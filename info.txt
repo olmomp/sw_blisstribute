@@ -1,0 +1,13 @@
+<h1>exitB BLISSTRIBUTE</h1>
+<br />
+<p>
+    Das offizielle Shopware Plugin für die BLISSTRIBUTE Versandhandelssoftware.
+</p>
+<br />
+<p>
+    Weiter Informationen zu unserer Versandhandelssoftware finden Sie <a href="https://www.exitb.de" target="_blank">hier</a>.
+</p>
+<br />
+<p>
+    Haben Sie Fragen? Dann <a href="http://exitb.de/kontakt/" target="_blank">schreiben Sie uns</a> oder rufen Sie uns an:  +49 (0)30 89565122.
+</p>
