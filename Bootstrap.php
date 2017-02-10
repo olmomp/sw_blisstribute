@@ -111,6 +111,25 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function enable()
+    {
+        \Shopware()->PluginLogger()->info('blisstribute::plugin enabled');
+        return $this->installDefaultTableValues();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function disable()
+    {
+        \Shopware()->PluginLogger()->info('blisstribute::plugin disabled');
+        return true;
+    }
+
+
+    /**
      * @return array
      */
     public function install()
@@ -806,6 +825,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function getPaymentMappingController(Enlight_Event_EventArgs $eventArgs)
     {
+
+
         $this->registerTemplateDir();
         $this->Application()->Snippets()->addConfigDir(__DIR__ . '/Snippets/');
         return $this->Path() . 'Controllers/Backend/BlisstributePaymentMapping.php';
@@ -1613,16 +1634,11 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     protected function installPluginSchema()
     {
         $this->registerCustomModels();
-
-        $createDemoData = array();
         foreach ($this->getBlisstributeClassMetadataCollection() as $currentClassMetadata) {
             try {
                 $this->handleTableInstall($currentClassMetadata);
-                $createDemoData[] = $currentClassMetadata->getName();
             } catch (Exception $e) {}
         }
-
-        $this->installDefaultTableValues($createDemoData);
     }
 
     /**
@@ -1660,9 +1676,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function handleTableInstall(\Doctrine\ORM\Mapping\ClassMetadata $classMetadata)
     {
-        Shopware()->PluginLogger()->info('bliss: install tables ');
-        Shopware()->CoreLogger()->info('bliss: install tables');
-
         if ($this->pluginTableExists($classMetadata)) {
             return $this->updateTableStructure($classMetadata);
         } else {
@@ -1783,48 +1796,46 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     /**
      * install default table values
      *
-     * @param array $modelNameCollection
-     *
-     * @return void
+     * @return bool
      */
-    protected function installDefaultTableValues(array $modelNameCollection)
+    protected function installDefaultTableValues()
     {
         Shopware()->PluginLogger()->info('bliss: install default table values');
-        $demoData = array(
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticle' =>
-                "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
-                . "s_article_id, trigger_deleted, trigger_sync, tries, comment) SELECT CURRENT_TIMESTAMP, "
-                . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a",
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticleType' =>
-                "INSERT IGNORE INTO s_plugin_blisstribute_article_type (created_at, modified_at, s_filter_id, "
-                . "article_type) SELECT CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, id, "
-                . \Shopware\CustomModels\Blisstribute\BlisstributeArticleType::ARTICLE_TYPE_EQUIPMENT . " "
-                . "FROM s_filter",
-            'Shopware\CustomModels\Blisstribute\BlisstributeShipment' =>
-                "INSERT IGNORE INTO s_plugin_blisstribute_shipment (mapping_class_name, s_premium_dispatch_id) "
-                . "SELECT NULL, pd.id FROM s_premium_dispatch AS pd",
-            'Shopware\CustomModels\Blisstribute\BlisstributePayment' =>
-                "INSERT IGNORE INTO s_plugin_blisstribute_payment (mapping_class_name, flag_payed, "
-                . "s_core_paymentmeans_id) SELECT NULL, 0, cp.id FROM s_core_paymentmeans AS cp",
-            'Shopware\CustomModels\Blisstribute\BlisstributeShop' =>
-                "INSERT IGNORE INTO s_plugin_blisstribute_shop (s_shop_id, advertising_medium_code) "
-                . "SELECT s.id, '' FROM s_core_shops AS s",
-            'Shopware\CustomModels\Blisstribute\BlisstributeCoupon' =>
-                "INSERT INTO s_plugin_blisstribute_coupon (s_voucher_id, flag_money_voucher) "
-                . "SELECT v.id, 0 FROM s_emarketing_vouchers AS v",
-        );
 
-        foreach ($modelNameCollection as $currentTable) {
-            Shopware()->PluginLogger()->info('bliss: install data');
-            Shopware()->CoreLogger()->info('bliss: install data');
-            if (!array_key_exists($currentTable, $demoData)) {
-                continue;
+        try {
+            $defaultTableData = array(
+                'Shopware\CustomModels\Blisstribute\BlisstributeArticle' =>
+                    "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
+                    . "s_article_id, trigger_deleted, trigger_sync, tries, comment) SELECT CURRENT_TIMESTAMP, "
+                    . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a",
+                'Shopware\CustomModels\Blisstribute\BlisstributeArticleType' =>
+                    "INSERT IGNORE INTO s_plugin_blisstribute_article_type (created_at, modified_at, s_filter_id, "
+                    . "article_type) SELECT CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, id, 4 FROM s_filter",
+                'Shopware\CustomModels\Blisstribute\BlisstributeShipment' =>
+                    "INSERT IGNORE INTO s_plugin_blisstribute_shipment (mapping_class_name, s_premium_dispatch_id) "
+                    . "SELECT NULL, pd.id FROM s_premium_dispatch AS pd",
+                'Shopware\CustomModels\Blisstribute\BlisstributePayment' =>
+                    "INSERT IGNORE INTO s_plugin_blisstribute_payment (mapping_class_name, flag_payed, "
+                    . "s_core_paymentmeans_id) SELECT NULL, 0, cp.id FROM s_core_paymentmeans AS cp",
+                'Shopware\CustomModels\Blisstribute\BlisstributeShop' =>
+                    "INSERT IGNORE INTO s_plugin_blisstribute_shop (s_shop_id, advertising_medium_code) "
+                    . "SELECT s.id, '' FROM s_core_shops AS s",
+                'Shopware\CustomModels\Blisstribute\BlisstributeCoupon' =>
+                    "INSERT INTO s_plugin_blisstribute_coupon (s_voucher_id, flag_money_voucher) "
+                    . "SELECT v.id, 0 FROM s_emarketing_vouchers AS v",
+            );
+
+            foreach ($defaultTableData as $currentDataSet) {
+                \Shopware()->PluginLogger()->info('blisstribute::' . $currentDataSet);
+                \Shopware()->Db()->query($currentDataSet);
             }
 
-            Shopware()->Db()->query($demoData[$currentTable]);
+            return true;
+        } catch (Exception $ex) {
+            \Shopware()->PluginLogger()->info('blisstribute::install default table values failed! ' . $ex->getMessage());
         }
 
-        return;
+        return false;
     }
 
     /**
