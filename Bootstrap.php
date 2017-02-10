@@ -299,23 +299,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->registerCronJobs();
             $this->subscribeEvent('Enlight_Controller_Front_StartDispatch', 'startDispatch');
         }
-		
-		if (version_compare($version, '0.3.15', '<')) {
-			$paymentMappings = Shopware()->Db()->fetchAll("SELECT * FROM s_plugin_blisstribute_payment WHERE mapping_class_name != ''");
-						
-			foreach($paymentMappings as $paymentMapping)
-			{
-				$paymentClassName = str_replace(' ', '', ucwords(str_replace('_', ' ', $paymentMapping['mapping_class_name'])));
-				
-				Shopware()->Db()->query("UPDATE s_plugin_blisstribute_payment SET mapping_class_name = ? WHERE id = ?", array($paymentClassName, $paymentMapping['id']));	
-			}
+        
+        if (version_compare($version, '0.3.15', '<')) {
+            $paymentMappings = Shopware()->Db()->fetchAll("SELECT * FROM s_plugin_blisstribute_payment WHERE mapping_class_name != ''");
+                        
+            foreach($paymentMappings as $paymentMapping)
+            {
+                $paymentClassName = str_replace(' ', '', ucwords(str_replace('_', ' ', $paymentMapping['mapping_class_name'])));
+                
+                Shopware()->Db()->query("UPDATE s_plugin_blisstribute_payment SET mapping_class_name = ? WHERE id = ?", array($paymentClassName, $paymentMapping['id']));    
+            }
         }
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy', 'config', 'frontend'));
-    }
-
-    public function activate() {
-
     }
 
     /**
@@ -1344,12 +1340,12 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         /** @var \Shopware\Models\Attribute\Voucher $attribute */
         $attribute = $args->get('entity');
 
-        if (!is_null($attribute)) {			
-			$plugin = Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy(array(
-            	'name' => 'NetiEasyCoupon',
-				'active' => true
-        	));
-			
+        if (!is_null($attribute)) {            
+            $plugin = Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy(array(
+                'name' => 'NetiEasyCoupon',
+                'active' => true
+            ));
+            
             if ($plugin) {
                 $blisstributeCoupon = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeCoupon')->findOneBy(array(
                     'voucher' => $attribute->getVoucher()
@@ -1856,7 +1852,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     array(1, 'http'),
                     array(2, 'https')
                 ),
-                'value' => 2
+                'value' => 1
             )
         );
         $form->setElement(
@@ -1947,7 +1943,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'transferOrders',
             [
                 'label' => 'Transfer Orders without verification',
-                'value' => 0,
+                'value' => 1,
                 'store' => [
                     [0, 'No'],
                     [1, 'Yes']
