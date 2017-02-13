@@ -434,7 +434,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'isrc' => '',
             'isbn' => '',
             'classification1' => $this->determineDetailArticleName($articleDetail),
-            'imageUrl' => $imageUrl,
+            'imageUrl' => '',
             'releaseDate' => $releaseDate,
             'removeDate' => $removeDate,
             'releaseState' => (bool)$this->determineArticleActiveState($articleDetail),

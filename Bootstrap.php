@@ -14,6 +14,8 @@ use ShopwarePlugins\ExitBBlisstribute\Subscribers\CronSubscriber;
  */
 class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
+    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
+
     /**
      * @return string
      *
@@ -118,7 +120,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function enable()
     {
-        \Shopware()->PluginLogger()->info('blisstribute::plugin enabled');
+        $this->logInfo('plugin enabled');
         return $this->installDefaultTableValues();
     }
 
@@ -127,8 +129,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function disable()
     {
-        \Shopware()->PluginLogger()->info('blisstribute::plugin disabled');
-        return true;
+        $this->logInfo('plugin disabled');
+        return $this->deleteDefaultTableValues();
     }
 
 
@@ -137,15 +139,15 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function install()
     {
-        Shopware()->PluginLogger()->info('bliss: register cron');
+        $this->logDebug('register cron jobs');
         $this->registerCronJobs();
-        Shopware()->PluginLogger()->info('bliss: subscribe events');
+        $this->logDebug('subscribe events');
         $this->subscribeEvents();
-        Shopware()->PluginLogger()->info('bliss: create menu');
+        $this->logDebug('creating menu items');
         $this->createMenuItems();
-        Shopware()->PluginLogger()->info('bliss: install plugin schema');
+        $this->logDebug('install plugin scheme');
         $this->installPluginSchema();
-        Shopware()->PluginLogger()->info('bliss: create config');
+        $this->logDebug('creating config');
         $this->createConfig();
 
         try {
@@ -1799,7 +1801,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function installDefaultTableValues()
     {
-        Shopware()->PluginLogger()->info('bliss: install default table values');
+        $this->logInfo('install default table values');
 
         try {
             $defaultTableData = array(
@@ -1830,7 +1832,34 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             return true;
         } catch (Exception $ex) {
-            \Shopware()->PluginLogger()->info('blisstribute::install default table values failed! ' . $ex->getMessage());
+            $this->logInfo('install default table values failed! ' . $ex->getMessage());
+        }
+
+        return false;
+    }
+
+    /**
+     * install default table values
+     *
+     * @return bool
+     */
+    protected function deleteDefaultTableValues()
+    {
+        $this->logInfo('delete default table values');
+
+        try {
+            $defaultTableData = array(
+                'Shopware\CustomModels\Blisstribute\BlisstributeArticle' => "TRUNCATE TABLE s_plugin_blisstribute_articles",
+                'Locks' => "TRUNCATE TABLE s_plugin_blisstribute_task_lock",
+            );
+
+            foreach ($defaultTableData as $currentDataSet) {
+                \Shopware()->Db()->query($currentDataSet);
+            }
+
+            return true;
+        } catch (Exception $ex) {
+            $this->logInfo('delete default table values failed! ' . $ex->getMessage());
         }
 
         return false;
