@@ -461,7 +461,12 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     private function getArticleVhsNumber($articleDetail)
     {
-        return trim($articleDetail->getAttribute()->getBlisstributeVhsNumber());
+        $vhsArticleNumber = $articleDetail->getAttribute()->getBlisstributeVhsNumber();
+        if (!$vhsArticleNumber) {
+            return '';
+        }
+
+        return $vhsArticleNumber;
     }
 
     /**
