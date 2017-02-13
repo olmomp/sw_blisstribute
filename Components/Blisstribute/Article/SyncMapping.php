@@ -378,35 +378,30 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
-     * Build collection for SW variants
-     *
      * @param Detail $articleDetail
-     *
-     * @return array
+     * @return string
      */
-    protected function buildSpecificationCollection(Detail $articleDetail)
+    protected function getImageUrl(Detail $articleDetail)
     {
-        $releaseDate = '';
-        if ($articleDetail->getArticle()->getAvailableFrom() !== null) {
-            $releaseDate = $articleDetail->getArticle()->getAvailableFrom()->format('Y-m-d H:i:s');
-        }
-
-        $removeDate = '';
-        if ($articleDetail->getArticle()->getAvailableTo() !== null) {
-            $articleDetail->getArticle()->getAvailableTo()->format('Y-m-d H:i:s');
-        }
-
         $imageUrl = '';
         /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
         $mediaService = Shopware()->Container()->get('shopware_media.media_service');
         /** @var \Shopware\Models\Article\Image[] $imageCollection */
         $imageCollection = $articleDetail->getImages();
-        if (count($imageCollection) == 0) {
+
+        $image = null;
+        foreach ($imageCollection as $currentImage) {
+            if ($currentImage->getMedia() != null) {
+                $image = $currentImage;
+            }
+        }
+
+        if (count($imageCollection) == 0 || $image == null) {
+            $this->logDebug('articleSyncMapping::got article collection ' . count($imageCollection));
             $imageCollection = $articleDetail->getArticle()->getImages();
         }
 
         if (count($imageCollection) > 0) {
-            $image = null;
             foreach ($imageCollection as $currentImage) {
                 if ($currentImage->getMedia() != null) {
                     $image = $currentImage;
@@ -434,6 +429,28 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             }
         }
 
+        return $imageUrl;
+    }
+
+    /**
+     * Build collection for SW variants
+     *
+     * @param Detail $articleDetail
+     *
+     * @return array
+     */
+    protected function buildSpecificationCollection(Detail $articleDetail)
+    {
+        $releaseDate = '';
+        if ($articleDetail->getArticle()->getAvailableFrom() !== null) {
+            $releaseDate = $articleDetail->getArticle()->getAvailableFrom()->format('Y-m-d H:i:s');
+        }
+
+        $removeDate = '';
+        if ($articleDetail->getArticle()->getAvailableTo() !== null) {
+            $articleDetail->getArticle()->getAvailableTo()->format('Y-m-d H:i:s');
+        }
+
         $specificationData = array(
             'erpArticleNumber' => $this->getArticleVhsNumber($articleDetail),
             'articleNumber' => $articleDetail->getNumber(),
@@ -442,7 +459,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'isrc' => '',
             'isbn' => '',
             'classification1' => $this->determineDetailArticleName($articleDetail),
-            'imageUrl' => $imageUrl,
+            'imageUrl' => $this->getImageUrl($articleDetail),
             'releaseDate' => $releaseDate,
             'removeDate' => $removeDate,
             'releaseState' => (bool)$this->determineArticleActiveState($articleDetail),
