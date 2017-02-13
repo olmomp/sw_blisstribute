@@ -364,11 +364,12 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
      */
     protected function setBlisstributeArticleNumber(array $confirmationDataCollection)
     {
-        $this->logMessage('start update vhs article number', __FUNCTION__);
+        $this->logDebug('start updating confirmation data ' . json_encode($confirmationDataCollection));
 
         foreach ($confirmationDataCollection as $currentConfirmationData) {
-            $detailRepository = $this->modelManager->getRepository('Shopware\Models\Article\Detail');
+            $this->logDebug('start processing confirmation data set ' . json_encode($currentConfirmationData));
 
+            $detailRepository = $this->modelManager->getRepository('Shopware\Models\Article\Detail');
             /** @var \Shopware\Models\Article\Detail $detail */
             $detail = $detailRepository->createQueryBuilder('article_detail')
                 ->select('ad')
@@ -393,9 +394,12 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
             }
 
             $attributes = $detail->getAttribute();
+            $this->logDebug('got attribute for vhs number update');
             $attributes->setBlisstributeVhsNumber($currentConfirmationData['erpArticleNumber']);
 
+            $this->logDebug('start persisting');
             $this->modelManager->persist($attributes);
+            $this->logDebug('persisting done');
 
             $this->logMessage(sprintf(
                 'vhs number set for article::article %s::vhs number %s',
