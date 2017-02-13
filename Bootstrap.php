@@ -121,6 +121,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     public function enable()
     {
         $this->logInfo('plugin enabled');
+        $this->subscribeEvents();
         return $this->installDefaultTableValues();
     }
 
@@ -400,10 +401,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function onEnlightControllerFrontStartDispatch(Enlight_Event_EventArgs $args)
     {
-        $this->Application()->Loader()->registerNamespace(
-            'Shopware\Components',
-            $this->Path() . 'Components/'
-        );
+        $this->Application()->Loader()->registerNamespace('Shopware\Components', $this->Path() . 'Components/');
     }
 
     /**
@@ -412,6 +410,15 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     public function onGetBtordersApiController()
     {
         return $this->Path() . 'Controllers/Api/Btorders.php';
+    }
+
+    /**
+     * @return string
+     */
+    public function onGetGoogleAddressValidator()
+    {
+        require_once $this->Path() . 'Components/Blisstribute/Order/GoogleAddressValidator.php';
+        return new Shopware_Components_Blisstribute_Order_GoogleAddressValidator();
     }
 
     /**
@@ -598,6 +605,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $this->subscribeEvent('Shopware\Models\Order\Order::postRemove', 'onModelsOrderOrderPostRemove');
 
         $this->subscribeEvent('Enlight_Controller_Front_StartDispatch', 'startDispatch');
+
+        $this->subscribeEvent('Enlight_Bootstrap_InitResource_blisstribute.google_address_validator', 'onGetGoogleAddressValidator');
     }
 
     /* ********************************************** Reworked Subscriber *********************************************/
@@ -698,10 +707,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function registerNamespaces()
     {
-        $this->get('Loader')->registerNamespace(
-            'ShopwarePlugins\ExitBBlisstribute',
-            $this->Path()
-        );
+        $this->get('Loader')->registerNamespace('ShopwarePlugins\ExitBBlisstribute',$this->Path());
     }
 
     /**
@@ -826,8 +832,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function getPaymentMappingController(Enlight_Event_EventArgs $eventArgs)
     {
-
-
         $this->registerTemplateDir();
         $this->Application()->Snippets()->addConfigDir(__DIR__ . '/Snippets/');
         return $this->Path() . 'Controllers/Backend/BlisstributePaymentMapping.php';
@@ -1480,95 +1484,22 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function onOrderFinished(Enlight_Event_EventArgs $eventArgs)
     {
-        $config = $this->get('config');
-
-        $models = $this->get('models');
-
-        $mapping = [
-            'route' => 'streetName',
-            'street_number' => 'streetNumber',
-            'locality' => 'setCity',
-            'postal_code' => 'setZipCode'
-        ];
-
         $blisstributeOrder = $this->registerOrder($eventArgs);
-
-        $order = $blisstributeOrder->getOrder();
-
-        error_log('process order: ' . $order->getNumber() . "\n", 3, Shopware()->DocPath() . '/exitb_error.log');
-
-        if ($config->get('googleAddressValidation')) {
-            $billing = $order->getBilling();
-            $shipping = $order->getShipping();
-
-            $customerAddress = $shipping->getStreet() . ',' . $shipping->getZipCode() . ',' . $shipping->getCity() . ',' . $order->getShipping()->getCountry()->getName();
-            $customerAddress = rawurlencode($customerAddress);
-
-            $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' . $customerAddress ."&key=" . $config->get('googleMapsKey');
-
-            $codeResult = file_get_contents($url);
-            $decodedResult = json_decode($codeResult, true);
-
-            $street = array();
-            $data = array();
-
-            $forUpdate = false;
-            $googleResult = $decodedResult['results'][0]['address_components'];
-            foreach ($googleResult as $k => $address) {
-                foreach ($address['types'] as $type) {
-                    if (in_array($type, array_keys($mapping))) {
-                        $forUpdate = true;
-                        if (method_exists($shipping, $mapping[$type])) {
-                            $data[$mapping[$type]] = $googleResult[$k]['long_name'];
-                        } elseif(in_array($mapping[$type], array('streetNumber', 'streetName'))) {
-                            $street[$mapping[$type]] = $googleResult[$k]['long_name'];
-                        }
-                    }
-                }
-            }
-
-            if ($forUpdate) {
-                foreach ($data as $key => $val) {
-                    $shipping->{$key}($val);
-
-                    if ($billing->getId() == $shipping->getId()) {
-                        $billing->{$key}($val);
-                    }
-                }
-
-                if ($street) {
-                    $shipping->setStreet(implode(array_reverse($street), ' '));
-
-                    if ($billing->getId() == $shipping->getId()) {
-                        $billing->setStreet(implode(array_reverse($street), ' '));
-                    }
-                }
-
-                $models->persist($billing);
-                $models->persist($shipping);
-                $models->flush();
-
-            }
-
-            if (!$config->get('transferOrders')) {
-                if ('OK' !== $decodedResult['status']) {
-                    $hint = 'No address verification possible';
-
-                    $blisstributeOrder
-                        ->setStatus(\Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_VALIDATION_ERROR)
-                        ->setErrorComment($hint)
-                        ->setTries(0);
-
-                    $models->persist($blisstributeOrder);
-                    $models->flush();
-
-                    return false;
-                }
-            }
+        if ($blisstributeOrder == null || !$blisstributeOrder) {
+            $this->logInfo('blisstributeOrder is null! onOrderFinished failed!');
+            return false;
         }
 
-        if ($blisstributeOrder == null) {
-            return false;
+        $order = $blisstributeOrder->getOrder();
+        if ($order == null || !$order) {
+            $this->logInfo('order is null! onOrderFinished failed!');
+        }
+
+        $this->logInfo('processing order ' . $order->getNumber());
+        if ($this->get('config')->get('googleAddressValidation')) {
+            /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
+            $addressValidator = $this->get('blisstribute.google_address_validator');
+            $addressValidator->validateAddress($blisstributeOrder, $this->get('config'));
         }
 
         if ($blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_TRANSFERRED
@@ -1893,6 +1824,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Host',
                 'maxLength' => 255,
+                'value' => 'soap-exitb-erp.local.exitb.de',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -1902,6 +1834,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Port',
                 'maxLength' => 4,
+                'value' => 80,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -1911,6 +1844,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Client',
                 'maxLength' => 3,
+                'value' => 'cen',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -1920,6 +1854,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Username',
                 'maxLength' => 255,
+                'value' => 'cendaemon',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -1929,6 +1864,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Password',
                 'maxLength' => 255,
+                'value' => 'cendaemon',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -1956,42 +1892,44 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Standard Werbemittel',
                 'maxLength' => 3,
+                'value' => 'cen',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
             'select',
             'googleAddressValidation',
-            [
+            array(
                 'label' => 'Google Maps Adress Verification',
-                'value' => 0,
-                'store' => [
-                    [0, 'No'],
-                    [1, 'Yes']
-                ],
+                'value' => 1,
+                'store' => array(
+                    array(0, 'No'),
+                    array(1, 'Yes')
+                ),
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-            ]
+            )
         );
         $form->setElement(
             'text',
             'googleMapsKey',
-            [
+            array(
                 'label' => 'Google Maps Key',
+                'value' => 'AIzaSyDHc63fG2957xsouqaERfU2ylzoFQlIHPk',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-            ]
+            )
         );
         $form->setElement(
             'select',
             'transferOrders',
-            [
+            array(
                 'label' => 'Transfer Orders without verification',
                 'value' => 1,
-                'store' => [
-                    [0, 'No'],
-                    [1, 'Yes'],
-                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-                ]
-            ]
+                'store' => array(
+                    array(0, 'No'),
+                    array(1, 'Yes'),
+                ),
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            )
         );
     }
 

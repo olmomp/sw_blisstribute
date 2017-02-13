@@ -71,8 +71,12 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
                     dataIndex: 'className',
                     align: 'left',
                     renderer: function(value) {
-                        var index = store.find('id', value);
-                        return store.getAt(index).get('label');
+                        var data = store.getAt(store.find('id', value));
+                        if (data) {
+                            return data.get('label');
+                        }
+
+                        return value;
                     },
                     editor: Ext.create('Ext.form.field.ComboBox', {
                         store: store,

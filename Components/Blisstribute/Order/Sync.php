@@ -183,7 +183,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
             }
         } catch (Shopware_Components_Blisstribute_Exception_MappingException $ex) {
             $this->logMessage(
-                'order invalid::' . $blisstributeOrder->getOrder()->getNumber(),
+                'order invalid::' . $blisstributeOrder->getOrder()->getNumber() . $ex->getMessage() . $ex->getTraceAsString(),
                 __FUNCTION__,
                 Logger::ERROR
             );
