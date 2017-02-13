@@ -1820,7 +1820,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     "INSERT IGNORE INTO s_plugin_blisstribute_shop (s_shop_id, advertising_medium_code) "
                     . "SELECT s.id, '' FROM s_core_shops AS s",
                 'Shopware\CustomModels\Blisstribute\BlisstributeCoupon' =>
-                    "INSERT INTO s_plugin_blisstribute_coupon (s_voucher_id, flag_money_voucher) "
+                    "INSERT IGNORE INTO s_plugin_blisstribute_coupon (s_voucher_id, flag_money_voucher) "
                     . "SELECT v.id, 0 FROM s_emarketing_vouchers AS v",
             );
 
