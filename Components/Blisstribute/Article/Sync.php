@@ -393,6 +393,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                 continue;
             }
 
+            $this->logDebug('got detail for vhs number update');
             $attributes = $detail->getAttribute();
             $this->logDebug('got attribute for vhs number update');
             $attributes->setBlisstributeVhsNumber($currentConfirmationData['erpArticleNumber']);
