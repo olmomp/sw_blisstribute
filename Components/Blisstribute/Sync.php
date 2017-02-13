@@ -16,6 +16,8 @@ use Shopware\CustomModels\Blisstribute\TaskLock;
  */
 abstract class Shopware_Components_Blisstribute_Sync
 {
+    use ExitBBlisstributeConnect_Domain_LoggingTrait;
+
     /**
      * @var ModelManager
      */
@@ -25,16 +27,6 @@ abstract class Shopware_Components_Blisstribute_Sync
      * @var string
      */
     protected $taskName = '';
-
-    /**
-     * @var Logger
-     */
-    protected $logger;
-
-    /**
-     * @var string
-     */
-    protected $logBaseName = '';
 
     /**
      * @var \Enlight_Config
@@ -60,40 +52,7 @@ abstract class Shopware_Components_Blisstribute_Sync
     protected function logMessage($message, $method, $logLevel = Logger::INFO)
     {
         $logMessage = get_class($this) . '::' . $method . '::' . $message . '::memory ' . memory_get_usage(true);
-        switch ($logLevel) {
-            case Logger::DEBUG:
-                $this->logger->debug($logMessage);
-                break;
-
-            case Logger::NOTICE:
-                $this->logger->notice($logMessage);
-                break;
-
-            case Logger::WARNING:
-                $this->logger->warn($logMessage);
-                break;
-
-            case Logger::ERROR:
-                $this->logger->err($logMessage);
-                break;
-
-            case Logger::CRITICAL:
-                $this->logger->crit($logMessage);
-                break;
-
-            case Logger::ALERT:
-                $this->logger->alert($logMessage);
-                break;
-
-            case Logger::EMERGENCY:
-                $this->logger->emerg($logMessage);
-                break;
-
-            case Logger::INFO:
-            default:
-                $this->logger->info($logMessage);
-                break;
-        }
+        $this->_log($logMessage, $logLevel);
     }
 
     /**
@@ -106,22 +65,6 @@ abstract class Shopware_Components_Blisstribute_Sync
         $this->config = $config;
 
         $this->modelManager = Shopware()->Models();
-
-        $appPath = Shopware()->DocPath();
-        if (version_compare(Shopware::VERSION, '5.0.4', '<=') && Shopware::VERSION != '___VERSION___') {
-            $logFilePath = $appPath . 'logs/' . $this->logBaseName . '-' . date('Y-m-d') . '.log';
-        } else {
-            $logFilePath = $appPath . 'var/log/' . $this->logBaseName . '-' . date('Y-m-d') . '.log';
-        }
-
-        if (!file_exists($logFilePath)) {
-            touch($logFilePath);
-            chmod($logFilePath, 0777);
-        }
-
-        $logFile = fopen($logFilePath, 'a');
-
-        $this->logger = new Logger($this->logBaseName, array(new StreamHandler($logFile)));
     }
 
     /**
@@ -160,12 +103,7 @@ abstract class Shopware_Components_Blisstribute_Sync
                 $this->modelManager->persist($taskLock);
                 $this->modelManager->flush();
 
-                $this->logMessage(
-                    'reset lock due to long inactive::' .
-                    $this->taskName,
-                    __FUNCTION__,
-                    Logger::WARNING
-                );
+                $this->logMessage('reset lock due to long inactive::' . $this->taskName, __FUNCTION__, Logger::WARNING);
 
                 return;
             }

@@ -43,7 +43,7 @@ trait Shopware_Components_Blisstribute_Domain_LoggerTrait
      *
      * @return void
      */
-    protected function _log($message, $level)
+    protected function _log($message, $level = Logger::INFO)
     {
         if ($this->_logger == null) {
             $this->_logger = \Shopware()->PluginLogger();
