@@ -406,23 +406,31 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         if (count($imageCollection) > 0) {
-            $image = $imageCollection[0];
+            $image = null;
+            foreach ($imageCollection as $currentImage) {
+                if ($currentImage->getMedia() != null) {
+                    $image = $currentImage;
+                    break;
+                }
+            }
 
-            // sync thumbnails?
-            /*$thumbnailSizeCollection = $image->getMedia()->getDefaultThumbnails();
-            if (count($thumbnailSizeCollection) > 0) {
-                $thumbnailSize = implode('x', $thumbnailSizeCollection[0]);
-                $thumbnail = $image->getMedia()->getThumbnailFilePaths()[$thumbnailSize];
+            if ($image != null) {
+                // sync thumbnails?
+                /*$thumbnailSizeCollection = $image->getMedia()->getDefaultThumbnails();
+                if (count($thumbnailSizeCollection) > 0) {
+                    $thumbnailSize = implode('x', $thumbnailSizeCollection[0]);
+                    $thumbnail = $image->getMedia()->getThumbnailFilePaths()[$thumbnailSize];
 
-                if ($mediaService->has($thumbnail)) {
-                    $imageUrl = $mediaService->getUrl($thumbnail);
+                    if ($mediaService->has($thumbnail)) {
+                        $imageUrl = $mediaService->getUrl($thumbnail);
+                        $this->logInfo($imageUrl);
+                    }
+                }*/
+
+                if ($mediaService->has('media/image/' . $image->getMedia()->getFileName())) {
+                    $imageUrl = $mediaService->getUrl('media/image/' . $image->getMedia()->getFileName());
                     $this->logInfo($imageUrl);
                 }
-            }*/
-
-            if ($mediaService->has('media/image/' . $image->getMedia()->getFileName())) {
-                $imageUrl = $mediaService->getUrl('media/image/' . $image->getMedia()->getFileName());
-                $this->logInfo($imageUrl);
             }
         }
 
@@ -434,7 +442,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'isrc' => '',
             'isbn' => '',
             'classification1' => $this->determineDetailArticleName($articleDetail),
-            'imageUrl' => '',
+            'imageUrl' => $imageUrl,
             'releaseDate' => $releaseDate,
             'removeDate' => $removeDate,
             'releaseState' => (bool)$this->determineArticleActiveState($articleDetail),
