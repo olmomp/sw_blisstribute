@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . '/Components/Blisstribute/Domain/LoggerTrait.php');
+
 use ShopwarePlugins\ExitBBlisstribute\Subscribers\CronSubscriber;
 
 /**

@@ -21,6 +21,8 @@ use Shopware\Models\Tax\Tax;
  */
 class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Components_Blisstribute_SyncMapping
 {
+    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
+
     /**
      * get shopware article for blisstribute mapped article
      *
@@ -392,6 +394,36 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $removeDate = '';
         if ($articleDetail->getArticle()->getAvailableTo() !== null) {
             $articleDetail->getArticle()->getAvailableTo()->format('Y-m-d H:i:s');
+        }
+
+        $imageUrl = '';
+        /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
+        $mediaService = Shopware()->Container()->get('shopware_media.media_service');
+        /** @var \Shopware\Models\Article\Image[] $imageCollection */
+        $imageCollection = $articleDetail->getImages();
+        if (count($imageCollection) == 0) {
+            $imageCollection = $articleDetail->getArticle()->getImages();
+        }
+
+        if (count($imageCollection) > 0) {
+            $image = $imageCollection[0];
+
+            // sync thumbnails?
+            /*$thumbnailSizeCollection = $image->getMedia()->getDefaultThumbnails();
+            if (count($thumbnailSizeCollection) > 0) {
+                $thumbnailSize = implode('x', $thumbnailSizeCollection[0]);
+                $thumbnail = $image->getMedia()->getThumbnailFilePaths()[$thumbnailSize];
+
+                if ($mediaService->has($thumbnail)) {
+                    $imageUrl = $mediaService->getUrl($thumbnail);
+                    $this->logInfo($imageUrl);
+                }
+            }*/
+
+            if ($mediaService->has('media/image/' . $image->getMedia()->getFileName())) {
+                $imageUrl = $mediaService->getUrl('media/image/' . $image->getMedia()->getFileName());
+                $this->logInfo($imageUrl);
+            }
         }
 
         $specificationData = array(
