@@ -434,7 +434,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'isrc' => '',
             'isbn' => '',
             'classification1' => $this->determineDetailArticleName($articleDetail),
-            'imageUrl' => '',
+            'imageUrl' => $imageUrl,
             'releaseDate' => $releaseDate,
             'removeDate' => $removeDate,
             'releaseState' => (bool)$this->determineArticleActiveState($articleDetail),
@@ -461,11 +461,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     private function getArticleVhsNumber($articleDetail)
     {
-        $vhs = $articleDetail->getAttribute()->getBlisstributeVhsNumber();
-
-        if(!$vhs) return '';
-
-        return $vhs;
+        return trim($articleDetail->getAttribute()->getBlisstributeVhsNumber());
     }
 
     /**
@@ -481,9 +477,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     private function determineArticleActiveState($articleDetail)
     {
         $article = $this->getModelEntity()->getArticle();
-        $articleActive = $article->getActive();
-        if(!$articleActive) {
-            return $articleActive; // if the entire article is deactivated, the same goes for all its variants
+        if (!$article->getActive()) {
+            return false;
         }
 
         return $articleDetail->getActive();
