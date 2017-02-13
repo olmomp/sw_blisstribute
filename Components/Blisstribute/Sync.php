@@ -17,7 +17,7 @@ use Shopware\CustomModels\Blisstribute\TaskLock;
  */
 abstract class Shopware_Components_Blisstribute_Sync
 {
-    use ExitBBlisstributeConnect_Domain_LoggingTrait;
+    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
 
     /**
      * @var ModelManager
