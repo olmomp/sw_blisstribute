@@ -103,6 +103,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         return array(
             'version' => $this->getVersion(),
             'label' => $this->getLabel(),
+            'author' => $this->getSupplier(),
             'supplier' => $this->getSupplier(),
             'description' => $this->getDescription(),
             'support' => $this->getSupport(),
