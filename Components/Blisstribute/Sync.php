@@ -1,7 +1,8 @@
 <?php
 
+require_once(__DIR__ . '/Domain/LoggerTrait.php');
+
 use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 use Shopware\Components\Model\ModelEntity;
 use Shopware\Components\Model\ModelManager;
 use Shopware\CustomModels\Blisstribute\TaskLock;
