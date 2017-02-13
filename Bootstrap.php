@@ -1883,7 +1883,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     array(1, 'http'),
                     array(2, 'https')
                 ),
-                'value' => 1
+                'value' => 1,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
@@ -1891,7 +1892,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-host',
             array(
                 'label' => 'Host',
-                'maxLength' => 255
+                'maxLength' => 255,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
@@ -1899,7 +1901,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-port',
             array(
                 'label' => 'Port',
-                'maxLength' => 4
+                'maxLength' => 4,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
@@ -1907,7 +1910,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-client',
             array(
                 'label' => 'Client',
-                'maxLength' => 3
+                'maxLength' => 3,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
@@ -1915,7 +1919,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-username',
             array(
                 'label' => 'Username',
-                'maxLength' => 255
+                'maxLength' => 255,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
@@ -1923,7 +1928,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-password',
             array(
                 'label' => 'Password',
-                'maxLength' => 255
+                'maxLength' => 255,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
@@ -1931,7 +1937,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-http-login',
             array(
                 'label' => 'HTTP Username',
-                'maxLength' => 255
+                'maxLength' => 255,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
@@ -1939,7 +1946,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-http-password',
             array(
                 'label' => 'HTTP Password',
-                'maxLength' => 255
+                'maxLength' => 255,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
@@ -1947,7 +1955,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-default-advertising-medium',
             array(
                 'label' => 'Standard Werbemittel',
-                'maxLength' => 3
+                'maxLength' => 3,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
@@ -1959,14 +1968,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'store' => [
                     [0, 'No'],
                     [1, 'Yes']
-                ]
+                ],
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );
         $form->setElement(
             'text',
             'googleMapsKey',
             [
-                'label' => 'Google Maps Key'
+                'label' => 'Google Maps Key',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );
         $form->setElement(
@@ -1977,7 +1988,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => 1,
                 'store' => [
                     [0, 'No'],
-                    [1, 'Yes']
+                    [1, 'Yes'],
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
                 ]
             ]
         );
