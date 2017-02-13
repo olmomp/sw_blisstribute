@@ -369,8 +369,19 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
         foreach ($confirmationDataCollection as $currentConfirmationData) {
             $this->logDebug('start processing confirmation data set ' . json_encode($currentConfirmationData));
 
-            $detailRepository = $this->modelManager->getRepository('Shopware\Models\Article\Detail');
-            /** @var \Shopware\Models\Article\Detail $detail */
+            $sql = 'UPDATE s_articles_attributes SET blisstribute_vhs_number = :vhsArticleNumber WHERE articledetailsID = (
+              SELECT id from s_articles_details WHERE ordernumber = :articleNumber OR ean = :ean
+            )';
+            Shopware()->Db()->query($sql, array(
+                'vhsArticleNumber' => trim($currentConfirmationData['erpArticleNumber']),
+                'articleNumber' => trim($currentConfirmationData['articleNumber']),
+                'ean' => trim($currentConfirmationData['ean13'])
+            ));
+
+            $this->logDebug('processing done for vhs article number ' . trim($currentConfirmationData['erpArticleNumber']));
+
+            /*$detailRepository = $this->modelManager->getRepository('Shopware\Models\Article\Detail');
+            /** @var \Shopware\Models\Article\Detail $detail *
             $detail = $detailRepository->createQueryBuilder('article_detail')
                 ->select('ad')
                 ->from('Shopware\Models\Article\Detail', 'ad')
@@ -400,13 +411,13 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
 
             $this->logDebug('start persisting');
             $this->modelManager->persist($attributes);
-            $this->logDebug('persisting done');
+            $this->logDebug('persisting done');*/
 
-            $this->logMessage(sprintf(
+            /*$this->logMessage(sprintf(
                 'vhs number set for article::article %s::vhs number %s',
                 $detail->getNumber(),
                 $detail->getAttribute()->getBlisstributeVhsNumber()
-            ), __FUNCTION__);
+            ), __FUNCTION__);*/
         }
 
         $this->logMessage('end vhs article number', __FUNCTION__);
