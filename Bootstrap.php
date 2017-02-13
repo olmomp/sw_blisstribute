@@ -1824,7 +1824,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Host',
                 'maxLength' => 255,
-                'value' => 'soap-exitb-erp.local.exitb.de',
+                'value' => '',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -1844,7 +1844,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Client',
                 'maxLength' => 3,
-                'value' => 'cen',
+                'value' => '',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -1854,7 +1854,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Username',
                 'maxLength' => 255,
-                'value' => 'cendaemon',
+                'value' => '',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -1864,7 +1864,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Password',
                 'maxLength' => 255,
-                'value' => 'cendaemon',
+                'value' => '',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
