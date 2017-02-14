@@ -129,6 +129,21 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
     }
 
     /**
+     * resets the article sync locks
+     *
+     * @return void
+     */
+    public function resetLockAction()
+    {
+        $sql = 'DELETE FROM s_plugin_blisstribute_task_lock WHERE task_name LIKE :taskName';
+        Shopware()->Db()->query($sql, array('taskName' => '%article_sync%'));
+
+        $this->View()->assign(array(
+            'success' => true
+        ));
+    }
+
+    /**
      * sets trigger sync for selected articles
      *
      * @return void

@@ -7,6 +7,7 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
             'blisstribute-order-listing-grid': {
                 'blisstribute-order-selection-changed': me.onSelectionChange,
                 'sync': me.displaySyncProgress,
+                'reset-btorder-lock': me.onResetBtOrderLock,
                 'edit': me.onEdit,
                 'openOrder': me.onOpenOrder
             }
@@ -86,6 +87,24 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
             },
             success: function(response, operation) {
                 callback(response, operation);
+            }
+        });
+    },
+
+    /**
+     * event listener for trigger sync batch action
+     *
+     * @param task
+     * @param record
+     * @param callback
+     */
+    onResetBtOrderLock: function(task, record, callback) {
+        Ext.Ajax.request({
+            url: '{url controller=BlisstributeOrder action=resetLock}',
+            method: 'POST',
+            params: { },
+            success: function(response, operation) {
+                Shopware.Notification.createGrowlMessage('Erfolg','Die Bestell-Sperren wurden erfolgreich aufgehoben');
             }
         });
     },

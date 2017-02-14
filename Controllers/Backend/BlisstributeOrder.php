@@ -129,6 +129,21 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
     }
 
     /**
+     * resets the order sync locks
+     *
+     * @return void
+     */
+    public function resetLockAction()
+    {
+        $sql = 'DELETE FROM s_plugin_blisstribute_task_lock WHERE task_name LIKE :taskName';
+        Shopware()->Db()->query($sql, array('taskName' => '%order_sync%'));
+
+        $this->View()->assign(array(
+            'success' => true
+        ));
+    }
+
+    /**
      * Check for invalid order transfers and return warning
      */
     public function getInvalidOrderTransfersAction()

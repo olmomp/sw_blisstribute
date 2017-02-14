@@ -143,17 +143,28 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
         items = Ext.Array.insert(
             items,
             0,
-            [ me.createSyncButton() ]
+            [ me.createResetLockButton(),me.createSyncButton() ]
         );
 
         return items;
+    },
+
+    createResetLockButton: function() {
+        var me = this;
+        return this.triggerSyncButton = Ext.create('Ext.button.Button', {
+            text: 'Sperren aufheben',
+            scope: this,
+            handler: function() {
+                me.fireEvent('reset-btorder-lock', me);
+            }
+        });
     },
 
     createSyncButton: function() {
         var me = this;
         return this.syncButton = Ext.create('Ext.button.Button', {
             disabled: true,
-            text: 'Bestellung übermitteln',
+            text: 'Jetzt übertragen',
             scope: this,
             handler: function() {
                 me.fireEvent('sync', me);

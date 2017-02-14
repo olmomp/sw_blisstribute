@@ -113,7 +113,7 @@ Ext.define('Shopware.apps.BlisstributeArticle.view.list.Article', {
         items = Ext.Array.insert(
             items,
             0,
-            [ me.createTriggerSyncButton(), me.createSyncButton() ]
+            [ me.createResetLockButton(), me.createTriggerSyncButton(), me.createSyncButton() ]
         );
 
         return items;
@@ -123,10 +123,21 @@ Ext.define('Shopware.apps.BlisstributeArticle.view.list.Article', {
         var me = this;
         return this.triggerSyncButton = Ext.create('Ext.button.Button', {
             disabled: true,
-            text: 'Trigger Sync',
+            text: 'Übertragung vormerken',
             scope: this,
             handler: function() {
                 me.fireEvent('trigger-sync', me);
+            }
+        });
+    },
+
+    createResetLockButton: function() {
+        var me = this;
+        return this.triggerSyncButton = Ext.create('Ext.button.Button', {
+            text: 'Sperren aufheben',
+            scope: this,
+            handler: function() {
+                me.fireEvent('reset-btarticle-lock', me);
             }
         });
     },
@@ -135,7 +146,7 @@ Ext.define('Shopware.apps.BlisstributeArticle.view.list.Article', {
         var me = this;
         return this.syncButton = Ext.create('Ext.button.Button', {
             disabled: true,
-            text: 'Sync now',
+            text: 'Jetzt übertragen',
             scope: this,
             handler: function() {
                 me.fireEvent('sync', me);

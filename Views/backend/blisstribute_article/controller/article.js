@@ -9,7 +9,8 @@ Ext.define('Shopware.apps.BlisstributeArticle.controller.Article', {
                 'trigger-sync': me.displayTriggerProgress,
                 'sync': me.displaySyncProgress,
                 'edit': me.onEdit,
-                'openArticle': me.onOpenArticle
+                'openArticle': me.onOpenArticle,
+                'reset-btarticle-lock': me.onResetBtArticleLock
             }
         });
 
@@ -91,6 +92,24 @@ Ext.define('Shopware.apps.BlisstributeArticle.controller.Article', {
             },
             success: function(response, operation) {
                 callback(response, operation);
+            }
+        });
+    },
+
+    /**
+     * event listener for trigger sync batch action
+     *
+     * @param task
+     * @param record
+     * @param callback
+     */
+    onResetBtArticleLock: function(task, record, callback) {
+        Ext.Ajax.request({
+            url: '{url controller=BlisstributeArticle action=resetLock}',
+            method: 'POST',
+            params: { },
+            success: function(response, operation) {
+                Shopware.Notification.createGrowlMessage('Erfolg','Die Artikel-Sperren wurden erfolgreich aufgehoben');
             }
         });
     },
