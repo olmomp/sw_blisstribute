@@ -5,6 +5,7 @@ require_once __DIR__ . '/../Exception/MappingException.php';
 require_once __DIR__ . '/../Exception/ValidationMappingException.php';
 require_once __DIR__ . '/../Exception/OrderPaymentMappingException.php';
 require_once __DIR__ . '/../Exception/OrderShipmentMappingException.php';
+require_once __DIR__ . '/../Domain/LoggerTrait.php';
 
 use Shopware\Models\Order\Detail;
 use Shopware\Models\Article\Article;
@@ -30,6 +31,8 @@ use Shopware\CustomModels\Blisstribute\BlisstributeShipmentRepository;
  */
 class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Components_Blisstribute_SyncMapping
 {
+    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
+
     /**
      * mapped order data
      *
@@ -115,6 +118,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected function buildBaseData()
     {
+        $this->logDebug('buildBaseData start');
         // determine used vouchers
         $this->determineVoucherDiscount();
 
@@ -125,6 +129,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $this->orderData['deliveryAddressData'] = $this->buildDeliveryAddressData();
         $this->orderData['orderLines'] = $this->buildArticleData();
         $this->orderData['orderCoupons'] = $this->buildCouponData();
+
+        $this->logDebug('buildBaseData done');
 
         return $this->orderData;
     }
@@ -494,6 +500,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $articleDataCollection = $this->applyPromoDiscounts($articleDataCollection, $promotions, $orderNumbers, $shopwareDiscountsAmount, $orderId);
 
+        // whats this for?
         foreach ($articleDataCollection as &$product) {
             $priceAmount = ($product['discountTotal']) / $product['quantity'];
 
@@ -745,6 +752,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
                 $product['promoQuantity'] -= 1;
                 $product['price'] -= $discount;
+                $product['priceAmount'] -= $discount;
                 $product['discountTotal'] += $discount;
             }
         }
@@ -1214,6 +1222,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected function determineVoucherDiscount()
     {
+        $this->logDebug('determineVoucherDiscount start');
+
         $this->voucherDiscountValue = 0.00;
         $this->voucherDiscountUsed = 0.00;
         $this->voucherCollection = array();
@@ -1243,6 +1253,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $this->voucherDiscountValue += abs(round($currentDetail->getPrice(), 2, PHP_ROUND_HALF_DOWN));
         }
+
+        $this->logDebug('voucherDiscountValue: ' . $this->voucherDiscountValue);
+        $this->logDebug('voucherDiscountUsed: ' . $this->voucherDiscountUsed);
+        $this->logDebug('voucherDiscountCollection: ' . count($this->voucherCollection));
+
+        $this->logDebug('determineVoucherDiscount done');
     }
 
     /**
@@ -1254,6 +1270,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected function checkVoucherDiscountUsed(array $articleDataCollection)
     {
+        $this->logDebug('checkVoucherDiscountUsed start');
+        $this->logDebug('before ' . json_encode($articleDataCollection));
         $diff = round(($this->voucherDiscountValue - $this->voucherDiscountUsed) / count($articleDataCollection), 2);
 
         if (abs($diff) > 0.01) {
@@ -1313,6 +1331,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             return $articleDataCollection;
         }
 
+        $this->logDebug('after ' . json_encode($articleDataCollection));
         return $articleDataCollection;
     }
 

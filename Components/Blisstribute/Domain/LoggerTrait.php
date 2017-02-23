@@ -39,6 +39,16 @@ trait Shopware_Components_Blisstribute_Domain_LoggerTrait
 
     /**
      * @param string $message
+     *
+     * @return void
+     */
+    public function logWarn($message)
+    {
+        $this->_log($message, Monolog\Logger::WARNING);
+    }
+
+    /**
+     * @param string $message
      * @param int $level
      *
      * @return void

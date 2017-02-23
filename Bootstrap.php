@@ -1493,6 +1493,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $order = $blisstributeOrder->getOrder();
         if ($order == null || !$order) {
             $this->logInfo('order is null! onOrderFinished failed!');
+            return false;
         }
 
         $this->logInfo('processing order ' . $order->getNumber());
@@ -1505,6 +1506,11 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if ($blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_TRANSFERRED
             || $blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_IN_TRANSFER
         ) {
+            return true;
+        }
+
+        if (!$this->get('config')->get('blisstribute-auto-sync-order')) {
+            $this->logDebug('order sync cancelled due to disabled automatic sync');
             return true;
         }
 
@@ -1810,12 +1816,12 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-protocol',
             array(
                 'label' => 'Protocol',
+                'description' => 'SOAP-Protokoll für den Verbindungsaufbau zum Blisstribute-System',
                 'store' => array(
                     array(1, 'http'),
                     array(2, 'https')
                 ),
-                'value' => 1,
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => 1
             )
         );
         $form->setElement(
@@ -1823,9 +1829,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-host',
             array(
                 'label' => 'Host',
+                'description' => 'SOAP-Hostname für den Verbindungsaufbau zum Blisstribute-System',
                 'maxLength' => 255,
-                'value' => '',
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => ''
             )
         );
         $form->setElement(
@@ -1833,9 +1839,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-port',
             array(
                 'label' => 'Port',
+                'description' => 'SOAP-Port für den Verbindungsaufbau zum Blisstribute-System',
                 'maxLength' => 4,
-                'value' => 80,
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => 80
             )
         );
         $form->setElement(
@@ -1843,9 +1849,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-client',
             array(
                 'label' => 'Client',
+                'description' => 'SOAP-Klientenkürzel für Ihren Blisstribute-Mandanten',
                 'maxLength' => 3,
-                'value' => '',
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => ''
             )
         );
         $form->setElement(
@@ -1853,9 +1859,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-username',
             array(
                 'label' => 'Username',
+                'description' => 'SOAP-Benutzername für Ihren Blisstribute-Mandanten',
                 'maxLength' => 255,
-                'value' => '',
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => ''
             )
         );
         $form->setElement(
@@ -1863,9 +1869,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-soap-password',
             array(
                 'label' => 'Password',
+                'description' => 'SOAP-Passwort für Ihren Blisstribute-Mandanten',
                 'maxLength' => 255,
-                'value' => '',
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => ''
             )
         );
         $form->setElement(
@@ -1873,8 +1879,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-http-login',
             array(
                 'label' => 'HTTP Username',
-                'maxLength' => 255,
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'description' => 'Zugangsdaten (Benutzername) für eine eventuelle .htaccess Authentifizierung',
+                'maxLength' => 255
             )
         );
         $form->setElement(
@@ -1882,30 +1888,40 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-http-password',
             array(
                 'label' => 'HTTP Password',
+                'description' => 'Zugangsdaten (Passwort) für eine eventuelle .htaccess Authentifizierung',
+                'maxLength' => 255
+            )
+        );
+
+        $form->setElement(
+            'checkbox',
+            'blisstribute-auto-sync-order',
+            array(
+                'label' => 'Bestellung bei Anlage übermitteln',
+                'description' => 'Wenn aktiviert, wird die Bestellung sofort nach Abschluss des Checkout-Prozesses zum Blisstribute System übermittelt. Wenn deaktiviert, müssen die Bestellungen manuell, oder über den Cron übermittelt werden.',
                 'maxLength' => 255,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
+
         $form->setElement(
             'text',
             'blisstribute-default-advertising-medium',
             array(
                 'label' => 'Standard Werbemittel',
+                'description' => 'Das Standard-Werbemittel für die Bestellanlage',
                 'maxLength' => 3,
                 'value' => 'cen',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
-            'select',
+            'checkbox',
             'googleAddressValidation',
             array(
-                'label' => 'Google Maps Adress Verification',
-                'value' => 1,
-                'store' => array(
-                    array(0, 'No'),
-                    array(1, 'Yes')
-                ),
+                'label' => 'Google Maps Address Verification',
+                'description' => 'Wenn aktiviert, werden Liefer- und Rechnungsadresse bei Bestellübertragung mit der Google Maps API abgeglichen, um eventuelle Adressefehler zu korrigieren.',
+                'value' => 0,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
@@ -1914,20 +1930,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'googleMapsKey',
             array(
                 'label' => 'Google Maps Key',
-                'value' => 'AIzaSyDHc63fG2957xsouqaERfU2ylzoFQlIHPk',
+                'description' => 'API-KEY für den Zugang zur Google Maps API.',
+                'value' => '',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
         $form->setElement(
-            'select',
+            'checkbox',
             'transferOrders',
             array(
                 'label' => 'Transfer Orders without verification',
+                'description' => 'Wenn aktiviert, werden ausschließlich Bestellungen ins Blisstribute-System übertragen, deren Adressen erfolgreich verifiziert werden konnten.',
                 'value' => 1,
-                'store' => array(
-                    array(0, 'No'),
-                    array(1, 'Yes'),
-                ),
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
