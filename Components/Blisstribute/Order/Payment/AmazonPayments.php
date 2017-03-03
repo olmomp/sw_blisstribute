@@ -25,16 +25,22 @@ class Shopware_Components_Blisstribute_Order_Payment_AmazonPayments
     {
         $orderAttribute = $this->order->getAttribute();
 
-        $authorizationId = trim($orderAttribute->getBestitAmazonAuthorizationId());
+        $captureNow = Shopware()->Config()->get('captureNow', false);
+			
+		if ((bool)$captureNow) {
+			$resToken = trim($orderAttribute->getBestitAmazonCaptureId());
+		} else {
+			$resToken = trim($orderAttribute->getBestitAmazonAuthorizationId());
+		}
 
-        if ($authorizationId == '' || is_null($authorizationId)) {
+        if ($resToken == '' || is_null($resToken)) {
             throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException(
-                'no authorization id given'
+                'no token given'
             );
         }
 
         return array(
-            'resToken' => $authorizationId,
+            'resToken' => $resToken,
             'cardAlias' => trim($this->order->getTransactionId()),
         );
     }
