@@ -56,8 +56,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                     $this->logMessage('export status check failed::' . $ex->getMessage(), __FUNCTION__, Logger::ERROR);
                     continue;
                 }
-
-                //$currentOrder = $this->prepareOrderForPaymentDiscounts($currentOrder);
+                
                 $this->processOrderSync($currentOrder);
             }
 
@@ -90,44 +89,11 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
         $this->taskName .= '::single::' . $blisstributeOrder->getId();
         $this->lockTask();
 
-        //$blisstributeOrder = $this->prepareOrderForPaymentDiscounts($blisstributeOrder);
         $result = $this->processOrderSync($blisstributeOrder);
 
         $this->unlockTask();
         
         return $result;
-    }
-
-    /**
-     * If there is a payment discount applied to an order, this function ensures that this position is not
-     * send to the exitB backend. (payment discounts are handled as separate positions)
-     *
-     * The discount / costs for payment are applied to each article separately in Order/SyncMapping (buildArticleData)
-     *
-     * @param BlisstributeOrder $btOrder
-     * @return mixed
-     */
-    private function prepareOrderForPaymentDiscounts($btOrder)
-    {
-        $swOrder = &$btOrder->getOrder();
-        $basketItems = &$swOrder->getDetails();
-
-        $elementsToRemove = array();
-        /** @var Shopware\Models\Order\Detail $item */
-        foreach ($basketItems as $item) {
-            $price = $item->getPrice();
-            $articleNumber = $item->getArticleNumber();
-            // payment discount ?
-            if ($articleNumber == 'sw-payment') {
-                $elementsToRemove[] = $item;
-            }
-        }
-        // remove discount positions
-        foreach ($elementsToRemove as $element) {
-            $basketItems->removeElement($element);
-        }
-
-        return $btOrder;
     }
 
     /**
