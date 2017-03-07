@@ -58,7 +58,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'sex' => 0,
             'sale' => null,
             'priceCode' => '0000',
-            'basePrice' => $this->getArticle()->getMainDetail()->getPurchasePrice(),
+            'basePrice' => $this->getMainDetailBasePrice($this->getArticle()->getMainDetail()),
             'extractArticleSeries' => false,
             'vatCollection' => $this->buildVatCollection(),
             'vendorCollection' => array(),
@@ -603,4 +603,20 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         return $tagCollection;
     }
+	
+	/**
+	 * get the base price of the main detail
+	 *
+	 * @param Detail $articleDetail
+	 *
+	 * @return float
+	 */
+	protected function getMainDetailBasePrice(Detail $articleDetail)
+	{
+		if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
+			return $articleDetail->getPurchasePrice();
+		}
+		
+		return $articleDetail->getPrices()->first()->getBasePrice();
+	}
 }
