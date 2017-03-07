@@ -140,22 +140,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function install()
     {
-		// check the current sw version
-		if (!$this->assertMinimumVersion('5.1')) {
-    		return array(
-				'success' => false,
-				'message' => 'Das Plugin benötigt mindestens Shopware 5.1.'
-            );
-    	}
-		
-		// check needed plugins
-		if (!$this->assertRequiredPluginsPresent(array('Cron'))) {
-			return array(
-				'success' => false,
-				'message' => 'Bitte installieren und aktivieren Sie das Shopware Cron-Plugin.'
-            );
-		}    	
-		
         $this->logDebug('register cron jobs');
         $this->registerCronJobs();
         $this->logDebug('subscribe events');
@@ -187,10 +171,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {
         if (version_compare($version, '0.2.1', '<=')) {
             $sql = 'UPDATE s_plugin_blisstribute_articles SET last_cron_at = CURRENT_TIMESTAMP';
-            $this->get('db')->query($sql);
+            Shopware()->Db()->query($sql);
         }
 
-        $em = $this->get('models');
+        $em = Shopware()->Models();
         if (version_compare($version, '0.2.2', '<=')) {
             $this->subscribeEvent('Shopware\Models\Property\Group::postPersist', 'postPersistProperty');
             $this->subscribeEvent('Shopware\Models\Property\Group::preRemove', 'preRemoveProperty');
@@ -201,16 +185,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $sql = 'INSERT IGNORE INTO s_plugin_blisstribute_article_type (created_at, modified_at, s_filter_id, ' .
                 'article_type) SELECT CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, id, ' .
                 \Shopware\CustomModels\Blisstribute\BlisstributeArticleType::ARTICLE_TYPE_EQUIPMENT . ' FROM s_filter';
-            $this->get('db')->query($sql);
+            Shopware()->Db()->query($sql);
         }
 
         if (version_compare($version, '0.2.3', '<=')) {
-            $this->get('models')->removeAttribute('s_articles_attributes', 'blisstribute', 'estimated_delivery_date');
+            Shopware()->Models()->removeAttribute('s_articles_attributes', 'blisstribute', 'estimated_delivery_date');
 
-            $this->get('models')->generateAttributeModels(array('s_articles_attributes'));
+            Shopware()->Models()->generateAttributeModels(array('s_articles_attributes'));
 
             $sql = "DELETE FROM s_core_engine_elements WHERE name = 'blisstributeEstimatedDeliveryDate'";
-            $this->get('db')->query($sql);
+            Shopware()->Db()->query($sql);
         }
 
         if (version_compare($version, '0.2.10', '<=')) {
@@ -265,11 +249,11 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             $sql = "INSERT IGNORE INTO s_plugin_blisstribute_shop (s_shop_id, advertising_medium_code) "
                 . "SELECT s.id, '' FROM s_core_shops AS s";
-            $this->get('db')->query($sql);
+            Shopware()->Db()->query($sql);
 
             $sql = "INSERT INTO s_plugin_blisstribute_coupon (s_voucher_id, flag_money_voucher) "
                 . "SELECT v.id, 0 FROM s_emarketing_vouchers AS v";
-            $this->get('db')->query($sql);
+            Shopware()->Db()->query($sql);
 
             $parent = $this->Menu()->findOneBy(['label' => 'Blisstribute Mapping']);
             if ($parent != null) {
@@ -323,13 +307,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
         
         if (version_compare($version, '0.3.15', '<')) {
-            $paymentMappings = $this->get('db')->fetchAll("SELECT * FROM s_plugin_blisstribute_payment WHERE mapping_class_name != ''");
+            $paymentMappings = Shopware()->Db()->fetchAll("SELECT * FROM s_plugin_blisstribute_payment WHERE mapping_class_name != ''");
                         
             foreach($paymentMappings as $paymentMapping)
             {
                 $paymentClassName = str_replace(' ', '', ucwords(str_replace('_', ' ', $paymentMapping['mapping_class_name'])));
                 
-                $this->get('db')->query("UPDATE s_plugin_blisstribute_payment SET mapping_class_name = ? WHERE id = ?", array($paymentClassName, $paymentMapping['id']));    
+                Shopware()->Db()->query("UPDATE s_plugin_blisstribute_payment SET mapping_class_name = ? WHERE id = ?", array($paymentClassName, $paymentMapping['id']));    
             }
         }
 
@@ -364,7 +348,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     (61, 'Retoure abgeschlossen', 102, 'state', 0),
                     (62, 'Retoure teilweise abgeschlossen', 103, 'state', 0)";
 
-        $this->get('db')->query($sql);
+        Shopware()->Db()->query($sql);
     }
 
     /**
@@ -372,22 +356,24 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     private function createAttributeCollection()
     {
-        $modelManager = $this->get('models');
-		
-		$modelManager->addAttribute('s_articles_attributes', 'blisstribute', 'vhs_number', 'varchar(255)', true, 0);
-        $modelManager->addAttribute('s_articles_attributes', 'blisstribute', 'supplier_stock', 'int(11)', true, 0);
+        $modelManager = Shopware()->Models();
 
         $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'quantity_canceled', 'int(11)', true, 0);
         $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'quantity_returned', 'int(11)', true, 0);
         $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'quantity_shipped', 'int(11)', true, 0);
         $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'date_changed', 'date', true, 0);
 
-		$modelManager->addAttribute('s_order_basket_attributes', 'blisstribute', 'swag_promotion_is_free_good', 'varchar(255)', true, 0);
-		$modelManager->addAttribute('s_order_basket_attributes', 'blisstribute', 'swag_is_free_good_by_promotion_id', 'varchar(255)', true, 0);
-		
-		$modelManager->generateAttributeModels(array('s_articles_attributes', 's_order_details_attributes', 's_order_basket_attributes'));       
+        $modelManager->generateAttributeModels(array('s_order_details_attributes'));
 
-        $this->get('db')->query(
+        $modelManager->addAttribute('s_articles_attributes', 'blisstribute', 'vhs_number', 'varchar(255)', true, 0);
+        $modelManager->addAttribute('s_articles_attributes', 'blisstribute', 'supplier_stock', 'int(11)', true, 0);
+        $modelManager->generateAttributeModels(array('s_articles_attributes'));
+
+        $service = $this->get('shopware_attribute.crud_service');
+        $service->update('s_order_basket_attributes', 'swag_promotion_is_free_good', 'varchar(255)', [], null, true);
+        $service->update('s_order_basket_attributes', 'swag_is_free_good_by_promotion_id', 'varchar(255)', [], null, true);
+
+        Shopware()->Db()->query(
             "INSERT IGNORE INTO `s_core_engine_elements` (`groupID`, `type`, `label`, `required`, `position`, " .
             "`name`, `variantable`, `translatable`) VALUES  (7, 'text', 'VHS Nummer', 0, 101, " .
             "'blisstributeVhsNumber', 0, 0), (7, 'number', 'Bestand Lieferant', 0, 102, " .
@@ -642,7 +628,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 Shopware()->Container(),
                 $this->Path(),
                 $this->Application(),
-                $this->get('db')
+                Shopware()->Db()
             )
         );
 
@@ -897,7 +883,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function postPersistArticle(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        /* @var \Doctrine\ORM\EntityManager $modelManager */
+        $modelManager = $args->get('entityManager');
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $args->get('entity');
@@ -920,21 +907,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function postUpdateArticle(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        /* @var \Doctrine\ORM\EntityManager $modelManager */
+        $modelManager = Shopware()->Models();
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $args->get('entity');
 
-        $repository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $repository = Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
         $blisstributeArticle = $repository->findOneBy(array('article' => $article));
-        if ($blisstributeArticle === null) {
+        if ($blisstributeArticle == null) {
             $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($article);
         }
-		
-		if ($blisstributeArticle->isTriggerSync()) {
-			return;
-		}
 
         $blisstributeArticle->setLastCronAt(new DateTime())
             ->setTriggerSync(true)
@@ -952,46 +936,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function preRemoveArticle(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $args->get('entity');
 
-        $repository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $repository = Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
         $blisstributeArticle = $repository->findOneBy(array('article' => $article));
-        if ($blisstributeArticle === null) {
+        if ($blisstributeArticle == null) {
             return;
         }
 
-        $modelManager->remove($blisstributeArticle);
-        $modelManager->flush();
-    }
-
-    /**
-     * @param Enlight_Event_EventArgs $args
-     *
-     * @return void
-     */
-    public function postPersistDetail(Enlight_Event_EventArgs $args)
-    {
-		$modelManager = $this->get('models');
-		
-        /** @var \Shopware\Models\Article\Detail $detail */
-        $detail = $args->get('entity');
-
-        // load article
-        $repository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
-        $blisstributeArticle = $repository->findOneBy(array('article' => $detail->getArticle()));
-        if ($blisstributeArticle === null) {
-            $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
-            $blisstributeArticle->setArticle($detail->getArticle());
-        }
-		
-		if ($blisstributeArticle->isTriggerSync()) {
-			return;
-		}
-
-        $blisstributeArticle->setLastCronAt(new DateTime())
+        $blisstributeArticle->setDeleted(true)
             ->setTriggerSync(true)
             ->setTries(0)
             ->setComment(null);
@@ -1005,9 +961,37 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
+    public function postPersistDetail(Enlight_Event_EventArgs $args)
+    {
+        /** @var \Shopware\Models\Article\Detail $detail */
+        $detail = $args->get('entity');
+
+        // load article
+        $repository = Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $blisstributeArticle = $repository->findOneBy(array('article' => $detail->getArticle()));
+        if ($blisstributeArticle == null) {
+            $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
+            $blisstributeArticle->setArticle($detail->getArticle());
+        }
+
+        $blisstributeArticle->setLastCronAt(new DateTime())
+            ->setTriggerSync(true)
+            ->setTries(0)
+            ->setComment(null);
+
+        $modelManager = Shopware()->Models();
+        $modelManager->persist($blisstributeArticle);
+        $modelManager->flush();
+    }
+
+    /**
+     * @param Enlight_Event_EventArgs $args
+     *
+     * @return void
+     */
     public function postUpdateDetail(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $args->get('entity');
@@ -1015,18 +999,14 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $articleRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticle $article */
-        $blisstributeArticle = $articleRepository->findOneBy(array('article' => $detail->getArticle()));
+        $article = $articleRepository->findOneBy(array('article' => $detail->getArticle()));
 
-        if ($blisstributeArticle === null) {
-            $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
-            $blisstributeArticle->setArticle($detail->getArticle());
+        if ($article === null) {
+            $article = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
+            $article->setArticle($detail->getArticle());
         }
-		
-		if ($blisstributeArticle->isTriggerSync()) {
-			return;
-		}
 
-        $blisstributeArticle->setLastCronAt(new DateTime())
+        $article->setLastCronAt(new DateTime())
             ->setTriggerSync(true)
             ->setTries(0)
             ->setComment(null);
@@ -1042,17 +1022,17 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function preRemoveDetail(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $args->get('entity');
 
-        $repository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $repository = Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticle $blisstributeArticle */
         $blisstributeArticle = $repository->findOneBy(array('article' => $detail->getArticle()));
 
-        if ($blisstributeArticle === null or $blisstributeArticle->isDeleted()) {
+        if ($blisstributeArticle == null) {
             return;
         }
 
@@ -1072,7 +1052,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function postPersistProperty(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
         $entity = $args->get('entity');
 
         $articleType = new Shopware\CustomModels\Blisstribute\BlisstributeArticleType();
@@ -1090,13 +1070,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function preRemoveProperty(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
         $entity = $args->get('entity');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleTypeRepository $articleTypeRepository */
         $articleTypeRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticleType');
         $articleType = $articleTypeRepository->fetchByFilterType($entity->getId());
-        if ($articleType === null) {
+        if ($articleType == null) {
             return;
         }
 
@@ -1269,7 +1249,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {
         $articleIdCollection = array();
 
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
         $entity = $args->get('entity');
@@ -1303,7 +1283,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function postPersistShop(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var \Shopware\Models\Shop\Shop $shop */
         $shop = $args->get('entity');
@@ -1322,14 +1302,14 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function postRemoveShop(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var Shopware\Models\Shop\ $blisstributeShop */
         $shop = $args->get('entity');
 
-        $repository = $this->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeShop');
+        $repository = Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeShop');
         $blisstributeShop = $repository->findOneByShop($shop->getId());
-        if ($blisstributeShop === null) {
+        if ($blisstributeShop == null) {
             return;
         }
 
@@ -1344,7 +1324,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function postPersistVoucher(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var \Shopware\Models\Voucher\Voucher $voucher */
         $voucher = $args->get('entity');
@@ -1364,13 +1344,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function postPersistVoucherAttribute(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var \Shopware\Models\Attribute\Voucher $attribute */
         $attribute = $args->get('entity');
 
         if (!is_null($attribute)) {            
-            $plugin = $this->get('models')->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy(array(
+            $plugin = Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy(array(
                 'name' => 'NetiEasyCoupon',
                 'active' => true
             ));
@@ -1395,14 +1375,14 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function postRemoveVoucher(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var \Shopware\Models\Voucher\Voucher $voucher */
         $voucher = $args->get('entity');
 
-        $repository = $this->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeCoupon');
+        $repository = Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeCoupon');
         $blisstributeCoupon = $repository->findByCoupon($voucher->getId());
-        if ($blisstributeCoupon === null) {
+        if ($blisstributeCoupon == null) {
             return;
         }
 
@@ -1417,14 +1397,14 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function onModelsOrderOrderPostRemove(Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var \Shopware\Models\Order\Order $order */
         $order = $args->get('entity');
 
-        $repository = $this->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
+        $repository = Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $repository->findByOrder($order);
-        if ($blisstributeOrder === null) {
+        if ($blisstributeOrder == null) {
             return;
         }
 
@@ -1505,13 +1485,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     public function onOrderFinished(Enlight_Event_EventArgs $eventArgs)
     {
         $blisstributeOrder = $this->registerOrder($eventArgs);
-        if ($blisstributeOrder === null || !$blisstributeOrder) {
+        if ($blisstributeOrder == null || !$blisstributeOrder) {
             $this->logInfo('blisstributeOrder is null! onOrderFinished failed!');
             return false;
         }
 
         $order = $blisstributeOrder->getOrder();
-        if ($order === null || !$order) {
+        if ($order == null || !$order) {
             $this->logInfo('order is null! onOrderFinished failed!');
             return false;
         }
@@ -1556,19 +1536,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {
         $orderProxy = $eventArgs->get('subject');
 
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
         $orderRepository = $modelManager->getRepository('Shopware\Models\Order\Order');
 
         /** @var \Shopware\Models\Order\Order $order */
         $order = $orderRepository->findOneBy(array('number' => $orderProxy->sOrderNumber));
-        if ($order === null) {
+        if ($order == null) {
             return null;
         }
 
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeOrderRepository $blisstributeOrderRepository */
         $blisstributeOrderRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $blisstributeOrderRepository->findByOrder($order);
-        if ($blisstributeOrder === null) {
+        if ($blisstributeOrder == null) {
             $blisstributeOrder = new \Shopware\CustomModels\Blisstribute\BlisstributeOrder();
             $blisstributeOrder->setLastCronAt(new DateTime())
                 ->setOrder($order)
@@ -1604,7 +1584,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function getBlisstributeClassMetadataCollection()
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
 
         /** @var \Doctrine\ORM\Mapping\ClassMetadata[] $classMetadataCollection */
         $classMetadataCollection = array(
@@ -1649,7 +1629,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function pluginTableExists(\Doctrine\ORM\Mapping\ClassMetadata $classMetadata)
     {
-        $schemaManager = $this->get('models')->getConnection()->getSchemaManager();
+        $schemaManager = Shopware()->Models()->getConnection()->getSchemaManager();
         if (!$schemaManager->tablesExist(array($classMetadata->getTableName()))) {
             return false;
         }
@@ -1671,7 +1651,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function updateTableStructure(\Doctrine\ORM\Mapping\ClassMetadata $classMetadata)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
         $schemaManager = $modelManager->getConnection()->getSchemaManager();
         $currentTable = $schemaManager->listTableDetails($classMetadata->getTableName());
 
@@ -1688,7 +1668,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $databasePlatform = $schemaManager->getDatabasePlatform();
         $tableDiffSqlCollection = $databasePlatform->getAlterTableSQL($tableDiff);
 
-        $databaseConnection = $this->get('db');
+        $databaseConnection = Shopware()->Db();
 
         try {
             $databaseConnection->beginTransaction();
@@ -1720,7 +1700,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function createTableStructure(\Doctrine\ORM\Mapping\ClassMetadata $classMetadata)
     {
-        $modelManager = $this->get('models');
+        $modelManager = Shopware()->Models();
         $schemaManager = $modelManager->getConnection()->getSchemaManager();
 
         $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($modelManager);
@@ -1733,7 +1713,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             throw new Exception('Failure in create database structure');
         }
 
-        $databaseConnection = $this->get('db');
+        $databaseConnection = Shopware()->Db();
 
         try {
             $databaseConnection->beginTransaction();
@@ -1784,7 +1764,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
 
             foreach ($defaultTableData as $currentDataSet) {
-                $this->get('db')->query($currentDataSet);
+                \Shopware()->Db()->query($currentDataSet);
             }
 
             return true;
@@ -1811,7 +1791,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
 
             foreach ($defaultTableData as $currentDataSet) {
-                $this->get('db')->query($currentDataSet);
+                \Shopware()->Db()->query($currentDataSet);
             }
 
             return true;
