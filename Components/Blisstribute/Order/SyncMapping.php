@@ -507,7 +507,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $articleDataCollection = $this->applyPromoDiscounts($articleDataCollection, $promotions, $orderNumbers, $shopwareDiscountsAmount, $orderId);
 
         // whats this for?
-        foreach ($articleDataCollection as &$product) {
+        /*foreach ($articleDataCollection as &$product) {
             $priceAmount = ($product['discountTotal']) / $product['quantity'];
 
             $product['priceAmount'] -= $priceAmount;
@@ -518,7 +518,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $product['priceAmount'] = $price;
             $product['price'] = $priceA;
 
-        }
+        }*/
 
         return $articleDataCollection;
     }
