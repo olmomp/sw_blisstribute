@@ -174,6 +174,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         if (trim($billingAddress->getCompany()) != '') {
             $isB2BOrder = true;
         }
+		
+		if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
+			$customerBirthday = $customer->getBirthday();
+		} else {
+			$customerBirthday = $customer->getBilling()->getBirthday();
+		}
 
         return array(
             'externalCustomerNumber' => $customerNumber,
@@ -181,7 +187,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'externalCustomerPhoneNumber' => $customer->getBilling()->getPhone(),
             'externalCustomerMobilePhoneNumber' => '',
             'externalCustomerFaxNumber' => '',
-            'customerBirthdate' => $customer->getBirthday(),
+            'customerBirthdate' => $customerBirthday,
             'externalOrderNumber' => $order->getNumber(),
             'customerOrderNumber' => '',
             'isAnonymousCustomer' => false,
