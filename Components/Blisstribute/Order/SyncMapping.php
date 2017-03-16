@@ -152,6 +152,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $order = $this->getModelEntity()->getOrder();
         $customer = $order->getCustomer();
         $billingAddress = $order->getBilling();
+		$orderShipLock = false;
 
         $orderRemark = array();
         if (trim($order->getCustomerComment()) != '') {
@@ -165,6 +166,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         if ($order->getPaymentStatus()->getId() == 21) {
             $orderRemark[] = 'Zahlung prüfen - Shopware Zahlungshinweis';
         }
+		
+		if (!empty($orderRemark)) {
+			$orderShipLock = true;
+		}
 
         // todo change to config decision
 //        $customerNumber = $customer->getBilling()->getNumber();
@@ -192,7 +197,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'customerOrderNumber' => '',
             'isAnonymousCustomer' => false,
             'orderDate' => $order->getOrderTime()->format('Y-m-d H:i:s'),
-            'orderShipLock' => false,
+            'orderShipLock' => $orderShipLock,
             'orderCurrency' => $order->getCurrency(),
             'orderRemark' => implode(' - ', $orderRemark),
             'isB2BOrder' => $isB2BOrder,
