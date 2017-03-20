@@ -429,7 +429,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             return $this->_loadImage($mediaId);
         }
 
-        $sql = 'SELECT mediaId FROM s_articles_img WHERE id = :parentId';
+        $sql = 'SELECT media_id FROM s_articles_img WHERE id = :parentId';
         $mediaId = (int)Shopware()->Db()->fetchOne($sql, array('parentId' => (int)$parentId));
 
         return $this->_loadImage($mediaId);
