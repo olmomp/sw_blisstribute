@@ -387,27 +387,14 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
         $mediaService = Shopware()->Container()->get('shopware_media.media_service');
         /** @var \Shopware\Models\Article\Image[] $imageCollection */
-        $imageCollection = $articleDetail->getImages();
-
-        $image = null;
-        foreach ($imageCollection as $currentImage) {
-            if ($currentImage->getMedia() != null) {
-                $image = $currentImage;
-            }
-        }
-
-        if (count($imageCollection) == 0 || $image == null) {
-            $this->logDebug('articleSyncMapping::got detail image collection ' . count($imageCollection));
-            $imageCollection = $articleDetail->getArticle()->getImages();
-            $this->logDebug('articleSyncMapping::got article image collection ' . count($imageCollection));
-        }
-
+        $imageCollection = $articleDetail->getArticle()->getImages();
         if (count($imageCollection) == 0) {
             return null;
         }
 
+        $image = null;
         foreach ($imageCollection as $currentImage) {
-            if ($currentImage->getMedia() != null) {
+            if ($currentImage->getMedia() != null && $currentImage->getArticleDetail()->getId() == $articleDetail->getId()) {
                 $image = $currentImage;
                 break;
             }
