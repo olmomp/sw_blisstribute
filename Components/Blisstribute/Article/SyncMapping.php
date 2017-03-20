@@ -397,35 +397,38 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         if (count($imageCollection) == 0 || $image == null) {
-            $this->logDebug('articleSyncMapping::got article collection ' . count($imageCollection));
+            $this->logDebug('articleSyncMapping::got detail image collection ' . count($imageCollection));
             $imageCollection = $articleDetail->getArticle()->getImages();
+            $this->logDebug('articleSyncMapping::got article image collection ' . count($imageCollection));
         }
 
-        if (count($imageCollection) > 0) {
-            foreach ($imageCollection as $currentImage) {
-                if ($currentImage->getMedia() != null) {
-                    $image = $currentImage;
-                    break;
-                }
+        if (count($imageCollection) == 0) {
+            return null;
+        }
+
+        foreach ($imageCollection as $currentImage) {
+            if ($currentImage->getMedia() != null) {
+                $image = $currentImage;
+                break;
             }
+        }
 
-            if ($image != null) {
-                // sync thumbnails?
-                /*$thumbnailSizeCollection = $image->getMedia()->getDefaultThumbnails();
-                if (count($thumbnailSizeCollection) > 0) {
-                    $thumbnailSize = implode('x', $thumbnailSizeCollection[0]);
-                    $thumbnail = $image->getMedia()->getThumbnailFilePaths()[$thumbnailSize];
+        if ($image != null) {
+            // sync thumbnails?
+            /*$thumbnailSizeCollection = $image->getMedia()->getDefaultThumbnails();
+            if (count($thumbnailSizeCollection) > 0) {
+                $thumbnailSize = implode('x', $thumbnailSizeCollection[0]);
+                $thumbnail = $image->getMedia()->getThumbnailFilePaths()[$thumbnailSize];
 
-                    if ($mediaService->has($thumbnail)) {
-                        $imageUrl = $mediaService->getUrl($thumbnail);
-                        $this->logInfo($imageUrl);
-                    }
-                }*/
-
-                if ($mediaService->has('media/image/' . $image->getMedia()->getFileName())) {
-                    $imageUrl = $mediaService->getUrl('media/image/' . $image->getMedia()->getFileName());
+                if ($mediaService->has($thumbnail)) {
+                    $imageUrl = $mediaService->getUrl($thumbnail);
                     $this->logInfo($imageUrl);
                 }
+            }*/
+
+            if ($mediaService->has('media/image/' . $image->getMedia()->getFileName())) {
+                $imageUrl = $mediaService->getUrl('media/image/' . $image->getMedia()->getFileName());
+                $this->logInfo($imageUrl);
             }
         }
 
