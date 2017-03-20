@@ -383,11 +383,15 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function getImageUrl(Detail $articleDetail)
     {
+        /** @var \Shopware\Components\Api\Resource\Variant $variantResource */
+        $variantResource = Shopware\Components\Api\Manager::getResource('Variant');
+        $detail = $variantResource->getOne($articleDetail->getId());
+
         $imageUrl = '';
         /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
         $mediaService = Shopware()->Container()->get('shopware_media.media_service');
         /** @var \Shopware\Models\Article\Image[] $imageCollection */
-        $imageCollection = $articleDetail->getArticle()->getImages();
+        $imageCollection = $detail->getImages();
         if (count($imageCollection) == 0) {
             return null;
         }
@@ -397,14 +401,12 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $image = null;
         foreach ($imageCollection as $currentImage) {
 
-            if ($currentImage->getMedia() == null || $currentImage->getArticleDetail() == null) {
+            if ($currentImage->getMedia() == null) {
                 continue;
             }
 
-            if ($currentImage->getArticleDetail()->getId() == $articleDetail->getId()) {
-                $image = $currentImage;
-                break;
-            }
+            $image = $currentImage;
+            break;
         }
 
         if ($image != null) {
