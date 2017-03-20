@@ -233,11 +233,6 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                     throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('order aborted');
                 }
 
-                if ($order->getOrderStatus()->getId() == 21 || $order->getPaymentStatus()->getId() == 21) {
-                    $this->logMessage('order inspection necessary', __FUNCTION__, Logger::ERROR);
-                    throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('order inspection necessary');
-                }
-
                 return true;
                 break;
 
@@ -252,11 +247,6 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                     $modelManager->flush();
 
                     throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('order aborted');
-                }
-
-                if ($order->getOrderStatus()->getId() == 21 || $order->getPaymentStatus()->getId() == 21) {
-                    $this->logMessage('order inspection necessary', __FUNCTION__, Logger::ERROR);
-                    throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('order inspection necessary');
                 }
 
                 return true;
