@@ -377,6 +377,26 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         );
     }
 
+    protected function _loadImage($mediaId)
+    {
+        /** @var \Shopware\Components\Api\Resource\Media $mediaResource */
+        $mediaResource = Shopware\Components\Api\Manager::getResource('Media');
+        return $mediaResource->getOne($mediaId);
+    }
+
+    protected function _getAbsoluteImageUrl($imageName)
+    {
+        $mediaService = Shopware()->Container()->get('shopware_media.media_service');
+        if (!$mediaService->has('media/image/' . $imageName)) {
+            $this->logWarn('articleSyncMapping::getImageUrl::could not locate article media by name ' . $imageName);
+            return '';
+        }
+
+        $imageUrl = $mediaService->getUrl('media/image/' . $imageName);
+        $this->logInfo('articleSyncMapping::getImageUrl::got image url ' . $imageUrl);
+        return $imageUrl;
+    }
+
     /**
      * @param Detail $articleDetail
      * @return string
@@ -387,48 +407,45 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $variantResource = Shopware\Components\Api\Manager::getResource('Variant');
         $detail = $variantResource->getOne($articleDetail->getId());
 
-        $imageUrl = '';
-        /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
-        $mediaService = Shopware()->Container()->get('shopware_media.media_service');
-        /** @var \Shopware\Models\Article\Image[] $imageCollection */
-        $imageCollection = $detail->getImages();
+        $imageCollection = $detail['images'];
         if (count($imageCollection) == 0) {
             return null;
         }
 
-        $this->logDebug('articleSyncMapping::getImageUrl::got image collection ' . count($imageCollection));
-
-        $image = null;
-        foreach ($imageCollection as $currentImage) {
-
-            if ($currentImage->getMedia() == null) {
+        $mediaId = 0;
+        $parentId = 0;
+        foreach ($imageCollection as $currentImageData) {
+            if ((int)$currentImageData['mediaId'] == 0) {
                 continue;
             }
 
-            $image = $currentImage;
+            $mediaId = (int)$currentImageData['mediaId'];
             break;
         }
 
-        if ($image != null) {
-            // sync thumbnails?
-            /*$thumbnailSizeCollection = $image->getMedia()->getDefaultThumbnails();
-            if (count($thumbnailSizeCollection) > 0) {
-                $thumbnailSize = implode('x', $thumbnailSizeCollection[0]);
-                $thumbnail = $image->getMedia()->getThumbnailFilePaths()[$thumbnailSize];
-
-                if ($mediaService->has($thumbnail)) {
-                    $imageUrl = $mediaService->getUrl($thumbnail);
-                    $this->logInfo($imageUrl);
-                }
-            }*/
-
-            if ($mediaService->has('media/image/' . $image->getMedia()->getFileName())) {
-                $imageUrl = $mediaService->getUrl('media/image/' . $image->getMedia()->getFileName());
-                $this->logInfo($imageUrl);
-            }
+        if ($mediaId == 0) {
+            $parentId = (int)$imageCollection[0]['parentId'];
         }
 
-        return $imageUrl;
+        if ($parentId == 0) {
+            return '';
+        }
+
+        if ($mediaId != 0) {
+            $image = $this->_loadImage($mediaId);
+            $this->logInfo('articleSyncMapping::getImageUrl::got media path ' . json_encode($image));
+
+            return trim($image['path']);
+        }
+
+        $sql = 'SELECT img FROM s_articles_img WHERE id = :parentId';
+        $res = Shopware()->Db()->fetchOne($sql, array('parentId' => (int)$parentId));
+
+        if (trim($res) == '') {
+            return '';
+        }
+
+        return $this->_getAbsoluteImageUrl($res);
     }
 
     /**
