@@ -1569,10 +1569,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $blisstributeOrderRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $blisstributeOrderRepository->findByOrder($order);
         if ($blisstributeOrder === null) {
+		$status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_CREATION_PENDING;
+			
+		if (!$this->get('config')->get('blisstribute-auto-sync-order')) {
+			$status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_NONE;
+		}
+		
             $blisstributeOrder = new \Shopware\CustomModels\Blisstribute\BlisstributeOrder();
             $blisstributeOrder->setLastCronAt(new DateTime())
                 ->setOrder($order)
-                ->setStatus(\Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_CREATION_PENDING)
+		->setStatus($status)
                 ->setTries(0);
 
             $modelManager->persist($blisstributeOrder);
