@@ -392,9 +392,16 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             return null;
         }
 
+        $this->logDebug('articleSyncMapping::getImageUrl::got image collection ' . count($imageCollection));
+
         $image = null;
         foreach ($imageCollection as $currentImage) {
-            if ($currentImage->getMedia() != null && $currentImage->getArticleDetail()->getId() == $articleDetail->getId()) {
+
+            if ($currentImage->getMedia() == null || $currentImage->getArticleDetail() == null) {
+                continue;
+            }
+
+            if ($currentImage->getArticleDetail()->getId() == $articleDetail->getId()) {
                 $image = $currentImage;
                 break;
             }
