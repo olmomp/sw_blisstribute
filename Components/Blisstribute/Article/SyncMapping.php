@@ -377,24 +377,18 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         );
     }
 
+    /**
+     * @param int $mediaId
+     * @return string
+     */
     protected function _loadImage($mediaId)
     {
         /** @var \Shopware\Components\Api\Resource\Media $mediaResource */
         $mediaResource = Shopware\Components\Api\Manager::getResource('Media');
-        return $mediaResource->getOne($mediaId);
-    }
+        $media = $mediaResource->getOne($mediaId);
+        $this->logDebug('articleSyncMapping::_loadImage::got media data ' . json_encode($media));
 
-    protected function _getAbsoluteImageUrl($imageName)
-    {
-        $mediaService = Shopware()->Container()->get('shopware_media.media_service');
-        if (!$mediaService->has('media/image/' . $imageName)) {
-            $this->logWarn('articleSyncMapping::getImageUrl::could not locate article media by name ' . $imageName);
-            return '';
-        }
-
-        $imageUrl = $mediaService->getUrl('media/image/' . $imageName);
-        $this->logInfo('articleSyncMapping::getImageUrl::got image url ' . $imageUrl);
-        return $imageUrl;
+        return trim($media['path']);
     }
 
     /**
@@ -432,20 +426,13 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         if ($mediaId != 0) {
-            $image = $this->_loadImage($mediaId);
-            $this->logInfo('articleSyncMapping::getImageUrl::got media path ' . json_encode($image));
-
-            return trim($image['path']);
+            return $this->_loadImage($mediaId);
         }
 
-        $sql = 'SELECT img FROM s_articles_img WHERE id = :parentId';
-        $res = Shopware()->Db()->fetchOne($sql, array('parentId' => (int)$parentId));
+        $sql = 'SELECT mediaId FROM s_articles_img WHERE id = :parentId';
+        $mediaId = (int)Shopware()->Db()->fetchOne($sql, array('parentId' => (int)$parentId));
 
-        if (trim($res) == '') {
-            return '';
-        }
-
-        return $this->_getAbsoluteImageUrl($res);
+        return $this->_loadImage($mediaId);
     }
 
     /**
