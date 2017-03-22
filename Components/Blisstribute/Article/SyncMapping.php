@@ -267,7 +267,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $priceCollection = $articleDetail->getPrices()->toArray();
         foreach ($priceCollection as $currentPrice) {
             if ($currentPrice->getTo() != 'beliebig'
-                || !$currentPrice->getCustomerGroup()->getTaxInput()
+                or !$currentPrice->getCustomerGroup()->getTaxInput() or $currentPrice->getCustomerGroup()->getKey() != 'EK' 
             ) {
                 continue;
             }
@@ -283,14 +283,20 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $isSpecialPrice = false;
         $mappedPriceCollection = array();
         if ($price->getPseudoPrice() > 0 && $price->getPseudoPrice() > $price->getPrice()) {
-            $isSpecialPrice = true;
+            	$isSpecialPrice = true;
 
-            $mappedPriceCollection[] = $this->formatPricesFromNetToGross(
-                $price->getPseudoPrice(),
-                $articleDetail->getArticle()->getTax(),
-                false
+            	$mappedPriceCollection[] = $this->formatPricesFromNetToGross(
+                	$price->getPseudoPrice(),
+                	$articleDetail->getArticle()->getTax(),
+                	false
             );
-        }
+        } else {
+		$mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
+			$price->getPrice(),
+			$articleDetail->getArticle()->getTax(),
+			true
+		);
+	}
 
         $mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
             $price->getPrice(),
