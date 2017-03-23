@@ -1768,25 +1768,21 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         try {
             $defaultTableData = array(
-                'Shopware\CustomModels\Blisstribute\BlisstributeArticle' =>
                     "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
                     . "s_article_id, trigger_deleted, trigger_sync, tries, comment) SELECT CURRENT_TIMESTAMP, "
                     . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a",
-                'Shopware\CustomModels\Blisstribute\BlisstributeArticleType' =>
                     "INSERT IGNORE INTO s_plugin_blisstribute_article_type (created_at, modified_at, s_filter_id, "
                     . "article_type) SELECT CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, id, 4 FROM s_filter",
-                'Shopware\CustomModels\Blisstribute\BlisstributeShipment' =>
                     "INSERT IGNORE INTO s_plugin_blisstribute_shipment (mapping_class_name, s_premium_dispatch_id) "
                     . "SELECT NULL, pd.id FROM s_premium_dispatch AS pd",
-                'Shopware\CustomModels\Blisstribute\BlisstributePayment' =>
                     "INSERT IGNORE INTO s_plugin_blisstribute_payment (mapping_class_name, flag_payed, "
                     . "s_core_paymentmeans_id) SELECT NULL, 0, cp.id FROM s_core_paymentmeans AS cp",
-                'Shopware\CustomModels\Blisstribute\BlisstributeShop' =>
                     "INSERT IGNORE INTO s_plugin_blisstribute_shop (s_shop_id, advertising_medium_code) "
                     . "SELECT s.id, '' FROM s_core_shops AS s",
-                'Shopware\CustomModels\Blisstribute\BlisstributeCoupon' =>
                     "INSERT IGNORE INTO s_plugin_blisstribute_coupon (s_voucher_id, flag_money_voucher) "
                     . "SELECT v.id, 0 FROM s_emarketing_vouchers AS v",
+                    "DELETE FROM s_plugin_blisstribute_payment WHERE s_core_paymentmeans_id NOT IN (SELECT id FROM s_core_paymentmeans)",
+                    "DELETE FROM s_plugin_blisstribute_shipment WHERE s_premium_dispatch_id NOT IN (SELECT id FROM s_premium_dispatch)",
             );
 
             foreach ($defaultTableData as $currentDataSet) {
