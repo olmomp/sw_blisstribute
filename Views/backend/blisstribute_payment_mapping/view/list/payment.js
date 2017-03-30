@@ -24,6 +24,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameBill: '{s name=blisstribute/paymentBill}Rechnung (Eigene Abwicklung){/s}',
         classNamePayolution: '{s name=blisstribute/paymentPayolution}Rechnung (Payolution){/s}',
         classNamePayolutionInstallment: '{s name=blisstribute/paymentPayolutionInstallment}Ratenkauf (Payolution){/s}',
+        classNamePayolutionELV: '{s name=blisstribute/paymentPayolutionELV}ELV (Payolution){/s}',
         classNameHeidelpayCreditCard: '{s name=blisstribute/paymentHeidelpayCreditCard}Kreditkarte (Heidelpay){/s}',
 		classNameHeidelpaySofort: '{s name=blisstribute/paymentHeidelpaySofort}Sofortueberweisung (Heidelpay){/s}',
 		classNameHeidelpayIdeal: '{s name=blisstribute/paymentHeidelpayIdeal}iDEAL (Heidelpay){/s}',
@@ -97,6 +98,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                             case 'Payolution':
                                 return me.snippets.classNamePayolution;
 
+                            case 'PayolutionELV':
+                                return me.snippets.classNamePayolutionELV;
+
                             case 'PayolutionInstallment':
                                 return me.snippets.classNamePayolutionInstallment;
 
@@ -149,6 +153,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['PayPal', me.snippets.classNamePayPal],
                                 ['Bill', me.snippets.classNameBill],
                                 ['Payolution', me.snippets.classNamePayolution],
+                                ['PayolutionELV', me.snippets.classNamePayolutionELV],
                                 ['PayolutionInstallment', me.snippets.classNamePayolutionInstallment],
                                 ['Sofort', me.snippets.classNameSofort],
                                 ['HeidelpayCreditCard', me.snippets.classNameHeidelpayCreditCard],
