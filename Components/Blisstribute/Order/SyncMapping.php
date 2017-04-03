@@ -63,6 +63,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     private $container = null;
 
+    protected function getConfig()
+    {
+        return Shopware()->get('config');
+    }
+
     /**
      * get blisstribute shipment mapping database repository
      *
@@ -152,11 +157,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $order = $this->getModelEntity()->getOrder();
         $customer = $order->getCustomer();
         $billingAddress = $order->getBilling();
-		$orderShipLock = false;
+
+        $orderShipLock = false;
+        $orderHold = false;
 
         $orderRemark = array();
         if (trim($order->getCustomerComment()) != '') {
             $orderRemark[] = trim($order->getCustomerComment());
+            $orderHold = true;
         }
 
         if ($order->getOrderStatus()->getId() == 8) {
@@ -166,25 +174,31 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         if ($order->getPaymentStatus()->getId() == 21) {
             $orderRemark[] = 'Zahlung prüfen - Shopware Zahlungshinweis';
         }
-		
-		if (!empty($orderRemark)) {
-			$orderShipLock = true;
-		}
+
+        if ($this->getConfig()->get('blisstribute-auto-hold-order')) {
+            $this->logDebug('orderSyncMapping::buildBasicOrderData::blisstribute auto hold order enabled.');
+            $orderHold = true;
+        }
+
+        if ($this->getConfig()->get('blisstribute-auto-lock-order')) {
+            $this->logDebug('orderSyncMapping::buildBasicOrderData::blisstribute auto lock order enabled.');
+            $orderShipLock = true;
+        }
 
         // todo change to config decision
-//        $customerNumber = $customer->getBilling()->getNumber();
+        // $customerNumber = $customer->getBilling()->getNumber();
         $customerNumber = $customer->getEmail();
 
         $isB2BOrder = false;
         if (trim($billingAddress->getCompany()) != '') {
             $isB2BOrder = true;
         }
-		
-		if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
-			$customerBirthday = $customer->getBirthday();
-		} else {
-			$customerBirthday = $customer->getBilling()->getBirthday();
-		}
+        
+        if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
+            $customerBirthday = $customer->getBirthday();
+        } else {
+            $customerBirthday = $customer->getBilling()->getBirthday();
+        }
 
         return array(
             'externalCustomerNumber' => $customerNumber,
@@ -198,6 +212,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'isAnonymousCustomer' => false,
             'orderDate' => $order->getOrderTime()->format('Y-m-d H:i:s'),
             'orderShipLock' => $orderShipLock,
+            'orderHold' => $orderHold,
             'orderCurrency' => $order->getCurrency(),
             'orderRemark' => implode(' - ', $orderRemark),
             'isB2BOrder' => $isB2BOrder,

@@ -1927,6 +1927,28 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         );
 
         $form->setElement(
+            'checkbox',
+            'blisstribute-auto-hold-order',
+            array(
+                'label' => 'Bestellung in Blisstribute anhalten',
+                'description' => 'Wenn aktiviert, wird die Bestellung sofort nach der Übertragung zu Blisstribute angehalten',
+                'maxLength' => 255,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+
+        $form->setElement(
+            'checkbox',
+            'blisstribute-auto-lock-order',
+            array(
+                'label' => 'Bestellung in Blisstribute sperren',
+                'description' => 'Wenn aktiviert, wird die Bestellung sofort nach der Übertragung zu Blisstribute gesperrt',
+                'maxLength' => 255,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+
+        $form->setElement(
             'text',
             'blisstribute-default-advertising-medium',
             array(
