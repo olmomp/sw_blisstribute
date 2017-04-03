@@ -65,7 +65,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     protected function getConfig()
     {
-        return Shopware()->get('config');
+        return $this->container->get('config');
     }
 
     /**
