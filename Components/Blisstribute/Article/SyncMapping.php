@@ -409,6 +409,13 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         $imageCollection = $detail['images'];
         if (count($imageCollection) == 0) {
+		$sql = 'SELECT media_id FROM s_articles_img WHERE articleID = :articleId AND main = 1 AND media_id IS NOT NULL';
+        	$mediaId = (int)Shopware()->Db()->fetchOne($sql, array('articleId' => (int)$articleDetail->getArticle()->getId()));
+			
+		if ($mediaId) {
+			return $this->_loadImage($mediaId);
+		}
+			
             return null;
         }
 
