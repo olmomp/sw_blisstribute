@@ -178,11 +178,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         if ($this->getConfig()->get('blisstribute-auto-hold-order')) {
             $this->logDebug('orderSyncMapping::buildBasicOrderData::blisstribute auto hold order enabled.');
             $orderHold = true;
+            $orderRemark[] = 'SWP - Bestellung angehalten.';
         }
 
         if ($this->getConfig()->get('blisstribute-auto-lock-order')) {
             $this->logDebug('orderSyncMapping::buildBasicOrderData::blisstribute auto lock order enabled.');
             $orderShipLock = true;
+            $orderRemark[] = 'SWP - Bestellung gesperrt.';
         }
 
         // todo change to config decision
