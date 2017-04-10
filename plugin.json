@@ -8,10 +8,11 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.5.4",
+    "currentVersion": "0.5.5",
 
     "changelog": {
         "de": {
+            "0.5.5": "Blisstribute article listing search fixed",
             "0.5.4": "Configurable Order Ship-Lock / Order Hold",
             "0.5.3": "Payolution ELV",
             "0.5.2": "Order mapping lock reset",
