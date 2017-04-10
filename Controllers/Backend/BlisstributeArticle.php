@@ -98,11 +98,11 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
      */
     protected function getFilterConditions($filters, $model, $alias, $whiteList = array())
     {
-        $conditionCollection = parent::getFilterConditions($filters, $model, $alias, $whiteList);
         if (count($filters) == 0) {
-            return $conditionCollection;
+            return array();
         }
 
+        $conditionCollection = array();
         $conditionCollection[] = array(
             'property' => 'attribute.blisstributeVhsNumber',
             'operator' => 'OR',
@@ -117,6 +117,12 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
 
         $conditionCollection[] = array(
             'property' => 'mainDetail.ean',
+            'operator' => 'OR',
+            'value' => '%' . $filters[0]['value'] . '%'
+        );
+
+        $conditionCollection[] = array(
+            'property' => 'article.name',
             'operator' => 'OR',
             'value' => '%' . $filters[0]['value'] . '%'
         );
