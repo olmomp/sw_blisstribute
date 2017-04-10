@@ -98,34 +98,30 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
      */
     protected function getFilterConditions($filters, $model, $alias, $whiteList = array())
     {
-        $conditions = parent::getFilterConditions($filters, $model, $alias, $whiteList);
-
-        foreach ($filters as $condition) {
-            if ($condition['property'] === 'name' || $condition['property'] === 'number') {
-                // check if the developer limited the filterable fields and the passed property defined in the filter fields parameter.
-                if (!empty($whiteList) && !in_array($condition['property'], $whiteList)) {
-                    continue;
-                }
-
-                if ($condition['property'] === 'name') {
-                    $fields = $this->getModelFields('\Shopware\Models\Article\Article', 'base_article');
-                } else {
-                    $fields = $this->getModelFields('\Shopware\Models\Article\Detail', 'detail');
-                }
-
-                $field = $fields[$condition['property']];
-                $value = $this->formatSearchValue($condition['value'], $field);
-
-                $conditions[] = array(
-                    'property' => $field['alias'],
-                    'operator' => $condition['operator'],
-                    'value' => $value,
-                    'expression' => $condition['expression']
-                );
-            }
+        $conditionCollection = parent::getFilterConditions($filters, $model, $alias, $whiteList);
+        if (count($filters) == 0) {
+            return $conditionCollection;
         }
 
-        return $conditions;
+        $conditionCollection[] = array(
+            'property' => 'attribute.blisstributeVhsNumber',
+            'operator' => 'OR',
+            'value' => '%' . $filters[0]['value'] . '%'
+        );
+
+        $conditionCollection[] = array(
+            'property' => 'mainDetail.number',
+            'operator' => 'OR',
+            'value' => '%' . $filters[0]['value'] . '%'
+        );
+
+        $conditionCollection[] = array(
+            'property' => 'mainDetail.ean',
+            'operator' => 'OR',
+            'value' => '%' . $filters[0]['value'] . '%'
+        );
+
+        return $conditionCollection;
     }
 
     /**
