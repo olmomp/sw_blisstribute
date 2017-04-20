@@ -389,12 +389,16 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function _loadImage($mediaId)
     {
-        /** @var \Shopware\Components\Api\Resource\Media $mediaResource */
-        $mediaResource = Shopware\Components\Api\Manager::getResource('Media');
-        $media = $mediaResource->getOne($mediaId);
-        $this->logDebug('articleSyncMapping::_loadImage::got media data ' . json_encode($media));
+        try {
+            /** @var \Shopware\Components\Api\Resource\Media $mediaResource */
+            $mediaResource = Shopware\Components\Api\Manager::getResource('Media');
+            $media = $mediaResource->getOne($mediaId);
+            $this->logDebug('articleSyncMapping::_loadImage::got media data ' . json_encode($media));
 
-        return trim($media['path']);
+            return trim($media['path']);
+        } catch (Exception $ex) {
+            return null;
+        }
     }
 
     /**

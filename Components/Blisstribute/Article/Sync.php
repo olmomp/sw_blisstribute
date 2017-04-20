@@ -244,7 +244,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
             }
         } catch (Shopware_Components_Blisstribute_Exception_ArticleNotChangedException $ex) {
             $this->logMessage(
-                'article not changed::' . $blisstributeArticle->getMainDetail()->getNumber(),
+                'article not changed::' . $ex->getMessage(),
                 __FUNCTION__,
                 Logger::ERROR
             );
@@ -254,6 +254,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
             $result = false;
             $this->setLastError('Der Artikel weißt keine Änderungen auf.');
         } catch (Exception $ex) {
+            $this->logMessage($ex->getMessage() . $ex->getTraceAsString(), __FUNCTION__, Logger::ERROR);
             $this->logMessage('exception occured::' . $ex->getMessage(), __FUNCTION__, Logger::ERROR);
 
             $blisstributeArticle->setTries($blisstributeArticle->getTries() + 1)
