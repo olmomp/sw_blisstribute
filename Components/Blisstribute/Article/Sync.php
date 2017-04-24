@@ -371,12 +371,11 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
             $this->logDebug('start processing confirmation data set ' . json_encode($currentConfirmationData));
 
             $sql = 'UPDATE s_articles_attributes SET blisstribute_vhs_number = :vhsArticleNumber WHERE articledetailsID = (
-              SELECT id from s_articles_details WHERE ordernumber = :articleNumber OR ean = :ean
+              SELECT id from s_articles_details WHERE ordernumber = :articleNumber
             )';
             Shopware()->Db()->query($sql, array(
                 'vhsArticleNumber' => trim($currentConfirmationData['erpArticleNumber']),
-                'articleNumber' => trim($currentConfirmationData['articleNumber']),
-                'ean' => trim($currentConfirmationData['ean13'])
+                'articleNumber' => trim($currentConfirmationData['articleNumber'])
             ));
 
             $this->logDebug('processing done for vhs article number ' . trim($currentConfirmationData['erpArticleNumber']));
