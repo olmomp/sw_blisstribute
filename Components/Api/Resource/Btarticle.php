@@ -207,6 +207,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
                 $currentNewDetail->setKind(1);
                 $this->getManager()->persist($currentNewDetail);
                 $article->setMainDetail($currentNewDetail);
+                break;
             }
         }
 
