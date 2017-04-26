@@ -4,6 +4,7 @@ namespace Shopware\Components\Api\Resource;
 
 use Shopware\Components\Api\Exception as ApiException;
 use Shopware\Components\Api\BatchInterface;
+use Shopware\Models\Article\Detail;
 use Shopware\Models\Article\Price;
 
 /**
@@ -182,6 +183,25 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $violations = $this->getManager()->validate($detail);
         if ($violations->count() > 0) {
             throw new ApiException\ValidationException($violations);
+        }
+
+        if ($detail->getKind() == 1 && $detail->getActive() == 0) {
+            $detail->setKind(2);
+
+            /** @var Detail $currentNewDetail */
+            foreach ($article->getDetails() as $currentNewDetail) {
+                if (!$currentNewDetail->getActive()) {
+                    continue;
+                }
+
+                if ($currentNewDetail->getInStock() == 0) {
+                    continue;
+                }
+
+                $currentNewDetail->setKind(1);
+                $this->getManager()->persist($currentNewDetail);
+                $article->setMainDetail($currentNewDetail);
+            }
         }
 
         $this->getManager()->persist($detail);
