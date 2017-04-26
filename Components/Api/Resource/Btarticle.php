@@ -5,7 +5,9 @@ namespace Shopware\Components\Api\Resource;
 use Shopware\Components\Api\Exception as ApiException;
 use Shopware\Components\Api\BatchInterface;
 use Shopware\Models\Article\Detail;
-use Shopware\Models\Article\Price;
+use Shopware_Components_Blisstribute_Domain_LoggerTrait;
+
+require_once __DIR__ . '/../../Blisstribute/Domain/LoggerTrait.php';
 
 /**
  * blisstribute custom api article extension resource
@@ -17,6 +19,8 @@ use Shopware\Models\Article\Price;
  */
 class Btarticle extends BtArticleResource implements BatchInterface
 {
+    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
+
     /**
      * @return \Shopware\Models\Article\Repository
      */
@@ -95,10 +99,12 @@ class Btarticle extends BtArticleResource implements BatchInterface
     public function update($detailId, array $params)
     {
         $this->checkPrivilege('update');
+        $this->logDebug('beginning update');
 
         if (empty($detailId)) {
             throw new ApiException\ParameterMissingException();
         }
+
 
         $builder = $this->getManager()->createQueryBuilder();
         $builder->select(array('detail', 'attribute'))
