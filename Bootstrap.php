@@ -140,22 +140,22 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function install()
     {
-		// check the current sw version
-		if (!$this->assertMinimumVersion('5.1')) {
-    		return array(
-				'success' => false,
-				'message' => 'Das Plugin benötigt mindestens Shopware 5.1.'
+        // check the current sw version
+        if (!$this->assertMinimumVersion('5.1')) {
+            return array(
+                'success' => false,
+                'message' => 'Das Plugin benötigt mindestens Shopware 5.1.'
             );
-    	}
-		
-		// check needed plugins
-		if (!$this->assertRequiredPluginsPresent(array('Cron'))) {
-			return array(
-				'success' => false,
-				'message' => 'Bitte installieren und aktivieren Sie das Shopware Cron-Plugin.'
+        }
+        
+        // check needed plugins
+        if (!$this->assertRequiredPluginsPresent(array('Cron'))) {
+            return array(
+                'success' => false,
+                'message' => 'Bitte installieren und aktivieren Sie das Shopware Cron-Plugin.'
             );
-		}    	
-		
+        }        
+        
         $this->logDebug('register cron jobs');
         $this->registerCronJobs();
         $this->logDebug('subscribe events');
@@ -373,8 +373,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     private function createAttributeCollection()
     {
         $modelManager = $this->get('models');
-		
-		$modelManager->addAttribute('s_articles_attributes', 'blisstribute', 'vhs_number', 'varchar(255)', true, 0);
+        
+        $modelManager->addAttribute('s_articles_attributes', 'blisstribute', 'vhs_number', 'varchar(255)', true, 0);
         $modelManager->addAttribute('s_articles_attributes', 'blisstribute', 'supplier_stock', 'int(11)', true, 0);
 
         $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'quantity_canceled', 'int(11)', true, 0);
@@ -382,10 +382,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'quantity_shipped', 'int(11)', true, 0);
         $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'date_changed', 'date', true, 0);
 
-		$modelManager->addAttribute('s_order_basket_attributes', 'blisstribute', 'swag_promotion_is_free_good', 'varchar(255)', true, 0);
-		$modelManager->addAttribute('s_order_basket_attributes', 'blisstribute', 'swag_is_free_good_by_promotion_id', 'varchar(255)', true, 0);
-		
-		$modelManager->generateAttributeModels(array('s_articles_attributes', 's_order_details_attributes', 's_order_basket_attributes'));       
+        $modelManager->addAttribute('s_order_basket_attributes', 'blisstribute', 'swag_promotion_is_free_good', 'varchar(255)', true, 0);
+        $modelManager->addAttribute('s_order_basket_attributes', 'blisstribute', 'swag_is_free_good_by_promotion_id', 'varchar(255)', true, 0);
+        
+        $modelManager->generateAttributeModels(array('s_articles_attributes', 's_order_details_attributes', 's_order_basket_attributes'));       
 
         $this->get('db')->query(
             "INSERT IGNORE INTO `s_core_engine_elements` (`groupID`, `type`, `label`, `required`, `position`, " .
@@ -931,10 +931,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($article);
         }
-		
-		if ($blisstributeArticle->isTriggerSync()) {
-			return;
-		}
+        
+        if ($blisstributeArticle->isTriggerSync()) {
+            return;
+        }
 
         $blisstributeArticle->setLastCronAt(new DateTime())
             ->setTriggerSync(true)
@@ -974,8 +974,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function postPersistDetail(Enlight_Event_EventArgs $args)
     {
-		$modelManager = $this->get('models');
-		
+        $modelManager = $this->get('models');
+        
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $args->get('entity');
 
@@ -986,10 +986,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($detail->getArticle());
         }
-		
-		if ($blisstributeArticle->isTriggerSync()) {
-			return;
-		}
+        
+        if ($blisstributeArticle->isTriggerSync()) {
+            return;
+        }
 
         $blisstributeArticle->setLastCronAt(new DateTime())
             ->setTriggerSync(true)
@@ -1021,17 +1021,17 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($detail->getArticle());
         }
-		
-		if ($blisstributeArticle->isTriggerSync()) {
-			return;
-		}
+        
+        if ($blisstributeArticle->isTriggerSync()) {
+            return;
+        }
 
         $blisstributeArticle->setLastCronAt(new DateTime())
             ->setTriggerSync(true)
             ->setTries(0)
             ->setComment(null);
 
-        $modelManager->persist($article);
+        $modelManager->persist($blisstributeArticle);
         $modelManager->flush();
     }
 
@@ -1569,16 +1569,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $blisstributeOrderRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $blisstributeOrderRepository->findByOrder($order);
         if ($blisstributeOrder === null) {
-		$status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_CREATION_PENDING;
-			
-		if (!$this->get('config')->get('blisstribute-auto-sync-order')) {
-			$status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_NONE;
-		}
-		
+        $status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_CREATION_PENDING;
+            
+        if (!$this->get('config')->get('blisstribute-auto-sync-order')) {
+            $status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_NONE;
+        }
+        
             $blisstributeOrder = new \Shopware\CustomModels\Blisstribute\BlisstributeOrder();
             $blisstributeOrder->setLastCronAt(new DateTime())
                 ->setOrder($order)
-		->setStatus($status)
+        ->setStatus($status)
                 ->setTries(0);
 
             $modelManager->persist($blisstributeOrder);
