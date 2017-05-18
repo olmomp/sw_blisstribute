@@ -461,13 +461,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function onAddConsoleCommand(Enlight_Event_EventArgs $args)
     {
-        $this->registerTemplateDir();
         $this->registerCustomModels();
         $this->registerNamespaces();
-        $this->registerSnippets();
 
-        $this->get('loader')->registerNamespace('Shopware\SwagPromotion', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/');
-        $this->get('loader')->registerNamespace('Shopware\Components', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Components/');
+        if (Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy([
+            'name' => 'SwagPromotion',
+            'active' => true
+        ])) {
+            $this->get('loader')->registerNamespace('Shopware\SwagPromotion', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/');
+            $this->get('loader')->registerNamespace('Shopware\Components', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Components/');
+        }
 
         return new ArrayCollection(array(
             new Shopware_Components_Blisstribute_Command_OrderExport()
