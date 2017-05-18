@@ -2,6 +2,7 @@
 
 require_once(__DIR__ . '/Components/Blisstribute/Domain/LoggerTrait.php');
 require_once(__DIR__ . '/Components/Blisstribute/Command/OrderExport.php');
+require_once(__DIR__ . '/Components/Blisstribute/Command/ArticleExport.php');
 
 use Doctrine\Common\Collections\ArrayCollection;
 use ShopwarePlugins\ExitBBlisstribute\Subscribers\CronSubscriber;
@@ -467,12 +468,14 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'name' => 'SwagPromotion',
             'active' => true
         ])) {
+            $this->get('loader')->registerNamespace('Shopware\CustomModels', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Models/');
             $this->get('loader')->registerNamespace('Shopware\SwagPromotion', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/');
             $this->get('loader')->registerNamespace('Shopware\Components', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Components/');
         }
 
         return new ArrayCollection(array(
-            new Shopware_Components_Blisstribute_Command_OrderExport()
+            new Shopware_Components_Blisstribute_Command_OrderExport(),
+            new Shopware_Components_Blisstribute_Command_ArticleExport()
         ));
     }
 

@@ -72,6 +72,21 @@ class BlisstributeArticleRepository extends ModelRepository
     }
 
     /**
+     * get all blisstribute articles for article id list
+     *
+     * @param int $articleId
+     *
+     * @return BlisstributeArticle
+     */
+    public function fetchByArticleId($articleId)
+    {
+        $builder = $this->createQueryBuilder('ba');
+        return $builder->where('ba.article = ' . (int)$articleId)
+            ->getQuery()
+            ->getOneOrNullResult(1);
+    }
+
+    /**
      * get list of articles to export to blisstribute
      *
      * @param \DateTime $exportDate

@@ -8,12 +8,13 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.5.9",
+    "currentVersion": "0.6.0",
 
     "changelog": {
         "de": {
-            "0.5.9": "Single Order Export CLI Command added",
-            "0.5.8": "Single Order Export CLI Command added",
+            "0.6.0": "Single Article Export CLI Command added",
+            "0.5.9": "Single Order Export CLI Command improved",
+            "0.5.8": "Single Order Export CLI Command improved",
             "0.5.7": "Single Order Export CLI Command added",
             "0.5.6": "Blisstribute article sync fix, main detail update if head variant goes offline",
             "0.5.5": "Blisstribute article listing search fixed",
