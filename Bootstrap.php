@@ -330,7 +330,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             }
         }
 
-        if (version_compare($version, '0.5.6', '<')) {
+        if (version_compare($version, '0.5.9', '<')) {
             $this->subscribeEvent('Shopware_Console_Add_Command', 'onAddConsoleCommand');
         }
 
