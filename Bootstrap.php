@@ -319,20 +319,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->subscribeEvent('Shopware\Models\Order\Order::postRemove', 'onModelsOrderOrderPostRemove');
         }
 
-        if (version_compare($version, '0.3.13', '<')) {
-            $this->registerCronJobs();
-            $this->subscribeEvent('Enlight_Controller_Front_StartDispatch', 'startDispatch');
-        }
-        
         if (version_compare($version, '0.3.15', '<')) {
             $paymentMappings = $this->get('db')->fetchAll("SELECT * FROM s_plugin_blisstribute_payment WHERE mapping_class_name != ''");
-                        
+
             foreach($paymentMappings as $paymentMapping)
             {
                 $paymentClassName = str_replace(' ', '', ucwords(str_replace('_', ' ', $paymentMapping['mapping_class_name'])));
-                
-                $this->get('db')->query("UPDATE s_plugin_blisstribute_payment SET mapping_class_name = ? WHERE id = ?", array($paymentClassName, $paymentMapping['id']));    
+
+                $this->get('db')->query("UPDATE s_plugin_blisstribute_payment SET mapping_class_name = ? WHERE id = ?", array($paymentClassName, $paymentMapping['id']));
             }
+        }
+
+        if (version_compare($version, '0.5.6', '<')) {
+            $this->subscribeEvent('Shopware_Console_Add_Command', 'onAddConsoleCommand');
         }
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy', 'config', 'frontend'));
