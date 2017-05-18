@@ -52,7 +52,6 @@ EOF
         $force = (bool)$input->getArgument('force');
 
         $output->writeln('<info>blisstribute order export started for order number ' . $orderNumber . '</info>');
-        $this->logDebug('test log');
 
         $modelManager = $this->container->get('models');
         $orderRepository = $modelManager->getRepository('Shopware\Models\Order\Order');
@@ -60,6 +59,7 @@ EOF
         /** @var \Shopware\Models\Order\Order $order */
         $order = $orderRepository->findOneBy(array('number' => $orderNumber));
         if ($order === null) {
+            $output->writeln('<error>buuuhuuhuuu.. could not load order. script terminated.</error>');
             return null;
         }
 
@@ -67,13 +67,10 @@ EOF
         $blisstributeOrderRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $blisstributeOrderRepository->findByOrder($order);
         if ($blisstributeOrder == null) {
-
-            $output->writeln('<error>buuuhuuhuuu.. could not load order. script terminated.</error>');
+            $output->writeln('<error>buuuhuuhuuu.. could not load blisstribute order. script terminated.</error>');
             return;
 
         }
-
-        $output->writeln('<info>blisstribute order found</info>');
 
         $orderSync = new Shopware_Components_Blisstribute_Order_Sync(
             $this->container->get('plugins')->Backend()->ExitBBlisstribute()->Config()
