@@ -78,7 +78,9 @@ EOF
         $orderSync = new Shopware_Components_Blisstribute_Order_Sync(
             $this->container->get('plugins')->Backend()->ExitBBlisstribute()->Config()
         );
-        $orderSync->processSingleOrderSync($blisstributeOrder, $force);
+        $result = $orderSync->processSingleOrderSync($blisstributeOrder, $force);
+
+        $output->writeln('<info>export result: ' . (int)$result . '</info>');
 
     }
 }
