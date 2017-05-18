@@ -62,8 +62,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     protected $voucherCollection = [];
 
     private $container = null;
-	
-	protected function getConfig()
+    
+    protected function getConfig()
     {
         return $this->container->get('config');
     }
@@ -136,6 +136,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $this->orderData['orderCoupons'] = $this->buildCouponData();
 
         $this->logDebug('buildBaseData done');
+        $this->logDebug('result::' . json_encode($this->orderData));
 
         return $this->orderData;
     }
@@ -692,26 +693,29 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $promoAmounts = [];
 
         if ($plugin) {
-			/** @var Detail $promotionItem */
-			foreach ($promotions as $promotionItem) {
-				/** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-				$promotion = $this->container->get('models')->getRepository('Shopware\CustomModels\SwagPromotion\Promotion')->findOneBy(['number' => $promotionItem->getArticleNumber()]);
+            /** @var Detail $promotionItem */
+            foreach ($promotions as $promotionItem) {
+                /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
+                $promotion = $this->container->get('models')->getRepository('Shopware\CustomModels\SwagPromotion\Promotion')->findOneBy(['number' => $promotionItem->getArticleNumber()]);
 
-				if (is_null($promotion)) {
-					continue;
-				}
+                if (is_null($promotion)) {
+                    continue;
+                }
 
-				$allPromotions[$promotion->getType()][] = $promotion;
-				$promoAmounts[$promotion->getType()][] = $promotionItem->getPrice();
-			}
-			
+                $allPromotions[$promotion->getType()][] = $promotion;
+                $promoAmounts[$promotion->getType()][] = $promotionItem->getPrice();
+            }
+            
             $products = $this->getProductContext($orderNumbers, $orderId);
 
             //First apply free product discount
-            $articleDataCollection = $this->applyFreeDiscount($allPromotions['product.freegoods'], $articleDataCollection);
+            if (array_key_exists('product.freegoods', $allPromotions)) {
+                $articleDataCollection = $this->applyFreeDiscount($allPromotions['product.freegoods'], $articleDataCollection);
+            }
 
-            //Apply buy X get Y free second
-            $articleDataCollection = $this->applyXYDiscount($allPromotions['product.buyxgetyfree'], $articleDataCollection, $products);
+            if (array_key_exists('product.buyxgetyfree', $allPromotions)) {
+                $articleDataCollection = $this->applyXYDiscount($allPromotions['product.buyxgetyfree'], $articleDataCollection, $products);
+            }
         }
 
         $articleDataCollection = $this->applyVouchers($articleDataCollection);
@@ -720,16 +724,24 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         if ($plugin) {
             //Apply product absolute discount
-            $articleDataCollection = $this->applyProductAbsoluteDiscount($allPromotions['product.absolute'], $articleDataCollection, $products);
+            if (array_key_exists('product.absolute', $allPromotions)) {
+                $articleDataCollection = $this->applyProductAbsoluteDiscount($allPromotions['product.absolute'], $articleDataCollection, $products);
+            }
 
             //Apply product percent discount
-            $articleDataCollection = $this->applyProductPercentDiscount($allPromotions['product.percentage'], $articleDataCollection, $products);
+            if (array_key_exists('product.percentage', $allPromotions)) {
+                $articleDataCollection = $this->applyProductPercentDiscount($allPromotions['product.percentage'], $articleDataCollection, $products);
+            }
 
             //Apply cart absolute discount
-            $articleDataCollection = $this->applyCartAbsoluteDiscount($allPromotions['basket.absolute'], $articleDataCollection);
+            if (array_key_exists('basket.absolute', $allPromotions)) {
+                $articleDataCollection = $this->applyCartAbsoluteDiscount($allPromotions['basket.absolute'], $articleDataCollection);
+            }
 
             //Apply cart percent discount, this discount must be handled in special way
-            $articleDataCollection = $this->applyCartPercentDiscount($allPromotions['basket.percentage'], $articleDataCollection, $promoAmounts['basket.percentage']);
+            if (array_key_exists('basket.percentage', $allPromotions)) {
+                $articleDataCollection = $this->applyCartPercentDiscount($allPromotions['basket.percentage'], $articleDataCollection, $promoAmounts['basket.percentage']);
+            }
         }
 
         return $articleDataCollection;
@@ -1020,11 +1032,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $weight = $product['price'] / $totalProductAmount;
 
-			$countedAmountToDiscountPerQuantity = (abs($shopwareDiscountsAmount) * $weight) / $product['promoQuantity'];
+            $countedAmountToDiscountPerQuantity = (abs($shopwareDiscountsAmount) * $weight) / $product['promoQuantity'];
 
             $product['discountTotal'] += $countedAmountToDiscountPerQuantity;
             $product['price'] -= $countedAmountToDiscountPerQuantity * $product['promoQuantity'];
-			$product['priceAmount'] -= $countedAmountToDiscountPerQuantity;
+            $product['priceAmount'] -= $countedAmountToDiscountPerQuantity;
         }
 
         return $articleDataCollection;
@@ -1056,14 +1068,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     $coeExcludeSupplier = $currentVoucher->getAttribute()->getCoeExcludeSupplier();
 
                     if ($coeExcludeSupplier != '') {
-						$coeExcludeSupplier = str_replace(',', '|', $coeExcludeSupplier);
-						$_coeExcludeSuppliers = explode('|', $coeExcludeSupplier);
-						
-						foreach ($_coeExcludeSuppliers as $_coeExcludeSupplier) {
-							if (!empty($_coeExcludeSupplier) && ctype_digit($_coeExcludeSupplier)) {
-								$coeExcludeSuppliers[] = $_coeExcludeSupplier;
-							}
-						}
+                        $coeExcludeSupplier = str_replace(',', '|', $coeExcludeSupplier);
+                        $_coeExcludeSuppliers = explode('|', $coeExcludeSupplier);
+                        
+                        foreach ($_coeExcludeSuppliers as $_coeExcludeSupplier) {
+                            if (!empty($_coeExcludeSupplier) && ctype_digit($_coeExcludeSupplier)) {
+                                $coeExcludeSuppliers[] = $_coeExcludeSupplier;
+                            }
+                        }
                     }
                 }
             }
@@ -1085,11 +1097,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'coeExcludeSuppliers' => $coeExcludeSuppliers,
                 'coeReducedArticle' => $coeReducedArticle,
             ];
-	
+    
             foreach ($articleDataCollection as $product) {
-				if ($this->isProductBlockedForVoucher($product, $currentVoucher, $vouchersData)) {
-					continue;
-				}
+                if ($this->isProductBlockedForVoucher($product, $currentVoucher, $vouchersData)) {
+                    continue;
+                }
 
                 $basketAmount += $product['originalPrice'];
                 $productBasket += $product['price'];
@@ -1110,10 +1122,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     2,
                     PHP_ROUND_HALF_DOWN
                 );
-				
-				$voucherDiscountPerQuantity = $voucherDiscount / $product['promoQuantity'];
+                
+                $voucherDiscountPerQuantity = $voucherDiscount / $product['promoQuantity'];
 
-				$product['priceAmount'] -= $voucherDiscountPerQuantity;
+                $product['priceAmount'] -= $voucherDiscountPerQuantity;
                 $product['price'] -= $voucherDiscountPerQuantity * $product['promoQuantity'];
                 $product['discountTotal'] += $voucherDiscountPerQuantity;
             }
@@ -1352,8 +1364,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     protected function calculateArticleDiscountForVoucher($product, Voucher $voucher, $vouchersData, $articlePrice, $articleDataCollection, $basketAmount, $productBasket)
     {        
         if ($this->isProductBlockedForVoucher($product, $voucher, $vouchersData)) {
-			return 0.00;
-		}
+            return 0.00;
+        }
 
         if ((bool) $voucher->getPercental()) {
             return $this->calculateDiscountForPercentVoucher($articlePrice, $voucher->getValue());
@@ -1365,10 +1377,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $voucher->getValue()
         );
     }
-	
-	
-	public function isProductBlockedForVoucher($product, Voucher $voucher, $vouchersData) {
-		if ($voucher == null) {
+    
+    
+    public function isProductBlockedForVoucher($product, Voucher $voucher, $vouchersData) {
+        if ($voucher == null) {
             return true;
         }
 
@@ -1412,9 +1424,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 }
             }
         }
-		
-		return false;
-	}
+        
+        return false;
+    }
 
     /***
      * @param array $articleDataCollection
@@ -1428,16 +1440,16 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $totalAmount = 0;
 
         //todo: use price or originalPrice?
-        foreach ($articleDataCollection as $product) {			
+        foreach ($articleDataCollection as $product) {            
             if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
                 continue;
             }
-			
-			if ($this->isProductBlockedForVoucher($product, $voucher, $vouchersData)) {
-				continue;
-			}
+            
+            if ($this->isProductBlockedForVoucher($product, $voucher, $vouchersData)) {
+                continue;
+            }
 
-			$totalAmount += $product['price'];
+            $totalAmount += $product['price'];
         }
 
         return $totalAmount;

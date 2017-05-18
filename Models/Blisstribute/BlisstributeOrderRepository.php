@@ -33,6 +33,27 @@ class BlisstributeOrderRepository extends ModelRepository
      */
     const PAGE_LIMIT = 50;
 
+
+    /**
+     * get blisstribute order mapping by order number
+     *
+     * @param string $orderNumber
+     *
+     * @return BlisstributeOrder
+     *
+     * @throws NonUniqueResultException
+     */
+    public function findByOrderNumber($orderNumber)
+    {
+        $blisstributeOrder = $this->createQueryBuilder('bo')
+            ->where('bo.order = :order')
+            ->setParameter('order.ordernumber', $orderNumber)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $blisstributeOrder;
+    }
+
     /**
      * get blisstribute order mapping by order
      *

@@ -1,7 +1,9 @@
 <?php
 
 require_once(__DIR__ . '/Components/Blisstribute/Domain/LoggerTrait.php');
+require_once(__DIR__ . '/Components/Blisstribute/Command/OrderExport.php');
 
+use Doctrine\Common\Collections\ArrayCollection;
 use ShopwarePlugins\ExitBBlisstribute\Subscribers\CronSubscriber;
 
 /**
@@ -452,12 +454,38 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     }
 
     /**
+     * add blisstribute cli commands
+     *
+     * @param Enlight_Event_EventArgs $args
+     * @return ArrayCollection
+     */
+    public function onAddConsoleCommand(Enlight_Event_EventArgs $args)
+    {
+        $this->registerTemplateDir();
+        $this->registerCustomModels();
+        $this->registerNamespaces();
+        $this->registerSnippets();
+
+        $this->get('loader')->registerNamespace('Shopware\SwagPromotion', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/');
+        $this->get('loader')->registerNamespace('Shopware\Components', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Components/');
+
+        return new ArrayCollection(array(
+            new Shopware_Components_Blisstribute_Command_OrderExport()
+        ));
+    }
+
+    /**
      * add event listener for blisstribute module
      *
      * @return void
      */
     private function subscribeEvents()
     {
+        $this->subscribeEvent(
+            'Shopware_Console_Add_Command',
+            'onAddConsoleCommand'
+        );
+
         $this->subscribeEvent(
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeArticle',
             'getArticleSyncController'

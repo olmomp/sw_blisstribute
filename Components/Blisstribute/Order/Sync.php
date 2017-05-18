@@ -74,20 +74,31 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
      * sync single order to blisstribute
      *
      * @param BlisstributeOrder $blisstributeOrder
+     * @param bool $force
      *
      * @return bool
      */
-    public function processSingleOrderSync(BlisstributeOrder $blisstributeOrder)
+    public function processSingleOrderSync(BlisstributeOrder $blisstributeOrder, $force = false)
     {
         try {
             $this->checkStatus($blisstributeOrder);
         } catch (Exception $ex) {
             $this->setLastError($ex->getMessage());
-            return false;
+
+            if (!$force) {
+                return false;
+            }
         }
 
         $this->taskName .= '::single::' . $blisstributeOrder->getId();
-        $this->lockTask();
+
+        try {
+            $this->lockTask();
+        } catch (Exception $ex) {
+            if (!$force) {
+                return false;
+            }
+        }
 
         $result = $this->processOrderSync($blisstributeOrder);
 
