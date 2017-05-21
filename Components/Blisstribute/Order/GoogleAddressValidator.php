@@ -28,26 +28,32 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
 
         foreach ($blackList as $currentBlackListItem) {
             if (preg_match('/' . $currentBlackListItem . '/i', $billingAddress->getStreet())) {
+                $this->logDebug('found packing station in billing address ' . $billingAddress->getStreet());
                 return true;
             }
 
             if (preg_match('/' . $currentBlackListItem . '/i', $billingAddress->getAdditionalAddressLine1())) {
+                $this->logDebug('found packing station in billing address address line 1' . $billingAddress->getAdditionalAddressLine1());
                 return true;
             }
 
             if (preg_match('/' . $currentBlackListItem . '/i', $billingAddress->getAdditionalAddressLine2())) {
+                $this->logDebug('found packing station in billing address address line 2' . $billingAddress->getAdditionalAddressLine2());
                 return true;
             }
 
             if (preg_match('/' . $currentBlackListItem . '/i', $shippingAddress->getStreet())) {
+                $this->logDebug('found packing station in delivery address ' . $shippingAddress->getStreet());
                 return true;
             }
 
             if (preg_match('/' . $currentBlackListItem . '/i', $shippingAddress->getAdditionalAddressLine1())) {
+                $this->logDebug('found packing station in delivery address address line 1' . $shippingAddress->getAdditionalAddressLine1());
                 return true;
             }
 
             if (preg_match('/' . $currentBlackListItem . '/i', $shippingAddress->getAdditionalAddressLine2())) {
+                $this->logDebug('found packing station in delivery address address line 2' . $shippingAddress->getAdditionalAddressLine2());
                 return true;
             }
         }
