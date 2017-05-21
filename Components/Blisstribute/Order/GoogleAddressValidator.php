@@ -20,6 +20,47 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
 
     }
 
+    private function _isPackingStation(\Shopware\Models\Order\Billing $billingAddress, \Shopware\Models\Order\Shipping $shippingAddress)
+    {
+        $blackList = array(
+            'pack', 'station', 'packstation', 'packing', 'packing station', 'packingstation'
+        );
+
+        foreach ($blackList as $currentBlackListItem) {
+            if (preg_match('/' . $currentBlackListItem . '/i', $billingAddress->getStreet())) {
+                return true;
+            }
+
+            if (preg_match('/' . $currentBlackListItem . '/i', $billingAddress->getAdditionalAddressLine1())) {
+                return true;
+            }
+
+            if (preg_match('/' . $currentBlackListItem . '/i', $billingAddress->getAdditionalAddressLine2())) {
+                return true;
+            }
+
+            if (preg_match('/' . $currentBlackListItem . '/i', $shippingAddress->getStreet())) {
+                return true;
+            }
+
+            if (preg_match('/' . $currentBlackListItem . '/i', $shippingAddress->getAdditionalAddressLine1())) {
+                return true;
+            }
+
+            if (preg_match('/' . $currentBlackListItem . '/i', $shippingAddress->getAdditionalAddressLine2())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param BlisstributeOrder $blisstributeOrder
+     * @param mixed $config
+     *
+     * @return bool
+     */
     public function validateAddress(BlisstributeOrder $blisstributeOrder, $config)
     {
         $this->logInfo('validating address on order ' . $blisstributeOrder->getOrder()->getNumber());
@@ -36,6 +77,10 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
 
         $billing = $order->getBilling();
         $shipping = $order->getShipping();
+
+        if ($this->_isPackingStation($billing, $shipping)) {
+            return false;
+        }
 
         $customerAddress = $shipping->getStreet() . ',' . $shipping->getZipCode() . ',' . $shipping->getCity() . ',' . $order->getShipping()->getCountry()->getName();
         $customerAddress = rawurlencode($customerAddress);
