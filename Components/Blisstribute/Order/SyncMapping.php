@@ -170,10 +170,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         if ($order->getOrderStatus()->getId() == 8) {
             $orderRemark[] = 'Bestellung prüfen - Bestellstatus Klärung';
+            $orderShipLock = true;
         }
 
         if ($order->getPaymentStatus()->getId() == 21) {
             $orderRemark[] = 'Zahlung prüfen - Shopware Zahlungshinweis';
+            $orderShipLock = true;
         }
 
         if ($this->getConfig()->get('blisstribute-auto-hold-order')) {
