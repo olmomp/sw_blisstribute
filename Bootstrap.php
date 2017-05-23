@@ -334,6 +334,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if (version_compare($version, '0.5.9', '<')) {
             $this->subscribeEvent('Shopware_Console_Add_Command', 'onAddConsoleCommand');
         }
+		
+		if (version_compare($version, '0.6.2', '<')) {
+            $this->createConfig();
+        }
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy', 'config', 'frontend'));
     }
@@ -2018,6 +2022,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Transfer Orders without verification',
                 'description' => 'Wenn aktiviert, werden ausschließlich Bestellungen ins Blisstribute-System übertragen, deren Adressen erfolgreich verifiziert werden konnten.',
+                'value' => 1,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+		$form->setElement(
+            'checkbox',
+            'blisstribute-transfer-shop-article-prices',
+            array(
+                'label' => 'Transfer Article Prices of each shop',
+                'description' => 'Wenn aktiviert, werden die Preise eines Artikels anhand der beim Shop hinterlegten Kundengruppe und Währung zusätzlich ins Blisstribute-System übertragen.',
                 'value' => 1,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
