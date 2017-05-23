@@ -79,10 +79,10 @@ class Shopware_Components_Blisstribute_Order_Payment_Abstract
             if(!in_array($currentDetail->getArticleNumber(), array('sw-payment', 'sw-payment-absolute', 'sw-surcharge'))) {
                 continue;
             }
-			
-			if($currentDetail->getPrice() > 0) {
-            	$paymentCosts += $currentDetail->getPrice();
-			}
+
+            if($currentDetail->getPrice() > 0) {
+                $paymentCosts += $currentDetail->getPrice();
+            }
         }
 
         $payment = array(

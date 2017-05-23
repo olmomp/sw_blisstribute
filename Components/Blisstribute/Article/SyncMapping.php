@@ -283,20 +283,20 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $isSpecialPrice = false;
         $mappedPriceCollection = array();
         if ($price->getPseudoPrice() > 0 && $price->getPseudoPrice() > $price->getPrice()) {
-            	$isSpecialPrice = true;
+                $isSpecialPrice = true;
 
-            	$mappedPriceCollection[] = $this->formatPricesFromNetToGross(
-                	$price->getPseudoPrice(),
-                	$articleDetail->getArticle()->getTax(),
-                	false
+                $mappedPriceCollection[] = $this->formatPricesFromNetToGross(
+                    $price->getPseudoPrice(),
+                    $articleDetail->getArticle()->getTax(),
+                    false
             );
         } else {
-		$mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
-			$price->getPrice(),
-			$articleDetail->getArticle()->getTax(),
-			true
-		);
-	}
+        $mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
+            $price->getPrice(),
+            $articleDetail->getArticle()->getTax(),
+            true
+        );
+    }
 
         $mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
             $price->getPrice(),
@@ -413,13 +413,13 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         $imageCollection = $detail['images'];
         if (count($imageCollection) == 0) {
-		$sql = 'SELECT media_id FROM s_articles_img WHERE articleID = :articleId AND main = 1 AND media_id IS NOT NULL';
-        	$mediaId = (int)Shopware()->Db()->fetchOne($sql, array('articleId' => (int)$articleDetail->getArticle()->getId()));
-			
-		if ($mediaId) {
-			return $this->_loadImage($mediaId);
-		}
-			
+        $sql = 'SELECT media_id FROM s_articles_img WHERE articleID = :articleId AND main = 1 AND media_id IS NOT NULL';
+            $mediaId = (int)Shopware()->Db()->fetchOne($sql, array('articleId' => (int)$articleDetail->getArticle()->getId()));
+
+        if ($mediaId) {
+            return $this->_loadImage($mediaId);
+        }
+
             return null;
         }
 
@@ -623,20 +623,20 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         return $tagCollection;
     }
-	
-	/**
-	 * get the base price of the main detail
-	 *
-	 * @param Detail $articleDetail
-	 *
-	 * @return float
-	 */
-	protected function getMainDetailBasePrice(Detail $articleDetail)
-	{
-		if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
-			return $articleDetail->getPurchasePrice();
-		}
-		
-		return $articleDetail->getPrices()->first()->getBasePrice();
-	}
+
+    /**
+     * get the base price of the main detail
+     *
+     * @param Detail $articleDetail
+     *
+     * @return float
+     */
+    protected function getMainDetailBasePrice(Detail $articleDetail)
+    {
+        if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
+            return $articleDetail->getPurchasePrice();
+        }
+
+        return $articleDetail->getPrices()->first()->getBasePrice();
+    }
 }

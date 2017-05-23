@@ -22,6 +22,7 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
 
     private function _isPackingStation(\Shopware\Models\Order\Billing $billingAddress, \Shopware\Models\Order\Shipping $shippingAddress)
     {
+        $this->logDebug('starting packing station check');
         $blackList = array(
             'pack', 'station', 'packstation', 'packing', 'packing station', 'packingstation'
         );
@@ -58,6 +59,7 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
             }
         }
 
+        $this->logDebug('no packing station found');
         return false;
     }
 

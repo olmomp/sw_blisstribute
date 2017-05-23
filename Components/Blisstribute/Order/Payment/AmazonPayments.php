@@ -26,12 +26,12 @@ class Shopware_Components_Blisstribute_Order_Payment_AmazonPayments
         $orderAttribute = $this->order->getAttribute();
 
         $captureNow = Shopware()->Config()->get('captureNow', false);
-			
-		if ((bool)$captureNow) {
-			$resToken = trim($orderAttribute->getBestitAmazonCaptureId());
-		} else {
-			$resToken = trim($orderAttribute->getBestitAmazonAuthorizationId());
-		}
+
+        if ((bool)$captureNow) {
+            $resToken = trim($orderAttribute->getBestitAmazonCaptureId());
+        } else {
+            $resToken = trim($orderAttribute->getBestitAmazonAuthorizationId());
+        }
 
         if ($resToken == '' || is_null($resToken)) {
             throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException(
