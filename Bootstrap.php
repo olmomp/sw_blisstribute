@@ -2032,8 +2032,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Transfer Article Prices of each shop',
                 'description' => 'Wenn aktiviert, werden die Preise eines Artikels anhand der beim Shop hinterlegten Kundengruppe und Währung zusätzlich ins Blisstribute-System übertragen.',
-                'value' => 1,
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => 0
             )
         );
     }
