@@ -204,6 +204,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         } else {
             $customerBirthday = $customer->getBilling()->getBirthday();
         }
+        
+        if (!is_null($customerBirthday)) {
+            $customerBirthday = $customerBirthday->format('Y-m-d');
+        }
 
         return [
             'externalCustomerNumber' => $customerNumber,
@@ -211,7 +215,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'externalCustomerPhoneNumber' => $customer->getBilling()->getPhone(),
             'externalCustomerMobilePhoneNumber' => '',
             'externalCustomerFaxNumber' => '',
-            'customerBirthdate' => $customerBirthday->format('Y-m-d'),
+            'customerBirthdate' => $customerBirthday,
             'externalOrderNumber' => $order->getNumber(),
             'customerOrderNumber' => '',
             'isAnonymousCustomer' => false,
