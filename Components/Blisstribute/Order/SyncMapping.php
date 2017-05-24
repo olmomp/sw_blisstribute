@@ -211,7 +211,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'externalCustomerPhoneNumber' => $customer->getBilling()->getPhone(),
             'externalCustomerMobilePhoneNumber' => '',
             'externalCustomerFaxNumber' => '',
-            'customerBirthdate' => $customerBirthday,
+            'customerBirthdate' => $customerBirthday->format('Y-m-d'),
             'externalOrderNumber' => $order->getNumber(),
             'customerOrderNumber' => '',
             'isAnonymousCustomer' => false,
