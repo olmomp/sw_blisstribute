@@ -288,7 +288,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 			/** @var Price[] $priceCollection */
 			$priceCollection = $articleDetail->getPrices()->toArray();
 			foreach ($priceCollection as $currentPrice) {
-				if ($currentPrice->getTo() != 'beliebig'
+				if ($currentPrice->getFrom() != '1'
 					or $currentPrice->getCustomerGroup()->getKey() != $shop['customerGroup'] 
 				) {
 					continue;
