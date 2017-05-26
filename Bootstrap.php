@@ -137,17 +137,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         return $this->deleteDefaultTableValues();
     }
 
-
     /**
      * @return array
      */
     public function install()
     {
         // check the current sw version
-        if (!$this->assertMinimumVersion('5.1')) {
+        if (!$this->assertMinimumVersion('5.0')) {
             return array(
                 'success' => false,
-                'message' => 'Das Plugin benötigt mindestens Shopware 5.1.'
+                'message' => 'Das Plugin benötigt mindestens Shopware 5.0.'
             );
         }
         
@@ -195,7 +194,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         $em = $this->get('models');
         if (version_compare($version, '0.2.2', '<=')) {
-            $this->subscribeEvent('Shopware\Models\Property\Group::postPersist', 'postPersistProperty');
+            $this->subscribeEvent('Shopware\Models\Property\Group::prePersist', 'prePersistProperty');
             $this->subscribeEvent('Shopware\Models\Property\Group::preRemove', 'preRemoveProperty');
 
             $classMetadata = $em->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeArticleType');
@@ -217,11 +216,11 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.2.10', '<=')) {
-            $this->subscribeEvent('Shopware\Models\Article\Article::postPersist', 'postPersistArticle');
+            $this->subscribeEvent('Shopware\Models\Article\Article::prePersist', 'prePersistArticle');
         }
 
         if (version_compare($version, '0.2.25', '<=')) {
-            $this->subscribeEvent('Shopware\Models\Order\Order::postPersist', 'postPersistOrder');
+            $this->subscribeEvent('Shopware\Models\Order\Order::prePersist', 'prePersistOrder');
         }
 
         if (version_compare($version, '0.2.29', '<=')) {
@@ -254,11 +253,11 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'onGetBtarticlestockApiController'
             );
 
-            $this->subscribeEvent('Shopware\Models\Shop\Shop::postPersist', 'postPersistShop');
-            $this->subscribeEvent('Shopware\Models\Shop\Shop::postRemove', 'postRemoveShop');
+            $this->subscribeEvent('Shopware\Models\Shop\Shop::prePersist', 'prePersistShop');
+            $this->subscribeEvent('Shopware\Models\Shop\Shop::preRemove', 'preRemoveShop');
 
-            $this->subscribeEvent('Shopware\Models\Voucher\Voucher::postPersist', 'postPersistVoucher');
-            $this->subscribeEvent('Shopware\Models\Voucher\Voucher::postRemove', 'postRemoveVoucher');
+            $this->subscribeEvent('Shopware\Models\Voucher\Voucher::prePersist', 'prePersistVoucher');
+            $this->subscribeEvent('Shopware\Models\Voucher\Voucher::preRemove', 'preRemoveVoucher');
 
             $classMetadata = $em->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShop');
             $this->handleTableInstall($classMetadata);
@@ -311,13 +310,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         if (version_compare($version, '0.3.7', '<')) {
             $this->subscribeEvent(
-                'Shopware\Models\Attribute\Voucher::postPersist',
-                'postPersistVoucherAttribute'
+                'Shopware\Models\Attribute\Voucher::prePersist',
+                'prePersistVoucherAttribute'
             );
         }
 
         if (version_compare($version, '0.3.11', '<')) {
-            $this->subscribeEvent('Shopware\Models\Order\Order::postRemove', 'onModelsOrderOrderPostRemove');
+            $this->subscribeEvent('Shopware\Models\Order\Order::preRemove', 'preRemoveOrder');
         }
 
         if (version_compare($version, '0.3.15', '<')) {
@@ -333,6 +332,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         if (version_compare($version, '0.5.9', '<')) {
             $this->subscribeEvent('Shopware_Console_Add_Command', 'onAddConsoleCommand');
+        }
+        
+        if (version_compare($version, '0.6.3', '<')) {
+            // check if plugin ExitBBlisstribute is installed
+			$plugin = Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy([
+				'name' => 'ExitBBlisstribute',
+			]);
+			
+			if($plugin)
+			{
+				Shopware()->Db()->query("DELETE FROM s_core_subscribes WHERE pluginID = ?", [$plugin->getId()]);
+                $this->subscribeEvents();
+			}
         }
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy', 'config', 'frontend'));
@@ -448,6 +460,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     /**
      * @return string
      */
+
+
     public function onGetBtarticlestockApiController()
     {
         return $this->Path() . 'Controllers/Api/Btarticlestock.php';
@@ -540,24 +554,25 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $this->subscribeEvent('Shopware_Modules_Order_SendMail_BeforeSend', 'onOrderFinished');
 
         // model events
-        $this->subscribeEvent('Shopware\Models\Order\Order::postPersist', 'postPersistOrder');
+        $this->subscribeEvent('Shopware\Models\Order\Order::prePersist', 'prePersistOrder');
+        $this->subscribeEvent('Shopware\Models\Order\Order::preRemove', 'preRemoveOrder');
 
-        $this->subscribeEvent('Shopware\Models\Article\Article::postPersist', 'postPersistArticle');
-        $this->subscribeEvent('Shopware\Models\Article\Article::postUpdate', 'postUpdateArticle');
+        $this->subscribeEvent('Shopware\Models\Article\Article::prePersist', 'prePersistArticle');
+        $this->subscribeEvent('Shopware\Models\Article\Article::preUpdate', 'preUpdateArticle');
         $this->subscribeEvent('Shopware\Models\Article\Article::preRemove', 'preRemoveArticle');
 
-        $this->subscribeEvent('Shopware\Models\Article\Detail::postPersist', 'postPersistDetail');
-        $this->subscribeEvent('Shopware\Models\Article\Detail::postUpdate', 'postUpdateDetail');
+        $this->subscribeEvent('Shopware\Models\Article\Detail::prePersist', 'prePersistDetail');
+        $this->subscribeEvent('Shopware\Models\Article\Detail::preUpdate', 'preUpdateDetail');
         $this->subscribeEvent('Shopware\Models\Article\Detail::preRemove', 'preRemoveDetail');
 
-        $this->subscribeEvent('Shopware\Models\Property\Group::postPersist', 'postPersistProperty');
+        $this->subscribeEvent('Shopware\Models\Property\Group::prePersist', 'prePersistProperty');
         $this->subscribeEvent('Shopware\Models\Property\Group::preRemove', 'preRemoveProperty');
 
-        $this->subscribeEvent('Shopware\Models\Shop\Shop::postPersist', 'postPersistShop');
-        $this->subscribeEvent('Shopware\Models\Shop\Shop::postRemove', 'postRemoveShop');
+        $this->subscribeEvent('Shopware\Models\Shop\Shop::prePersist', 'prePersistShop');
+        $this->subscribeEvent('Shopware\Models\Shop\Shop::preRemove', 'preRemoveShop');
 
-        $this->subscribeEvent('Shopware\Models\Voucher\Voucher::postPersist', 'postPersistVoucher');
-        $this->subscribeEvent('Shopware\Models\Voucher\Voucher::postRemove', 'postRemoveVoucher');
+        $this->subscribeEvent('Shopware\Models\Voucher\Voucher::prePersist', 'prePersistVoucher');
+        $this->subscribeEvent('Shopware\Models\Voucher\Voucher::preRemove', 'preRemoveVoucher');
 
         // blisstribute model events
         $this->subscribeEvent(
@@ -591,27 +606,22 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         $this->subscribeEvent(
             'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::prePersist',
-            'prePersistArticleType'
+            'prePersistBlisstributeArticleType'
         );
 
         $this->subscribeEvent(
             'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::preUpdate',
-            'preUpdateArticleType'
-        );
-
-        $this->subscribeEvent(
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::postUpdate',
-            'postUpdateArticleType'
+            'preUpdateBlisstributeArticleType'
         );
 
         $this->subscribeEvent(
             'Shopware\CustomModels\Blisstribute\BlisstributeArticle::prePersist',
-            'prePersistArticle'
+            'prePersistBlisstributeArticle'
         );
 
         $this->subscribeEvent(
             'Shopware\CustomModels\Blisstribute\BlisstributeArticle::preUpdate',
-            'preUpdateArticle'
+            'preUpdateBlisstributeArticle'
         );
 
         $this->subscribeEvent(
@@ -645,11 +655,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         );
 
         $this->subscribeEvent(
-            'Shopware\Models\Attribute\Voucher::postPersist',
-            'postPersistVoucherAttribute'
+            'Shopware\Models\Attribute\Voucher::prePersist',
+            'prePersistVoucherAttribute'
         );
-
-        $this->subscribeEvent('Shopware\Models\Order\Order::postRemove', 'onModelsOrderOrderPostRemove');
 
         $this->subscribeEvent('Enlight_Controller_Front_StartDispatch', 'startDispatch');
 
@@ -802,6 +810,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
     /**
      * return article sync controller path
+
      *
      * @param Enlight_Event_EventArgs $eventArgs
      *
@@ -917,7 +926,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return bool
      */
-    public function postPersistOrder(Enlight_Event_EventArgs $eventArgs)
+    public function prePersistOrder(Enlight_Event_EventArgs $eventArgs)
     {
         $this->registerOrder($eventArgs);
         return true;
@@ -928,7 +937,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function postPersistArticle(Enlight_Event_EventArgs $args)
+    public function prePersistArticle(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
 
@@ -951,7 +960,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function postUpdateArticle(Enlight_Event_EventArgs $args)
+    public function preUpdateArticle(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
 
@@ -1005,7 +1014,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function postPersistDetail(Enlight_Event_EventArgs $args)
+    public function prePersistDetail(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
         
@@ -1038,7 +1047,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function postUpdateDetail(Enlight_Event_EventArgs $args)
+    public function preUpdateDetail(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
 
@@ -1103,7 +1112,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function postPersistProperty(Enlight_Event_EventArgs $args)
+    public function prePersistProperty(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
         $entity = $args->get('entity');
@@ -1236,7 +1245,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function prePersistArticle(Enlight_Event_EventArgs $eventArgs)
+    public function prePersistBlisstributeArticle(Enlight_Event_EventArgs $eventArgs)
     {
         $currentTime = new DateTime();
 
@@ -1253,12 +1262,12 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function preUpdateArticle(Enlight_Event_EventArgs $args)
+    public function preUpdateBlisstributeArticle(Enlight_Event_EventArgs $args)
     {
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticle $entity */
         $entity = $args->get('entity');
         $entity->setModifiedAt(new DateTime());
-    }
+    }   
 
     /**
      * article type event fired before create entity
@@ -1267,7 +1276,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function prePersistArticleType(Enlight_Event_EventArgs $eventArgs)
+    public function prePersistBlisstributeArticleType(Enlight_Event_EventArgs $eventArgs)
     {
         $currentTime = new DateTime();
 
@@ -1278,27 +1287,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     }
 
     /**
-     * article type event fired before db update
+     * article type event fired before update
      *
      * @param Enlight_Event_EventArgs $args
      *
      * @return void
      */
-    public function preUpdateArticleType(Enlight_Event_EventArgs $args)
-    {
-        /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
-        $entity = $args->get('entity');
-        $entity->setModifiedAt(new DateTime());
-    }
-
-    /**
-     * article type event fired after update
-     *
-     * @param Enlight_Event_EventArgs $args
-     *
-     * @return void
-     */
-    public function postUpdateArticleType(Enlight_Event_EventArgs $args)
+    public function preUpdateBlisstributeArticleType(Enlight_Event_EventArgs $args)
     {
         $articleIdCollection = array();
 
@@ -1306,6 +1301,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
         $entity = $args->get('entity');
+        $entity->setModifiedAt(new DateTime());
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleRepository $articleRepository */
         $articleRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
@@ -1334,7 +1330,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function postPersistShop(Enlight_Event_EventArgs $args)
+    public function prePersistShop(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
 
@@ -1353,7 +1349,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function postRemoveShop(Enlight_Event_EventArgs $args)
+    public function preRemoveShop(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
 
@@ -1375,7 +1371,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function postPersistVoucher(Enlight_Event_EventArgs $args)
+    public function prePersistVoucher(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
 
@@ -1395,7 +1391,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @param Enlight_Event_EventArgs $args
      */
-    public function postPersistVoucherAttribute(Enlight_Event_EventArgs $args)
+    public function prePersistVoucherAttribute(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
 
@@ -1426,7 +1422,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function postRemoveVoucher(Enlight_Event_EventArgs $args)
+    public function preRemoveVoucher(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
 
@@ -1448,7 +1444,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      *
      * @return void
      */
-    public function onModelsOrderOrderPostRemove(Enlight_Event_EventArgs $args)
+    public function preRemoveOrder(Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->get('models');
 
