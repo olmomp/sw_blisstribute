@@ -474,14 +474,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         /** @var ArticleRepository $articleRepository */
         $articleRepository = $this->container->get('models')->getRepository('Shopware\Models\Article\Article');
+        
+        $customerGroupId = $swOrder->getCustomer()->getGroup()->getId();
+        $shopId =  $swOrder->getShop()->getId();
 
         foreach ($basketItems as $product) {
             $price = $product->getPrice();
             $quantity = $product->getQuantity();
             $mode = $product->getMode();
             $articleNumber = $product->getArticleNumber();
-            $customerGroupId = $product->getOrder()->getCustomer()->getGroup()->getId();
-            $shopId =  $product->getOrder()->getShop()->getId();
 
             if (in_array($mode, [3, 4])) {
                 if (in_array($articleNumber, ['sw-payment', 'sw-discount', 'sw-payment-absolute']) || $mode == 2) {
@@ -808,17 +809,29 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
 
                 foreach ($articleDataCollection as &$product) {
-                    if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
+                    if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0 || $amount == 0) {
                         continue;
                     }
 
                     if (in_array($product['articleNumber'], $stackProduct)) {
-                        $discount = $product['priceAmount'];
-
-                        $product['price'] -= $discount;
-                        $product['discountTotal'] += $discount;
+                        if ($amount > $product['quantity']) {
+                            $qty = $product['quantity'];
+                        } else {
+                            $qty = $amount;
+                        }
+                        
+                        $discountAbs = $product['priceAmount'] * $qty;
+                        $discountPerQty = round($discountAbs / $product['quantity'], 6);
+                        
+                        $product['priceAmount'] -= $discountPerQty;
+                        $product['price'] -= $discountAbs;
+                        $product['discountTotal'] += $discountPerQty;
+                        
+                        $amount -= $qty;
                     }
                 }
+                
+                $this->logDebug('stackedProducts: ' . print_r($articleDataCollection, true));
             }
         }
 
