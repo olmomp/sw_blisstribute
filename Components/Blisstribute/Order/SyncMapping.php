@@ -204,6 +204,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         } else {
             $customerBirthday = $customer->getBilling()->getBirthday();
         }
+        
+        if (!is_null($customerBirthday)) {
+            $customerBirthday = $customerBirthday->format('Y-m-d');
+        }
 
         return [
             'externalCustomerNumber' => $customerNumber,
