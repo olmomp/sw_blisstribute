@@ -11,22 +11,8 @@ use Shopware\CustomModels\Blisstribute\BlisstributeOrder;
 require_once __DIR__ . '/../Components/Blisstribute/Article/Sync.php';
 require_once __DIR__ . '/../Components/Blisstribute/Order/Sync.php';
 
-class CronSubscriber implements SubscriberInterface
+class ShopwareSubscriber implements SubscriberInterface
 {
-    /**
-     * @var Container
-     */
-    private $container;
-
-    /**
-     * SearchBundleSubscriber constructor.
-     * @param Container $container
-     */
-    public function __construct(Container $container)
-    {
-        $this->container = $container;
-    }
-
     /**
      * @inheritdoc
      */
