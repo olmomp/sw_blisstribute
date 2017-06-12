@@ -11,7 +11,7 @@ require_once __DIR__ . '/Exception/TransferException.php';
  * @copyright Copyright (c) 2016
  * @since     1.0.0
  */
-abstract class Shopware_Components_Blisstribute_SoapClient extends Zend_Soap_Client
+abstract class Shopware_Components_Blisstribute_SoapClient
 {
     /**@+
      * blisstribute soap endpoints
@@ -31,6 +31,16 @@ abstract class Shopware_Components_Blisstribute_SoapClient extends Zend_Soap_Cli
      * @var string
      */
     protected $blisstributeClient = null;
+    
+    /**
+     * @var string
+     */
+    protected $blisstributeHttpUser = null;
+    
+    /**
+     * @var string
+     */
+    protected $blisstributeHttpPassword = null;
 
     /**
      * @var string
@@ -46,6 +56,11 @@ abstract class Shopware_Components_Blisstribute_SoapClient extends Zend_Soap_Cli
      * @var \Enlight_Config
      */
     protected $config;
+    
+    /**
+     * @var object
+     */
+    protected $_soapClient = null;
 
     /**
      * Constructor method
@@ -55,18 +70,15 @@ abstract class Shopware_Components_Blisstribute_SoapClient extends Zend_Soap_Cli
      * @param Enlight_Config $config
      *
      * @throws Exception
-     * @throws Zend_Soap_Client_Exception
      */
     public function __construct(\Enlight_Config $config)
     {
         $this->config = $config;
-        $options = array();
+       
         if ($config->get('blisstribute-http-login') && $config->get('blisstribute-http-password')) {
-            $options['login'] = $config->get('blisstribute-http-login');
-            $options['password'] = $config->get('blisstribute-http-password');
+            $this->blisstributeHttpUser = $config->get('blisstribute-http-login');
+            $this->blisstributeHttpPassword = $config->get('blisstribute-http-password');
         }
-
-        parent::__construct($this->getServiceUrl(true), $options);
 
         $this->blisstributeClient = $config->get('blisstribute-soap-client');
         $this->blisstributeUser = $config->get('blisstribute-soap-username');
@@ -85,8 +97,8 @@ abstract class Shopware_Components_Blisstribute_SoapClient extends Zend_Soap_Cli
         if ($this->_soapClient == null) {
             $soapClient = new nusoap_client($this->getServiceUrl(true), true);
 
-            if (trim($this->getHttpLogin()) != '' && trim($this->getHttpPassword()) != '') {
-                $soapClient->setCredentials(trim($this->getHttpLogin()), trim($this->getHttpPassword()));
+            if (!is_null($this->blisstributeHttpUser) && trim($this->blisstributeHttpPassword)) {
+                $soapClient->setCredentials($this->blisstributeHttpUser, $this->blisstributeHttpPassword);
             }
 
             /** @var nusoap_client $oSoapProxy */
@@ -179,11 +191,6 @@ abstract class Shopware_Components_Blisstribute_SoapClient extends Zend_Soap_Cli
 
         $this->_lastMethod = $name;
 
-        $result = $soapClient->{$name}($this->_preProcessArguments($arguments));
-
-        // Reset non-permanent input headers
-        $this->_soapInputHeaders = array();
-
-        return $this->_preProcessResult($result);
+        return $soapClient->{$name}($arguments);
     }
 }
