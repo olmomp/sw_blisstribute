@@ -22,10 +22,10 @@ use Shopware\Models\Tax\Tax;
 class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Components_Blisstribute_SyncMapping
 {
     use Shopware_Components_Blisstribute_Domain_LoggerTrait;
-	
-	private $container = null;
-	
-	protected function getConfig()
+    
+    private $container = null;
+    
+    protected function getConfig()
     {
         return $this->container->get('config');
     }
@@ -39,8 +39,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     {
         return $this->getModelEntity()->getArticle();
     }
-	
-	public function __construct()
+    
+    public function __construct()
     {
         $this->container = Shopware()->Container();
     }
@@ -272,67 +272,67 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      * @return array
      */
     protected function buildPriceCollection(Detail $articleDetail)
-    {		
-		$mappedPriceCollection = array();
-		
-		if ($this->getConfig()->get('blisstribute-transfer-shop-article-prices')) {
-			$shops = Shopware()->Db()->fetchAll("SELECT spbs.advertising_medium_code AS advertisingMediumCode, scc.currency as currencyCode, scc.factor AS currencyFactor, sccg.groupkey AS customerGroup FROM s_core_shops scs LEFT JOIN s_core_currencies scc ON scs.currency_id = scc.id LEFT JOIN s_core_customergroups sccg ON scs.customer_group_id = sccg.id LEFT JOIN s_plugin_blisstribute_shop spbs ON scs.id = spbs.s_shop_id WHERE scs.active = 1");
-		}
-		
-		$shops[] = ['advertisingMediumCode' => '', 'currencyCode' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK'];
-		
-		foreach($shops as $shop)
-		{
-			$price = null;
-					
-			/** @var Price[] $priceCollection */
-			$priceCollection = $articleDetail->getPrices()->toArray();
-			foreach ($priceCollection as $currentPrice) {
-				if ($currentPrice->getFrom() != '1'
-					or $currentPrice->getCustomerGroup()->getKey() != $shop['customerGroup'] 
-				) {
-					continue;
-				}
+    {
+        $mappedPriceCollection = array();
+        
+        if ($this->getConfig()->get('blisstribute-transfer-shop-article-prices')) {
+            $shops = Shopware()->Db()->fetchAll("SELECT spbs.advertising_medium_code AS advertisingMediumCode, scc.currency as currencyCode, scc.factor AS currencyFactor, sccg.groupkey AS customerGroup FROM s_core_shops scs LEFT JOIN s_core_currencies scc ON scs.currency_id = scc.id LEFT JOIN s_core_customergroups sccg ON scs.customer_group_id = sccg.id LEFT JOIN s_plugin_blisstribute_shop spbs ON scs.id = spbs.s_shop_id WHERE scs.active = 1");
+        }
+        
+        $shops[] = ['advertisingMediumCode' => '', 'currencyCode' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK'];
+        
+        foreach($shops as $shop)
+        {
+            $price = null;
+                    
+            /** @var Price[] $priceCollection */
+            $priceCollection = $articleDetail->getPrices()->toArray();
+            foreach ($priceCollection as $currentPrice) {
+                if ($currentPrice->getFrom() != '1'
+                    or $currentPrice->getCustomerGroup()->getKey() != $shop['customerGroup'] 
+                ) {
+                    continue;
+                }
 
-				$price = $currentPrice;
-				break;
-			}
+                $price = $currentPrice;
+                break;
+            }
 
-			if ($price == null) {
-				continue;
-			}
-			
-			$tax = $articleDetail->getArticle()->getTax()->getTax();
+            if ($price == null) {
+                continue;
+            }
+            
+            $tax = $articleDetail->getArticle()->getTax()->getTax();
 
-			$isSpecialPrice = false;
-			if ($price->getPseudoPrice() > 0 && $price->getPseudoPrice() > $price->getPrice()) {
-					$isSpecialPrice = true;
+            $isSpecialPrice = false;
+            if ($price->getPseudoPrice() > 0 && $price->getPseudoPrice() > $price->getPrice()) {
+                    $isSpecialPrice = true;
 
-					$mappedPriceCollection[] = $this->formatPricesFromNetToGross(
-						$shop['advertisingMediumCode'],
-						$price->getPseudoPrice() * $shop['currencyFactor'],
-						$tax,
-						$shop['currencyCode'],
-						false
-				);
-			} else {
-				$mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
-					$shop['advertisingMediumCode'],
-					$price->getPrice() * $shop['currencyFactor'],
-					$tax,
-					$shop['currencyCode'],
-					true
-				);
-			}
+                    $mappedPriceCollection[] = $this->formatPricesFromNetToGross(
+                        $shop['advertisingMediumCode'],
+                        $price->getPseudoPrice() * $shop['currencyFactor'],
+                        $tax,
+                        $shop['currencyCode'],
+                        false
+                );
+            } else {
+                $mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
+                    $shop['advertisingMediumCode'],
+                    $price->getPrice() * $shop['currencyFactor'],
+                    $tax,
+                    $shop['currencyCode'],
+                    true
+                );
+            }
 
-			$mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
-				$shop['advertisingMediumCode'],
-				$price->getPrice() * $shop['currencyFactor'],
-				$tax,
-				$shop['currencyCode'],
-				$isSpecialPrice
-			);		
-		}
+            $mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
+                $shop['advertisingMediumCode'],
+                $price->getPrice() * $shop['currencyFactor'],
+                $tax,
+                $shop['currencyCode'],
+                $isSpecialPrice
+            );        
+        }
 
         return $mappedPriceCollection;
     }
