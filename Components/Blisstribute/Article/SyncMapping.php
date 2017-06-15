@@ -194,36 +194,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         return array_slice($categoryNameCollection, 0, 4);
     }
 
-//    /**
-//     * @param \Shopware\Models\Article\Article $article
-//     * @return string
-//     * @throws Exception
-//     */
-//    protected function _determineArticleType(Shopware\Models\Article\Article $article)
-//    {
-//        $filter = $article->getPropertyGroup();
-//        $query = $this->blisstributeArticleRepository->getFilterQuery($filter->getId());
-//        $articleType = $query->execute();
-//        if (empty($articleType)) {
-//            throw new Exception('invalid blisstribute article type');
-//        }
-//        /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleType $articleType */
-//        $articleType = $articleType[0];
-//        switch ($articleType->getArticleType()) {
-//            case 1:
-//                return 'MUSIC';
-//            case 2:
-//                return 'WEAR';
-//            case 3:
-//                return 'WEAR-ATTIRE';
-//            case 4:
-//                return 'EQUIPMENT';
-//            case 0:
-//            default:
-//                throw new Exception('invalid blisstribute article type');
-//        }
-//    }
-
     /**
      * @todo implement tax rules ??
      * @todo better mapping of vat types??
@@ -253,16 +223,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'countryIsoCode' => $germany->getIso(),
             'vatType' => $vatType
         );
-        //$countryCollection = $countryRepository->getCountriesQuery()->getResult();
-//        foreach ($countryCollection as $country) {
-//            if($country['iso'] == 'DE') {
-//                $vatCollection[] = array(
-//                    'countryIsoCode' => $country['iso'],
-//                    'vatType' => $vatType
-//                );
-//            }
-//
-//        }
+
         return $vatCollection;
     }
 
@@ -274,22 +235,22 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     protected function buildPriceCollection(Detail $articleDetail)
     {
         $mappedPriceCollection = array();
-        
+        $shops = [
+            ['advertisingMediumCode' => '', 'currencyCode' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK']
+        ];
+
         if ($this->getConfig()->get('blisstribute-transfer-shop-article-prices')) {
-            $shops = Shopware()->Db()->fetchAll("SELECT spbs.advertising_medium_code AS advertisingMediumCode, scc.currency as currencyCode, scc.factor AS currencyFactor, sccg.groupkey AS customerGroup FROM s_core_shops scs LEFT JOIN s_core_currencies scc ON scs.currency_id = scc.id LEFT JOIN s_core_customergroups sccg ON scs.customer_group_id = sccg.id LEFT JOIN s_plugin_blisstribute_shop spbs ON scs.id = spbs.s_shop_id WHERE scs.active = 1");
+            $shops = array_merge($shops, Shopware()->Db()->fetchAll("SELECT spbs.advertising_medium_code AS advertisingMediumCode, scc.currency as currencyCode, scc.factor AS currencyFactor, sccg.groupkey AS customerGroup FROM s_core_shops scs LEFT JOIN s_core_currencies scc ON scs.currency_id = scc.id LEFT JOIN s_core_customergroups sccg ON scs.customer_group_id = sccg.id LEFT JOIN s_plugin_blisstribute_shop spbs ON scs.id = spbs.s_shop_id WHERE scs.active = 1"));
         }
-        
-        $shops[] = ['advertisingMediumCode' => '', 'currencyCode' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK'];
-        
-        foreach($shops as $shop)
-        {
+
+        foreach($shops as $shop) {
             $price = null;
-                    
+
             /** @var Price[] $priceCollection */
             $priceCollection = $articleDetail->getPrices()->toArray();
             foreach ($priceCollection as $currentPrice) {
                 if ($currentPrice->getFrom() != '1'
-                    or $currentPrice->getCustomerGroup()->getKey() != $shop['customerGroup'] 
+                    or $currentPrice->getCustomerGroup()->getKey() != $shop['customerGroup']
                 ) {
                     continue;
                 }
@@ -301,37 +262,25 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             if ($price == null) {
                 continue;
             }
-            
+
             $tax = $articleDetail->getArticle()->getTax()->getTax();
-
-            $isSpecialPrice = false;
-            if ($price->getPseudoPrice() > 0 && $price->getPseudoPrice() > $price->getPrice()) {
-                    $isSpecialPrice = true;
-
-                    $mappedPriceCollection[] = $this->formatPricesFromNetToGross(
-                        $shop['advertisingMediumCode'],
-                        $price->getPseudoPrice() * $shop['currencyFactor'],
-                        $tax,
-                        $shop['currencyCode'],
-                        false
-                );
-            } else {
-                $mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
+            if ($price->getPseudoPrice() > 0) {
+                $mappedPriceCollection[] = $this->formatPricesFromNetToGross(
                     $shop['advertisingMediumCode'],
-                    $price->getPrice() * $shop['currencyFactor'],
+                    $price->getPseudoPrice() * $shop['currencyFactor'],
                     $tax,
                     $shop['currencyCode'],
                     true
                 );
             }
 
-            $mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
+            $mappedPriceCollection[] = $this->formatPricesFromNetToGross(
                 $shop['advertisingMediumCode'],
                 $price->getPrice() * $shop['currencyFactor'],
                 $tax,
                 $shop['currencyCode'],
-                $isSpecialPrice
-            );        
+                false
+            );
         }
 
         return $mappedPriceCollection;
@@ -340,24 +289,21 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     /**
      * Internal helper function to convert gross prices to net prices.
      *
-     * @todo implement advertising medium mapping
-     * @todo implement country mapping
-     *
-     * @param float $price
-     * @param Tax $tax
-     * @param bool $isSpecial
+     * @param string $advertisingMediumCode
+     * @param float $netPrice
+     * @param float $tax
+     * @param string $currency
+     * @param bool $isRecommendedRetailPrice
      *
      * @return array
      */
-    protected function formatPricesFromNetToGross($advertisingMediumCode, $price, $tax, $curreny, $isSpecial = false)
+    protected function formatPricesFromNetToGross($advertisingMediumCode, $netPrice, $tax, $currency, $isRecommendedRetailPrice = false)
     {
         return array(
             'isoCode' => 'DE',
-            'currency' => $curreny,
-            'price' => round($price / 100 * (100 + $tax), 6),
-            'isSpecial' => $isSpecial,
-            'isNetPrice' => false,
-            'isRecommendedRetailPrice' => false,
+            'currency' => $currency,
+            'price' => round($netPrice / 100 * (100 + $tax), 6),
+            'isRecommendedRetailPrice' => $isRecommendedRetailPrice,
             'advertisingMediumCode' => $advertisingMediumCode,
         );
     }
@@ -597,32 +543,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function buildTagCollection(Detail $articleDetail)
     {
-
-//        // get configurator groups with multiple values
-//        $multiTagGroupIds = array();
-//        $usedGroups = array();
-
-//        // @todo use article properties ??
-//        /* @var Shopware\Models\Article\Configurator\Option $configuratorOption */
-//        foreach ($articleDetail->getConfiguratorOptions() as $configuratorOption) {
-//            if (in_array($configuratorOption->getGroup()->getId(), $usedGroups)) {
-//                $multiTagGroupIds[] = $configuratorOption->getGroup()->getId();
-//            } else {
-//                $usedGroups[] = $configuratorOption->getGroup()->getId();
-//            }
-//        }
-//
-//        /* @var \Shopware\Models\Article\Configurator\Option $configuratorOption */
-//        foreach ($articleDetail->getConfiguratorOptions() as $configuratorOption) {
-//            $configuratorGroup = $configuratorOption->getGroup();
-//            $tagCollection[] = array(
-//                'type' => $configuratorGroup->getName(),
-//                'value' => $configuratorOption->getName(),
-//                'isMultiTag' => in_array($configuratorGroup->getId(), $multiTagGroupIds),
-//                'deliverer' => 'foreign'
-//            );
-//        }
-
         $tagCollection = array();
         if ($articleDetail->getLen() !== null) {
             $tagCollection[] = array(

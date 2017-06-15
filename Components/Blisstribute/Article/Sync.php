@@ -20,6 +20,8 @@ use Shopware\CustomModels\Blisstribute\BlisstributeArticle;
  */
 class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_Blisstribute_Sync
 {
+    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
+
     /**
      * count limit for articles to transfer to blisstribute
      *
@@ -34,10 +36,6 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
      */
     protected $taskName = 'article_sync';
 
-    /**
-     * @inheritdoc
-     */
-    protected $logBaseName = 'blisstribute_article_sync';
 
     /**
      * sync all transferable articles to blisstribute
@@ -308,6 +306,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
         $syncMapping->setModelEntity($modelEntity);
 
         $articleData = $syncMapping->buildMapping();
+        $this->logMessage('articleData::' . json_encode($articleData), __FUNCTION__);
         $checksum = trim(sha1(json_encode($articleData)));
         if (trim($modelEntity->getSyncHash()) == $checksum) {
             throw new Shopware_Components_Blisstribute_Exception_ArticleNotChangedException('article not changed');
