@@ -305,6 +305,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'price' => round($netPrice / 100 * (100 + $tax), 6),
             'isRecommendedRetailPrice' => $isRecommendedRetailPrice,
             'advertisingMediumCode' => $advertisingMediumCode,
+            'isSpecialPrice' => false
         );
     }
 
