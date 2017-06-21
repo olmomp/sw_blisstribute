@@ -471,7 +471,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'noticeStockLevel' => (int)$articleDetail->getStockMin(),
             'reorderStockLevel' => (int)$articleDetail->getStockMin(),
             'vendorCollection' => array(
-                'code' => $articleDetail->getAttribute()->getBlisstributeSupplierCode(),
+                'code' => $this->getSupplierCode($articleDetail),
                 'articleNumber' => $articleDetail->getSupplierNumber(),
                 'purchasePrice' => $articleDetail->getPurchasePrice(),
                 'isPreferred' => true
@@ -482,6 +482,20 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         );
 
         return $specificationData;
+    }
+
+    /**
+     * @param Detail $articleDetail
+     * @return mixed
+     */
+    private function getSupplierCode($articleDetail)
+    {
+        $supplierCode = $articleDetail->getAttribute()->getBlisstributeSupplierCode();
+        if (trim($supplierCode) == '') {
+            $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
+        }
+
+        return $supplierCode;
     }
 
     /**
