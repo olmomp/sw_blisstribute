@@ -471,10 +471,12 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'noticeStockLevel' => (int)$articleDetail->getStockMin(),
             'reorderStockLevel' => (int)$articleDetail->getStockMin(),
             'vendorCollection' => array(
-                'code' => $this->getSupplierCode($articleDetail),
-                'articleNumber' => $articleDetail->getSupplierNumber(),
-                'purchasePrice' => $articleDetail->getPurchasePrice(),
-                'isPreferred' => true
+                array(
+                    'code' => $this->getSupplierCode($articleDetail),
+                    'articleNumber' => $articleDetail->getSupplierNumber(),
+                    'purchasePrice' => $articleDetail->getPurchasePrice(),
+                    'isPreferred' => true
+                )
             ),
             'priceCollection' => $this->buildPriceCollection($articleDetail),
             'seriesCorrelation' => array($this->buildSeriesCorrelation($articleDetail)),
