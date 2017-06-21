@@ -209,7 +209,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         if (version_compare($version, '0.2.3', '<=')) {
             $this->get('models')->removeAttribute('s_articles_attributes', 'blisstribute', 'estimated_delivery_date');
-
             $this->get('models')->generateAttributeModels(array('s_articles_attributes'));
 
             $sql = "DELETE FROM s_core_engine_elements WHERE name = 'blisstributeEstimatedDeliveryDate'";
@@ -334,10 +333,12 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if (version_compare($version, '0.5.9', '<')) {
             $this->subscribeEvent('Shopware_Console_Add_Command', 'onAddConsoleCommand');
         }
-		
-		if (version_compare($version, '0.6.2', '<')) {
+        
+        if (version_compare($version, '0.6.2', '<')) {
             $this->createConfig();
         }
+
+        $this->createAttributeCollection();
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy', 'config', 'frontend'));
     }
@@ -378,20 +379,34 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     private function createAttributeCollection()
     {
-        $modelManager = $this->get('models');
-        
-        $modelManager->addAttribute('s_articles_attributes', 'blisstribute', 'vhs_number', 'varchar(255)', true, 0);
-        $modelManager->addAttribute('s_articles_attributes', 'blisstribute', 'supplier_stock', 'int(11)', true, 0);
+        /** @var Shopware\Bundle\AttributeBundle\Service\CrudService $crud */
+        $crud = $this->get('shopware_attribute.crud_service');
 
-        $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'quantity_canceled', 'int(11)', true, 0);
-        $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'quantity_returned', 'int(11)', true, 0);
-        $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'quantity_shipped', 'int(11)', true, 0);
-        $modelManager->addAttribute('s_order_details_attributes', 'blisstribute', 'date_changed', 'date', true, 0);
+        $crud->update('s_articles_attributes', 'blisstribute_supplier_code', 'combobox', [
+            'displayInBackend' => true,
+            'label' => 'blisstribute supplier code',
+            'custom' => 1
+        ]);
 
-        $modelManager->addAttribute('s_order_basket_attributes', 'blisstribute', 'swag_promotion_is_free_good', 'varchar(255)', true, 0);
-        $modelManager->addAttribute('s_order_basket_attributes', 'blisstribute', 'swag_is_free_good_by_promotion_id', 'varchar(255)', true, 0);
-        
-        $modelManager->generateAttributeModels(array('s_articles_attributes', 's_order_details_attributes', 's_order_basket_attributes'));       
+        $crud->update('s_articles_attributes', 'blisstribute_vhs_number', 'string', [
+            'displayInBackend' => true,
+            'label' => 'blisstribute vhs article number',
+            'custom' => 1
+        ]);
+
+        $crud->update('s_articles_attributes', 'blisstribute_supplier_stock', 'integer', [
+            'displayInBackend' => true,
+            'label' => 'blisstribute supplier stock',
+            'custom' => 1
+        ]);
+
+        $crud->update('s_order_details_attributes', 'blisstribute_quantity_canceled', 'integer');
+        $crud->update('s_order_details_attributes', 'blisstribute_quantity_returned', 'integer');
+        $crud->update('s_order_details_attributes', 'blisstribute_quantity_shipped', 'integer');
+        $crud->update('s_order_details_attributes', 'blisstribute_date_changed', 'date');
+
+        $crud->update('s_order_basket_attributes', 'blisstribute_swag_promotion_is_free_good', 'string');
+        $crud->update('s_order_basket_attributes', 'blisstribute_swag_is_free_good_by_promotion_id', 'string');
 
         $this->get('db')->query(
             "INSERT IGNORE INTO `s_core_engine_elements` (`groupID`, `type`, `label`, `required`, `position`, " .
@@ -399,6 +414,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             "'blisstributeVhsNumber', 0, 0), (7, 'number', 'Bestand Lieferant', 0, 102, " .
             "'blisstributeSupplierStock', 0, 0)"
         );
+
+        $metaDataCache = Shopware()->Models()->getConfiguration()->getMetadataCacheImpl();
+        $metaDataCache->deleteAll();
+        Shopware()->Models()->generateAttributeModels(['s_articles_attributes', 's_order_details_attributes', 's_order_basket_attributes']);
     }
 
     /**
@@ -2026,7 +2045,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
-		$form->setElement(
+        $form->setElement(
             'checkbox',
             'blisstribute-transfer-shop-article-prices',
             array(

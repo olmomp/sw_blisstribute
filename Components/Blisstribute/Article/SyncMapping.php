@@ -182,6 +182,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             && strtolower($baseCategory->getParent()->getName()) != 'root'
             && strtolower($baseCategory->getParent()->getName()) != 'deutsch'
             && strtolower($baseCategory->getParent()->getName()) != 'englisch'
+            && !preg_match('/\-de/i', $baseCategory->getParent()->getName())
+            && !preg_match('/\-en/i', $baseCategory->getParent()->getName())
             && $categoryLimit < 10
         ) {
             $baseCategory = $baseCategory->getParent();
@@ -468,7 +470,12 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'reorder' => true,
             'noticeStockLevel' => (int)$articleDetail->getStockMin(),
             'reorderStockLevel' => (int)$articleDetail->getStockMin(),
-            'vendorCollection' => array(),
+            'vendorCollection' => array(
+                'code' => $articleDetail->getAttribute()->getBlisstributeSupplierCode(),
+                'articleNumber' => $articleDetail->getSupplierNumber(),
+                'purchasePrice' => $articleDetail->getPurchasePrice(),
+                'isPreferred' => true
+            ),
             'priceCollection' => $this->buildPriceCollection($articleDetail),
             'seriesCorrelation' => array($this->buildSeriesCorrelation($articleDetail)),
             'tagCollection' => $this->buildTagCollection($articleDetail),
