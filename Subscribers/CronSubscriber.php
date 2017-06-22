@@ -1,6 +1,6 @@
 <?php
 
-namespace ShopwarePlugins\ExitBBlisstribute\Subscribers;
+namespace Shopware\ExitBBlisstribute\Subscribers;
 
 use Enlight\Event\SubscriberInterface;
 use Shopware\Components\DependencyInjection\Container;
@@ -11,8 +11,22 @@ use Shopware\CustomModels\Blisstribute\BlisstributeOrder;
 require_once __DIR__ . '/../Components/Blisstribute/Article/Sync.php';
 require_once __DIR__ . '/../Components/Blisstribute/Order/Sync.php';
 
-class ShopwareSubscriber implements SubscriberInterface
+class CronSubscriber implements SubscriberInterface
 {
+    /**
+     * @var Container
+     */
+    private $container;
+
+    /**
+     * SearchBundleSubscriber constructor.
+     * @param Container $container
+     */
+    public function __construct()
+    {
+        $this->container = Shopware()->Container();
+    }
+    
     /**
      * @inheritdoc
      */

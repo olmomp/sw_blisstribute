@@ -1,6 +1,6 @@
 <?php
 
-namespace ShopwarePlugins\ExitBBlisstribute\Subscribers;
+namespace Shopware\ExitBBlisstribute\Subscribers;
 
 use \Enlight\Event\SubscriberInterface;
 use Shopware\Components\DependencyInjection\Container;
@@ -18,9 +18,9 @@ class ModelSubscriber implements SubscriberInterface
      * SearchBundleSubscriber constructor.
      * @param Container $container
      */
-    public function __construct(Container $container)
+    public function __construct()
     {
-        $this->container = $container;
+        $this->container = Shopware()->Container();
     }
 
     /**
@@ -77,12 +77,12 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function preRemoveOrder(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Order\Order $order */
         $order = $args->get('entity');
 
-        $repository = $this->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
+        $repository = $this->container->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $repository->findByOrder($order);
         if ($blisstributeOrder === null) {
             return;
@@ -99,7 +99,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistArticle(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $args->get('entity');
@@ -122,7 +122,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function preUpdateArticle(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $args->get('entity');
@@ -154,7 +154,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function preRemoveArticle(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $args->get('entity');
@@ -176,7 +176,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistDetail(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
         
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $args->get('entity');
@@ -209,7 +209,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function preUpdateDetail(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $args->get('entity');
@@ -244,7 +244,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function preRemoveDetail(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $args->get('entity');
@@ -274,7 +274,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistProperty(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
         $entity = $args->get('entity');
 
         $articleType = new Shopware\CustomModels\Blisstribute\BlisstributeArticleType();
@@ -292,7 +292,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function preRemoveProperty(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
         $entity = $args->get('entity');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleTypeRepository $articleTypeRepository */
@@ -313,7 +313,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistShop(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Shop\Shop $shop */
         $shop = $args->get('entity');
@@ -332,12 +332,12 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function preRemoveShop(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var Shopware\Models\Shop\ $blisstributeShop */
         $shop = $args->get('entity');
 
-        $repository = $this->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeShop');
+        $repository = $this->container->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeShop');
         $blisstributeShop = $repository->findOneByShop($shop->getId());
         if ($blisstributeShop === null) {
             return;
@@ -354,7 +354,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistVoucher(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Voucher\Voucher $voucher */
         $voucher = $args->get('entity');
@@ -373,12 +373,12 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function preRemoveVoucher(\Enlight_Event_EventArgs $args)
     {
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Voucher\Voucher $voucher */
         $voucher = $args->get('entity');
 
-        $repository = $this->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeCoupon');
+        $repository = $this->container->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeCoupon');
         $blisstributeCoupon = $repository->findByCoupon($voucher->getId());
         if ($blisstributeCoupon === null) {
             return;
@@ -539,7 +539,7 @@ class ModelSubscriber implements SubscriberInterface
     {
         $articleIdCollection = array();
 
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
         $entity = $args->get('entity');
@@ -602,10 +602,10 @@ class ModelSubscriber implements SubscriberInterface
         }
 
         $this->logInfo('processing order ' . $order->getNumber());
-        if ($this->get('config')->get('googleAddressValidation')) {
+        if ($this->container->get('config')->get('googleAddressValidation')) {
             /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
-            $addressValidator = $this->get('blisstribute.google_address_validator');
-            $addressValidator->validateAddress($blisstributeOrder, $this->get('config'));
+            $addressValidator = $this->container->get('blisstribute.google_address_validator');
+            $addressValidator->validateAddress($blisstributeOrder, $this->container->get('config'));
         }
 
         if ($blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_TRANSFERRED
@@ -614,7 +614,7 @@ class ModelSubscriber implements SubscriberInterface
             return true;
         }
 
-        if (!$this->get('config')->get('blisstribute-auto-sync-order')) {
+        if (!$this->container->get('config')->get('blisstribute-auto-sync-order')) {
             $this->logDebug('order sync cancelled due to disabled automatic sync');
             return true;
         }
@@ -641,7 +641,7 @@ class ModelSubscriber implements SubscriberInterface
     {
         $orderProxy = $eventArgs->get('subject');
 
-        $modelManager = $this->get('models');
+        $modelManager = $this->container->get('models');
         $orderRepository = $modelManager->getRepository('Shopware\Models\Order\Order');
 
         /** @var \Shopware\Models\Order\Order $order */
@@ -656,7 +656,7 @@ class ModelSubscriber implements SubscriberInterface
         if ($blisstributeOrder === null) {
             $status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_CREATION_PENDING;
 
-            if (!$this->get('config')->get('blisstribute-auto-sync-order')) {
+            if (!$this->container->get('config')->get('blisstribute-auto-sync-order')) {
                 $status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_NONE;
             }
         

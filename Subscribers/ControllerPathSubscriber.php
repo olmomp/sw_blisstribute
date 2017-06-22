@@ -1,17 +1,26 @@
 <?php
 
-namespace ShopwarePlugins\ExitBBlisstribute\Subscribers;
+namespace Shopware\ExitBBlisstribute\Subscribers;
 
 use \Enlight\Event\SubscriberInterface;
-use Shopware\Components\DependencyInjection\Container;
+use \Shopware\Components\DependencyInjection\Container;
 
 class ControllerPathSubscriber implements SubscriberInterface
 {
+    /**
+     * @var Container
+     */
+    private $container;
+
+    /**
+     * SearchBundleSubscriber constructor.
+     * @param Container $container
+     */
     public function __construct()
     {
-        $this->registerDirs();
+        $this->container = Shopware()->Container();
     }
-
+    
     /**
      * @inheritdoc
      */
@@ -26,7 +35,12 @@ class ControllerPathSubscriber implements SubscriberInterface
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeShipmentMapping' => 'getShipmentMappingController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributePaymentMapping' => 'getPaymentMappingController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeShopMapping' => 'getShopMappingController',
-            'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeCouponMapping' => 'getCouponMappingController'            
+            'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeCouponMapping' => 'getCouponMappingController',
+            
+            // api controllers
+            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btorders' => 'onGetBtordersApiController',
+            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticles' => 'onGetBtarticlesApiController',
+            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticlestock' => 'onGetBtarticlestockApiController' 
         ];
     }
     
@@ -37,8 +51,8 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     protected function registerDirs()
     {
-        $this->container->get('template')->addTemplateDir(__DIR__ . '/Views/', 'blisstribute');
-        $this->container->get('snippets')->addConfigDir(__DIR__ . '/Snippets/');
+        $this->container->get('template')->addTemplateDir(__DIR__ . '/../Views/', 'blisstribute');
+        $this->container->get('snippets')->addConfigDir(__DIR__ . '/../Snippets/');
     }
 
     /**
@@ -50,7 +64,8 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     public function getArticleTypeController(\Enlight_Event_EventArgs $eventArgs)
     {
-        return $this->Path() . '/Controllers/Backend/BlisstributeArticleType.php';
+        $this->registerDirs();
+        return __DIR__ . '/../Controllers/Backend/BlisstributeArticleType.php';
     }
 
     /**
@@ -63,7 +78,8 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     public function getArticleSyncController(\Enlight_Event_EventArgs $eventArgs)
     {
-        return $this->Path() . '/Controllers/Backend/BlisstributeArticle.php';
+        $this->registerDirs();
+        return __DIR__ . '/../Controllers/Backend/BlisstributeArticle.php';
     }
 
     /**
@@ -75,7 +91,8 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     public function getArticleSyncCronController(\Enlight_Event_EventArgs $eventArgs)
     {
-        return $this->Path() . '/Controllers/Backend/BlisstributeArticleSyncCron.php';
+        $this->registerDirs();
+        return __DIR__ . '/../Controllers/Backend/BlisstributeArticleSyncCron.php';
     }
 
     /**
@@ -87,7 +104,8 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     public function getOrderController(\Enlight_Event_EventArgs $eventArgs)
     {
-        return $this->Path() . '/Controllers/Backend/BlisstributeOrder.php';
+        $this->registerDirs();
+        return __DIR__ . '/../Controllers/Backend/BlisstributeOrder.php';
     }
 
     /**
@@ -99,7 +117,8 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     public function getOrderSyncCronController(\Enlight_Event_EventArgs $eventArgs)
     {
-        return $this->Path() . '/Controllers/Backend/BlisstributeOrderSyncCron.php';
+        $this->registerDirs();
+        return __DIR__ . '/../Controllers/Backend/BlisstributeOrderSyncCron.php';
     }
 
     /**
@@ -111,7 +130,8 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     public function getShipmentMappingController(\Enlight_Event_EventArgs $eventArgs)
     {
-        return $this->Path() . '/Controllers/Backend/BlisstributeShipmentMapping.php';
+        $this->registerDirs();
+        return __DIR__ . '/../Controllers/Backend/BlisstributeShipmentMapping.php';
     }
 
     /**
@@ -123,7 +143,8 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     public function getPaymentMappingController(\Enlight_Event_EventArgs $eventArgs)
     {
-        return $this->Path() . '/Controllers/Backend/BlisstributePaymentMapping.php';
+        $this->registerDirs();
+        return __DIR__ . '/../Controllers/Backend/BlisstributePaymentMapping.php';
     }
 
     /**
@@ -135,7 +156,8 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     public function getShopMappingController(\Enlight_Event_EventArgs $eventArgs)
     {
-        return $this->Path() . '/Controllers/Backend/BlisstributeShopMapping.php';
+        $this->registerDirs();
+        return __DIR__ . '/../Controllers/Backend/BlisstributeShopMapping.php';
     }
 
     /**
@@ -147,6 +169,31 @@ class ControllerPathSubscriber implements SubscriberInterface
      */
     public function getCouponMappingController(\Enlight_Event_EventArgs $eventArgs)
     {
-        return $this->Path() . '/Controllers/Backend/BlisstributeCouponMapping.php';
+        $this->registerDirs();
+        return __DIR__ . '/../Controllers/Backend/BlisstributeCouponMapping.php';
+    }
+    
+    /**
+     * @return string
+     */
+    public function onGetBtordersApiController()
+    {
+        return __DIR__ . '/../Controllers/Api/Btorders.php';
+    }
+    
+    /**
+     * @return string
+     */
+    public function onGetBtarticlesApiController()
+    {
+        return __DIR__ . '/../Controllers/Api/Btarticles.php';
+    }
+
+    /**
+     * @return string
+     */
+    public function onGetBtarticlestockApiController()
+    {
+        return __DIR__ . '/../Controllers/Api/Btarticlestock.php';
     }
 }
