@@ -13,8 +13,7 @@ class ModelSubscriber implements SubscriberInterface
     private $container;
 
     /**
-     * SearchBundleSubscriber constructor.
-     * @param Container $container
+     * ModelSubscriber constructor.
      */
     public function __construct()
     {
@@ -28,7 +27,6 @@ class ModelSubscriber implements SubscriberInterface
     {
         return [
             // shopware models
-            'Shopware\Models\Order\Order::postPersist' => 'postPersistOrder',
             'Shopware\Models\Order\Order::preRemove' => 'preRemoveOrder',
             'Shopware\Models\Article\Article::postPersist' => 'postPersistArticle',
             'Shopware\Models\Article\Article::preUpdate' => 'preUpdateArticle',
@@ -44,32 +42,24 @@ class ModelSubscriber implements SubscriberInterface
             'Shopware\Models\Voucher\Voucher::preRemove' => 'preRemoveVoucher',
             
             // blisstribute models
-            'Shopware\CustomModels\Blisstribute\BlisstributeOrder::postPersist' => 'postPersistBlisstributeOrder',
+            'Shopware\CustomModels\Blisstribute\BlisstributeOrder::prePersist' => 'prePersistBlisstributeOrder',
             'Shopware\CustomModels\Blisstribute\BlisstributeOrder::preUpdate' => 'preUpdateBlisstributeOrder',
-            'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest::postPersist' => 'postPersistBlisstributeShippingRequest',
+            'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest::prePersist' => 'prePersistBlisstributeShippingRequest',
             'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest::preUpdate' => 'preUpdateBlisstributeShippingRequest',
-            'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems::postPersist' => 'postPersistBlisstributeShippingRequestItem',
+            'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems::prePersist' => 'prePersistBlisstributeShippingRequestItem',
             'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems::preUpdate' => 'preUpdateBlisstributeShippingRequestItem',
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticle::postPersist' => 'postPersistBlisstributeArticle',
+            'Shopware\CustomModels\Blisstribute\BlisstributeArticle::prePersist' => 'prePersistBlisstributeArticle',
             'Shopware\CustomModels\Blisstribute\BlisstributeArticle::preUpdate' => 'preUpdateBlisstributeArticle',
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::postPersist' => 'postPersistBlisstributeArticleType',
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::preUpdate' => 'preUpdateBlisstributeArticleType'            
+            'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::prePersist' => 'prePersistBlisstributeArticleType',
+            'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::preUpdate' => 'preUpdateBlisstributeArticleType',
+            
+            // other events
+            'Shopware_Modules_Order_SendMail_BeforeSend' => 'onOrderSendMailBeforeSend'
         ];
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $eventArgs
-     *
-     * @return bool
-     */
-    public function postPersistOrder(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $this->onOrderFinished($eventArgs);
-        return true;
-    }
-    
-    /**
-     * @param \\Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $args
      *
      * @return void
      */
@@ -80,7 +70,7 @@ class ModelSubscriber implements SubscriberInterface
         /** @var \Shopware\Models\Order\Order $order */
         $order = $args->get('entity');
 
-        $repository = $this->container->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
+        $repository = $this->container->get('models')->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $repository->findByOrder($order);
         if ($blisstributeOrder === null) {
             return;
@@ -102,7 +92,7 @@ class ModelSubscriber implements SubscriberInterface
         /** @var \Shopware\Models\Article\Article $article */
         $article = $args->get('entity');
 
-        $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
+        $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
         $blisstributeArticle->setLastCronAt(new \DateTime())
             ->setArticle($article)
             ->setTriggerSync(true)
@@ -125,10 +115,10 @@ class ModelSubscriber implements SubscriberInterface
         /** @var \Shopware\Models\Article\Article $article */
         $article = $args->get('entity');
 
-        $repository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
         $blisstributeArticle = $repository->findOneBy(array('article' => $article));
         if ($blisstributeArticle === null) {
-            $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
+            $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($article);
         }
         
@@ -157,7 +147,7 @@ class ModelSubscriber implements SubscriberInterface
         /** @var \Shopware\Models\Article\Article $article */
         $article = $args->get('entity');
 
-        $repository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
         $blisstributeArticle = $repository->findOneBy(array('article' => $article));
         if ($blisstributeArticle === null) {
             return;
@@ -180,10 +170,10 @@ class ModelSubscriber implements SubscriberInterface
         $detail = $args->get('entity');
 
         // load article
-        $repository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
         $blisstributeArticle = $repository->findOneBy(array('article' => $detail->getArticle()));
         if ($blisstributeArticle === null) {
-            $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
+            $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($detail->getArticle());
         }
         
@@ -212,13 +202,13 @@ class ModelSubscriber implements SubscriberInterface
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $args->get('entity');
 
-        $articleRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $articleRepository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticle $article */
         $blisstributeArticle = $articleRepository->findOneBy(array('article' => $detail->getArticle()));
 
         if ($blisstributeArticle === null) {
-            $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
+            $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($detail->getArticle());
         }
         
@@ -247,7 +237,7 @@ class ModelSubscriber implements SubscriberInterface
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $args->get('entity');
 
-        $repository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticle $blisstributeArticle */
         $blisstributeArticle = $repository->findOneBy(array('article' => $detail->getArticle()));
@@ -273,11 +263,12 @@ class ModelSubscriber implements SubscriberInterface
     public function postPersistProperty(\Enlight_Event_EventArgs $args)
     {
         $modelManager = $this->container->get('models');
+            
+        /** @var \Shopware\Models\Property\Group $entry */
         $entity = $args->get('entity');
 
-        $articleType = new Shopware\CustomModels\Blisstribute\BlisstributeArticleType();
+        $articleType = new \Shopware\CustomModels\Blisstribute\BlisstributeArticleType();
         $articleType->setFilter($entity);
-        $articleType->setArticleType(0);
 
         $modelManager->persist($articleType);
         $modelManager->flush();
@@ -294,7 +285,7 @@ class ModelSubscriber implements SubscriberInterface
         $entity = $args->get('entity');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleTypeRepository $articleTypeRepository */
-        $articleTypeRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticleType');
+        $articleTypeRepository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticleType');
         $articleType = $articleTypeRepository->fetchByFilterType($entity->getId());
         if ($articleType === null) {
             return;
@@ -305,7 +296,7 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * @param \\Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $args
      *
      * @return void
      */
@@ -324,7 +315,7 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \\Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $args
      *
      * @return void
      */
@@ -335,7 +326,7 @@ class ModelSubscriber implements SubscriberInterface
         /** @var Shopware\Models\Shop\ $blisstributeShop */
         $shop = $args->get('entity');
 
-        $repository = $this->container->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeShop');
+        $repository = $this->container->get('models')->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeShop');
         $blisstributeShop = $repository->findOneByShop($shop->getId());
         if ($blisstributeShop === null) {
             return;
@@ -346,7 +337,7 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \\Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $args
      *
      * @return void
      */
@@ -365,7 +356,7 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \\Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $args
      *
      * @return void
      */
@@ -376,7 +367,7 @@ class ModelSubscriber implements SubscriberInterface
         /** @var \Shopware\Models\Voucher\Voucher $voucher */
         $voucher = $args->get('entity');
 
-        $repository = $this->container->get('models')->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeCoupon');
+        $repository = $this->container->get('models')->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeCoupon');
         $blisstributeCoupon = $repository->findByCoupon($voucher->getId());
         if ($blisstributeCoupon === null) {
             return;
@@ -393,7 +384,7 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function postPersistBlisstributeOrder(\Enlight_Event_EventArgs $eventArgs)
+    public function prePersistBlisstributeOrder(\Enlight_Event_EventArgs $eventArgs)
     {
         $currentTime = new \DateTime();
 
@@ -423,7 +414,7 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function postPersistBlisstributeShippingRequest(\Enlight_Event_EventArgs $eventArgs)
+    public function prePersistBlisstributeShippingRequest(\Enlight_Event_EventArgs $eventArgs)
     {
         $currentTime = new \DateTime();
 
@@ -454,7 +445,7 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function postPersistBlisstributeShippingRequestItem(\Enlight_Event_EventArgs $eventArgs)
+    public function prePersistBlisstributeShippingRequestItem(\Enlight_Event_EventArgs $eventArgs)
     {
         $currentTime = new \DateTime();
 
@@ -485,7 +476,7 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function postPersistBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
+    public function prePersistBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
     {
         $currentTime = new \DateTime();
 
@@ -516,7 +507,7 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function postPersistBlisstributeArticleType(\Enlight_Event_EventArgs $eventArgs)
+    public function prePersistBlisstributeArticleType(\Enlight_Event_EventArgs $eventArgs)
     {
         $currentTime = new \DateTime();
 
@@ -544,7 +535,7 @@ class ModelSubscriber implements SubscriberInterface
         $entity->setModifiedAt(new \DateTime());
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleRepository $articleRepository */
-        $articleRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $articleRepository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
 
         $groupEntity = $entity->getFilter();
         foreach ($groupEntity->getArticles() as $article) {
@@ -566,92 +557,28 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * add order reference for export to blisstribute
-     *
-     * @param \\Enlight_Event_EventArgs $eventArgs
+     * @param \Enlight_Event_EventArgs $args
      *
      * @return bool
      */
-    private function onRegisterOrder(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $this->registerOrder($eventArgs);
-        return true;
-    }
-    
-    /**
-     * export order to blisstribute
-     *
-     * @param \Enlight_Event_EventArgs $eventArgs
-     *
-     * @return bool|string
-     */
-    public function onOrderFinished(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $blisstributeOrder = $this->registerOrder($eventArgs);
-        if ($blisstributeOrder === null || !$blisstributeOrder) {
-            $this->logInfo('blisstributeOrder is null! onOrderFinished failed!');
-            return false;
-        }
-
-        $order = $blisstributeOrder->getOrder();
-        if ($order === null || !$order) {
-            $this->logInfo('order is null! onOrderFinished failed!');
-            return false;
-        }
-
-        $this->logInfo('processing order ' . $order->getNumber());
-        if ($this->container->get('config')->get('googleAddressValidation')) {
-            /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
-            $addressValidator = $this->container->get('blisstribute.google_address_validator');
-            $addressValidator->validateAddress($blisstributeOrder, $this->container->get('config'));
-        }
-
-        if ($blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_TRANSFERRED
-            || $blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_IN_TRANSFER
-        ) {
-            return true;
-        }
-
-        if (!$this->container->get('config')->get('blisstribute-auto-sync-order')) {
-            $this->logDebug('order sync cancelled due to disabled automatic sync');
-            return true;
-        }
-
-        try {
-            require_once __DIR__ . '/Components/Blisstribute/Order/Sync.php';
-            $orderSync = new Shopware_Components_Blisstribute_Order_Sync($this->Config());
-            $result = $orderSync->processSingleOrderSync($blisstributeOrder);
-        } catch (Exception $ex) {
-            return $ex->getMessage();
-        }
-
-        return $result;
-    }
-    
-    /**
-     * register order to blisstribute order export
-     *
-     * @param \Enlight_Event_EventArgs $eventArgs
-     *
-     * @return \Shopware\CustomModels\Blisstribute\BlisstributeOrder|null
-     */
-    protected function registerOrder(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $orderProxy = $eventArgs->get('subject');
+    public function onOrderSendMailBeforeSend(\Enlight_Event_EventArgs $args)
+    {        
+        $orderProxy = $args->get('subject');
 
         $modelManager = $this->container->get('models');
-        $orderRepository = $modelManager->getRepository('Shopware\Models\Order\Order');
+        $orderRepository = $modelManager->getRepository('\Shopware\Models\Order\Order');
 
         /** @var \Shopware\Models\Order\Order $order */
-        $order = $orderRepository->findOneBy(array('number' => $orderProxy->sOrderNumber));
+        $order = $orderRepository->findOneBy(['number' => $orderProxy->sOrderNumber]);
         if ($order === null) {
+            #$this->logDebug('order not found');            
             return null;
         }
 
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeOrderRepository $blisstributeOrderRepository */
-        $blisstributeOrderRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
+        $blisstributeOrderRepository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $blisstributeOrderRepository->findByOrder($order);
-        if ($blisstributeOrder === null) {
+        if ($blisstributeOrder === null) {        
             $status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_CREATION_PENDING;
 
             if (!$this->container->get('config')->get('blisstribute-auto-sync-order')) {
@@ -668,6 +595,56 @@ class ModelSubscriber implements SubscriberInterface
             $modelManager->flush();
         }
 
-        return $blisstributeOrder;
+        if($this->container->get('config')->get('blisstribute-auto-sync-order'))
+        {
+            $this->transferOrder($blisstributeOrder);
+            return true;
+        }
+        
+        #$this->logDebug('order sync cancelled due to disabled automatic sync');
+    }
+    
+    /**
+     * export order to blisstribute
+     *
+     * @param \Shopware\CustomModels\Blisstribute\BlisstributeOrder $blisstributeOrder
+     *
+     * @return bool|string
+     */
+    private function transferOrder(\Shopware\CustomModels\Blisstribute\BlisstributeOrder $blisstributeOrder)
+    {
+        if ($blisstributeOrder === null || !$blisstributeOrder) {
+            #$this->logInfo('blisstributeOrder is null! onOrderFinished failed!');
+            return false;
+        }
+
+        $order = $blisstributeOrder->getOrder();
+        if ($order === null || !$order) {
+            #$this->logInfo('order is null! onOrderFinished failed!');
+            return false;
+        }
+
+        #$this->logInfo('processing order ' . $order->getNumber());
+        if ($this->container->get('config')->get('googleAddressValidation')) {
+            /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
+            $addressValidator = $this->container->get('blisstribute.google_address_validator');
+            $addressValidator->validateAddress($blisstributeOrder, $this->container->get('config'));
+        }
+
+        if ($blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_TRANSFERRED
+            || $blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_IN_TRANSFER
+        ) {
+            return true;
+        }
+
+        try {
+            require_once __DIR__ . '/../Components/Blisstribute/Order/Sync.php';
+            $orderSync = new \Shopware_Components_Blisstribute_Order_Sync(\Shopware()->Plugins()->Backend()->ExitBBlisstribute()->Config());
+            $result = $orderSync->processSingleOrderSync($blisstributeOrder);
+        } catch (Exception $ex) {
+            return $ex->getMessage();
+        }
+
+        return $result;
     }
 }
