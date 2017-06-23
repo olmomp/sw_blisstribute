@@ -2,11 +2,10 @@
 
 namespace Shopware\ExitBBlisstribute\Subscribers;
 
-use Enlight\Event\SubscriberInterface;
-use Shopware\Components\DependencyInjection\Container;
-use Shopware\CustomModels\Blisstribute\BlisstributeCoupon;
-
-use Shopware\CustomModels\Blisstribute\BlisstributeOrder;
+use \Enlight\Event\SubscriberInterface;
+use \Shopware\Components\DependencyInjection\Container;
+use \Shopware\CustomModels\Blisstribute\BlisstributeCoupon;
+use \Shopware\CustomModels\Blisstribute\BlisstributeOrder;
 
 require_once __DIR__ . '/../Components/Blisstribute/Article/Sync.php';
 require_once __DIR__ . '/../Components/Blisstribute/Order/Sync.php';
@@ -33,45 +32,11 @@ class CronSubscriber implements SubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'Shopware_CronJob_PixupBlisstributeOrderSyncCron' => 'onRunPixupBlisstributeOrderSyncCron', // order sync
-            'Shopware_CronJob_PixupBlisstributeArticleSyncCron' => 'onRunPixupBlisstributeArticleSyncCron', // article sync
-            'Shopware_CronJob_PixupExitBEasyCouponWertgutscheinCron' => 'onRunPixupExitBEasyCouponWertgutscheinCron', // easyCoupon Wertgutscheine
-            'Shopware_CronJob_PixupImportOrdersToExitBCron' => 'onRunPixupImportOrdersToExitBCron' // import all orders
+            'Shopware_CronJob_BlisstributeOrderSyncCron' => 'onRunBlisstributeOrderSyncCron', // order sync
+            'Shopware_CronJob_BlisstributeArticleSyncCron' => 'onRunBlisstributeArticleSyncCron', // article sync
+            'Shopware_CronJob_BlisstributeEasyCouponMappingCron' => 'onRunBlisstributeEasyCouponMappingCron', // easyCoupon Wertgutscheine
+            'Shopware_CronJob_BlisstributeOrderMappingCron' => 'onRunBlisstributeOrderMappingCron' // import all orders
         ];
-    }
-
-    /**
-     * Import all orders that might have been added using pure sql
-     *
-     * @param \Shopware_Components_Cron_CronJob $job
-     */
-    public function onRunPixupImportOrdersToExitBCron(\Shopware_Components_Cron_CronJob $job)
-    {
-        if(is_null($job)) return;
-
-
-        // get unmapped orders
-        $sql = "SELECT id FROM s_order WHERE id NOT IN (SELECT s_order_id FROM s_plugin_blisstribute_orders) AND ordernumber != 0";
-
-        $modelManager = $this->container->get('models');
-
-        $orders = $this->container->get('db')->fetchAll($sql);
-
-        $date = new \DateTime();
-
-        foreach ($orders as $order) {
-            $blisstributeOrder = new BlisstributeOrder();
-            $blisstributeOrder->setTries(0);
-            $blisstributeOrder->setOrder($modelManager->getRepository('Shopware\Models\Order\Order')->find($order['id']));
-            $blisstributeOrder->setCreatedAt($date);
-            $blisstributeOrder->setModifiedAt($date);
-            $blisstributeOrder->setStatus(1);
-            $blisstributeOrder->setLastCronAt($date);
-
-            $modelManager->persist($blisstributeOrder);
-        }
-
-        $modelManager->flush();
     }
 
     /**
@@ -79,7 +44,7 @@ class CronSubscriber implements SubscriberInterface
      *
      * @param \Shopware_Components_Cron_CronJob $job
      */
-    public function onRunPixupBlisstributeOrderSyncCron(\Shopware_Components_Cron_CronJob $job)
+    public function onRunBlisstributeOrderSyncCron(\Shopware_Components_Cron_CronJob $job)
     {
         if(is_null($job)) return;
 
@@ -100,7 +65,7 @@ class CronSubscriber implements SubscriberInterface
      *
      * @param \Shopware_Components_Cron_CronJob $job
      */
-    public function onRunPixupBlisstributeArticleSyncCron(\Shopware_Components_Cron_CronJob $job)
+    public function onRunBlisstributeArticleSyncCron(\Shopware_Components_Cron_CronJob $job)
     {
         if(is_null($job)) return;
 
@@ -121,7 +86,7 @@ class CronSubscriber implements SubscriberInterface
      *
      * @param \Shopware_Components_Cron_CronJob $job
      */
-    public function onRunPixupExitBEasyCouponWertgutscheinCron(\Shopware_Components_Cron_CronJob $job)
+    public function onRunBlisstributeEasyCouponMappingCron(\Shopware_Components_Cron_CronJob $job)
     {
         if(is_null($job)) return;
 
@@ -147,6 +112,40 @@ class CronSubscriber implements SubscriberInterface
             $blisstributeCoupon->setVoucher($voucher)->setIsMoneyVoucher(true);
 
             $modelManager->persist($blisstributeCoupon);
+        }
+
+        $modelManager->flush();
+    }
+    
+    /**
+     * Import all orders that might have been added using pure sql
+     *
+     * @param \Shopware_Components_Cron_CronJob $job
+     */
+    public function onRunBlisstributeOrderMappingCron(\Shopware_Components_Cron_CronJob $job)
+    {
+        if(is_null($job)) return;
+
+
+        // get unmapped orders
+        $sql = "SELECT id FROM s_order WHERE id NOT IN (SELECT s_order_id FROM s_plugin_blisstribute_orders) AND ordernumber != 0";
+
+        $modelManager = $this->container->get('models');
+
+        $orders = $this->container->get('db')->fetchAll($sql);
+
+        $date = new \DateTime();
+
+        foreach ($orders as $order) {
+            $blisstributeOrder = new BlisstributeOrder();
+            $blisstributeOrder->setTries(0);
+            $blisstributeOrder->setOrder($modelManager->getRepository('Shopware\Models\Order\Order')->find($order['id']));
+            $blisstributeOrder->setCreatedAt($date);
+            $blisstributeOrder->setModifiedAt($date);
+            $blisstributeOrder->setStatus(1);
+            $blisstributeOrder->setLastCronAt($date);
+
+            $modelManager->persist($blisstributeOrder);
         }
 
         $modelManager->flush();

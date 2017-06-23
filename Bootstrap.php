@@ -1,11 +1,13 @@
 <?php
 
-require_once(__DIR__ . '/Components/Blisstribute/Domain/LoggerTrait.php');
-require_once(__DIR__ . '/Components/Blisstribute/Command/OrderExport.php');
-require_once(__DIR__ . '/Components/Blisstribute/Command/ArticleExport.php');
+require_once __DIR__ . '/Components/Blisstribute/Domain/LoggerTrait.php';
 
 use Doctrine\Common\Collections\ArrayCollection;
-use ShopwarePlugins\ExitBBlisstribute\Subscribers\CronSubscriber;
+use Shopware\ExitBBlisstribute\Subscribers\CommandSubscriber;
+use Shopware\ExitBBlisstribute\Subscribers\CronSubscriber;
+use Shopware\ExitBBlisstribute\Subscribers\ControllerSubscriber;
+use Shopware\ExitBBlisstribute\Subscribers\ModelSubscriber;
+use Shopware\ExitBBlisstribute\Subscribers\ServiceSubscriber;
 
 /**
  * exitb blisstribute plugin bootstrap
@@ -18,7 +20,7 @@ use ShopwarePlugins\ExitBBlisstribute\Subscribers\CronSubscriber;
 class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
     use Shopware_Components_Blisstribute_Domain_LoggerTrait;
-
+    
     /**
      * @return string
      *
@@ -122,7 +124,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      * {@inheritdoc}
      */
     public function enable()
-    {
+    {        
         $this->logInfo('plugin enabled');
         $this->subscribeEvents();
         return $this->installDefaultTableValues();
@@ -132,7 +134,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      * {@inheritdoc}
      */
     public function disable()
-    {
+    {        
         $this->logInfo('plugin disabled');
         return $this->deleteDefaultTableValues();
     }
@@ -141,12 +143,12 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      * @return array
      */
     public function install()
-    {
+    {        
         // check the current sw version
-        if (!$this->assertMinimumVersion('5.0')) {
+        if (!$this->assertMinimumVersion('5.2')) {
             return array(
                 'success' => false,
-                'message' => 'Das Plugin benötigt mindestens Shopware 5.0.'
+                'message' => 'Das Plugin benötigt mindestens Shopware 5.2.'
             );
         }
         
@@ -278,7 +280,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
         
         if (version_compare($version, '0.6.3', '<')) {
-            array('success' => false, 'message' => 'Bitte das Plugin neu installieren.');
+            return array('success' => false, 'message' => 'Bitte das Plugin neu installieren.');
         }
 
         return array('success' => true, 'invalidateCache' => array('backend', 'proxy', 'config', 'frontend'));
@@ -359,122 +361,14 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     }
 
     /**
-     * @param Enlight_Event_EventArgs $args
-     */
-    public function onEnlightControllerFrontStartDispatch(Enlight_Event_EventArgs $args)
-    {
-        $this->Application()->Loader()->registerNamespace('Shopware\Components', $this->Path() . 'Components/');
-    }
-
-    /**
-     * @return string
-     */
-    public function onGetBtordersApiController()
-    {
-        return $this->Path() . 'Controllers/Api/Btorders.php';
-    }
-
-    /**
-     * @return string
-     */
-    public function onGetGoogleAddressValidator()
-    {
-        require_once $this->Path() . 'Components/Blisstribute/Order/GoogleAddressValidator.php';
-        return new Shopware_Components_Blisstribute_Order_GoogleAddressValidator();
-    }
-
-    /**
-     * @return string
-     */
-    public function onGetBtarticlesApiController()
-    {
-        return $this->Path() . 'Controllers/Api/Btarticles.php';
-    }
-
-    /**
-     * @return string
-     */
-
-
-    public function onGetBtarticlestockApiController()
-    {
-        return $this->Path() . 'Controllers/Api/Btarticlestock.php';
-    }
-
-    /**
-     * add blisstribute cli commands
-     *
-     * @param Enlight_Event_EventArgs $args
-     * @return ArrayCollection
-     */
-    public function onAddConsoleCommand(Enlight_Event_EventArgs $args)
-    {
-        $this->registerCustomModels();
-        $this->registerNamespaces();
-
-        if (Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy([
-            'name' => 'SwagPromotion',
-            'active' => true
-        ])) {
-            $this->get('loader')->registerNamespace('Shopware\CustomModels', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Models/');
-            $this->get('loader')->registerNamespace('Shopware\SwagPromotion', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/');
-            $this->get('loader')->registerNamespace('Shopware\Components', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Components/');
-        }
-
-        return new ArrayCollection(array(
-            new Shopware_Components_Blisstribute_Command_OrderExport(),
-            new Shopware_Components_Blisstribute_Command_ArticleExport()
-        ));
-    }
-
-    /**
      * add event listener for blisstribute module
      *
      * @return void
      */
     private function subscribeEvents()
     {
-        $this->subscribeEvent(
-            'Shopware_Console_Add_Command',
-            'onAddConsoleCommand'
-        );
-
-        $this->subscribeEvent(
-            'Enlight_Controller_Action_PostDispatch_Backend_Article',
-            'postDispatchBackendArticle'
-        );
-
-        $this->subscribeEvent(
-            'Enlight_Controller_Front_StartDispatch',
-            'onEnlightControllerFrontStartDispatch'
-        );
-
-        $this->subscribeEvent(
-            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btorders',
-            'onGetBtordersApiController'
-        );
-
-        $this->subscribeEvent(
-            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticles',
-            'onGetBtarticlesApiController'
-        );
-
-        $this->subscribeEvent(
-            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticlestock',
-            'onGetBtarticlestockApiController'
-        );
-
-        $this->subscribeEvent(
-            'Enlight_Controller_Action_PostDispatchSecure_Backend_Index',
-            'onActionPostDispatchSecureBackendIndex'
-        );
-
         $this->subscribeEvent('Enlight_Controller_Front_StartDispatch', 'startDispatch');
-
-        $this->subscribeEvent('Enlight_Bootstrap_InitResource_blisstribute.google_address_validator', 'onGetGoogleAddressValidator');
     }
-
-    /* ********************************************** Reworked Subscriber *********************************************/
 
     /**
      * Start Dispatch Method
@@ -487,11 +381,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $this->registerCustomModels();
         $this->registerNamespaces();
         $this->registerSnippets();
-
+        
         $subscribers = array(
+            new CommandSubscriber(),
             new CronSubscriber(),
-            new ControllerPathSubscriber(),
-            new ModelSubscriber()
+            new ControllerSubscriber(),
+            new ModelSubscriber(),
+            new ServiceSubscriber()
         );
 
         foreach ($subscribers as $subscriber) {
@@ -507,8 +403,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         try {
             // order sync cron
             $this->createCronJob(
-                'Pixup Blisstribute Order Sync CronJob',
-                'PixupBlisstributeOrderSyncCron',
+                'Blisstribute Order Sync',
+                'Shopware_CronJob_BlisstributeOrderSyncCron',
                 3600, // 1 hour
                 true
             );
@@ -519,8 +415,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         try {
             // article sync cron
             $this->createCronJob(
-                'Pixup Blisstribute Article Sync CronJob',
-                'PixupBlisstributeArticleSyncCron',
+                'Blisstribute Article Sync',
+                'Shopware_CronJob_BlisstributeArticleSyncCron',
                 3600, // 1 hour
                 true
             );
@@ -531,8 +427,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         try {
             // easyCoupon Wertgutscheine
             $this->createCronJob(
-                'Pixup ExitB EasyCoupon Wertgutschein CronJob',
-                'PixupExitBEasyCouponWertgutscheinCron',
+                'Blisstribute EasyCoupon Mapping',
+                'Shopware_CronJob_BlisstributeEasyCouponMappingCron',
                 120, // 2 minutes
                 true
             );
@@ -543,8 +439,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         // import all orders that might have been added using pure sql
         try {
             $this->createCronJob(
-                'Pixup Import Orders To ExitB CronJob',
-                'PixupImportOrdersToExitBCron',
+                'Blisstribute Order Mapping',
+                'Shopware_CronJob_BlisstributeOrderMappingCron',
                 3600, // 1 hour
                 true
             );
@@ -560,7 +456,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function registerTemplateDir()
     {
-        $this->get('template')->addTemplateDir(__DIR__ . '/Views/', 'blisstribute');
+        $this->get('template')->addTemplateDir($this->Path() . '/Views/', 'blisstribute');
     }
 
     /**
@@ -568,7 +464,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function registerNamespaces()
     {
-        $this->get('Loader')->registerNamespace('ShopwarePlugins\ExitBBlisstribute',$this->Path());
+        $this->get('loader')->registerNamespace('Shopware\ExitBBlisstribute', $this->Path());
     }
 
     /**
@@ -576,28 +472,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     protected function registerSnippets()
     {
-        $this->Application()->Snippets()->addConfigDir(__DIR__ . '/Snippets/');
-    }
-
-    /* ********************************************** Reworked Subscriber END *****************************************/
-
-    public function onActionPostDispatchSecureBackendIndex(Enlight_Controller_ActionEventArgs $arguments)
-    {
-        /**@var $controller Shopware_Controllers_Frontend_Index */
-        $controller = $arguments->getSubject();
-
-        $view = $controller->View();
-
-        //Add our plugin template directory to load our slogan extension.
-        $view->addTemplateDir($this->Path() . 'Views/');
-
-        $this->Application()->Snippets()->addConfigDir(
-            $this->Path() . 'Snippets/'
-        );
-
-        if ($arguments->getRequest()->getActionName() === 'load') {
-            $view->extendsTemplate('backend/index/view/exitb_blisstribute/menu.js');
-        }
+        $this->get('snippets')->addConfigDir($this->Path() . '/Snippets/');
     }
 
     /**
@@ -803,7 +678,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             return true;
         } catch (Exception $ex) {
-            $this->logInfo('install default table values failed! ' . $ex->getMessage());
+           $this->logInfo('install default table values failed! ' . $ex->getMessage());
         }
 
         return false;
@@ -830,7 +705,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             return true;
         } catch (Exception $ex) {
-            $this->logInfo('delete default table values failed! ' . $ex->getMessage());
+           $this->logInfo('delete default table values failed! ' . $ex->getMessage());
         }
 
         return false;

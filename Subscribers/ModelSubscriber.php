@@ -3,9 +3,7 @@
 namespace Shopware\ExitBBlisstribute\Subscribers;
 
 use \Enlight\Event\SubscriberInterface;
-use Shopware\Components\DependencyInjection\Container;
-
-use Shopware\CustomModels\Blisstribute;
+use \Shopware\Components\DependencyInjection\Container;
 
 class ModelSubscriber implements SubscriberInterface
 {
@@ -105,7 +103,7 @@ class ModelSubscriber implements SubscriberInterface
         $article = $args->get('entity');
 
         $blisstributeArticle = new Shopware\CustomModels\Blisstribute\BlisstributeArticle();
-        $blisstributeArticle->setLastCronAt(new DateTime())
+        $blisstributeArticle->setLastCronAt(new \DateTime())
             ->setArticle($article)
             ->setTriggerSync(true)
             ->setTries(0)
@@ -138,7 +136,7 @@ class ModelSubscriber implements SubscriberInterface
             return;
         }
 
-        $blisstributeArticle->setLastCronAt(new DateTime())
+        $blisstributeArticle->setLastCronAt(new \DateTime())
             ->setTriggerSync(true)
             ->setTries(0)
             ->setComment(null);
@@ -193,7 +191,7 @@ class ModelSubscriber implements SubscriberInterface
             return;
         }
 
-        $blisstributeArticle->setLastCronAt(new DateTime())
+        $blisstributeArticle->setLastCronAt(new \DateTime())
             ->setTriggerSync(true)
             ->setTries(0)
             ->setComment(null);
@@ -228,7 +226,7 @@ class ModelSubscriber implements SubscriberInterface
             return;
         }
 
-        $blisstributeArticle->setLastCronAt(new DateTime())
+        $blisstributeArticle->setLastCronAt(new \DateTime())
             ->setTriggerSync(true)
             ->setTries(0)
             ->setComment(null);
@@ -397,7 +395,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistBlisstributeOrder(\Enlight_Event_EventArgs $eventArgs)
     {
-        $currentTime = new DateTime();
+        $currentTime = new \DateTime();
 
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeOrder $entity */
         $entity = $eventArgs->get('entity');
@@ -415,7 +413,7 @@ class ModelSubscriber implements SubscriberInterface
     public function preUpdateBlisstributeOrder(\Enlight_Event_EventArgs $eventArgs)
     {
         $entity = $eventArgs->get('entity');
-        $entity->setModifiedAt(new DateTime());
+        $entity->setModifiedAt(new \DateTime());
     }
     
     /**
@@ -427,7 +425,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistBlisstributeShippingRequest(\Enlight_Event_EventArgs $eventArgs)
     {
-        $currentTime = new DateTime();
+        $currentTime = new \DateTime();
 
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest $entity */
         $entity = $eventArgs->get('entity');
@@ -446,7 +444,7 @@ class ModelSubscriber implements SubscriberInterface
     {
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest $entity */
         $entity = $eventArgs->get('entity');
-        $entity->setModifiedAt(new DateTime());
+        $entity->setModifiedAt(new \DateTime());
     }
 
     /**
@@ -458,7 +456,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistBlisstributeShippingRequestItem(\Enlight_Event_EventArgs $eventArgs)
     {
-        $currentTime = new DateTime();
+        $currentTime = new \DateTime();
 
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems $entity */
         $entity = $eventArgs->get('entity');
@@ -477,7 +475,7 @@ class ModelSubscriber implements SubscriberInterface
     {
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems $entity */
         $entity = $eventArgs->get('entity');
-        $entity->setModifiedAt(new DateTime());
+        $entity->setModifiedAt(new \DateTime());
     }
     
     /**
@@ -489,7 +487,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
     {
-        $currentTime = new DateTime();
+        $currentTime = new \DateTime();
 
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
         $entity = $eventArgs->get('entity');
@@ -508,7 +506,7 @@ class ModelSubscriber implements SubscriberInterface
     {
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticle $entity */
         $entity = $args->get('entity');
-        $entity->setModifiedAt(new DateTime());
+        $entity->setModifiedAt(new \DateTime());
     }   
 
     /**
@@ -520,7 +518,7 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistBlisstributeArticleType(\Enlight_Event_EventArgs $eventArgs)
     {
-        $currentTime = new DateTime();
+        $currentTime = new \DateTime();
 
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
         $entity = $eventArgs->get('entity');
@@ -543,7 +541,7 @@ class ModelSubscriber implements SubscriberInterface
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
         $entity = $args->get('entity');
-        $entity->setModifiedAt(new DateTime());
+        $entity->setModifiedAt(new \DateTime());
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleRepository $articleRepository */
         $articleRepository = $modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
@@ -557,7 +555,7 @@ class ModelSubscriber implements SubscriberInterface
 
         $articleCollection = $articleRepository->fetchByArticleIdList($articleIdCollection);
         foreach ($articleCollection as $currentArticle) {
-            $currentArticle->setModifiedAt(new DateTime());
+            $currentArticle->setModifiedAt(new \DateTime());
             $currentArticle->setTriggerSync(true);
             $currentArticle->setTries(0);
 
@@ -661,7 +659,7 @@ class ModelSubscriber implements SubscriberInterface
             }
         
             $blisstributeOrder = new \Shopware\CustomModels\Blisstribute\BlisstributeOrder();
-            $blisstributeOrder->setLastCronAt(new DateTime())
+            $blisstributeOrder->setLastCronAt(new \DateTime())
                 ->setOrder($order)
                 ->setStatus($status)
                 ->setTries(0);

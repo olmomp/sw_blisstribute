@@ -5,7 +5,7 @@ namespace Shopware\ExitBBlisstribute\Subscribers;
 use \Enlight\Event\SubscriberInterface;
 use \Shopware\Components\DependencyInjection\Container;
 
-class ControllerPathSubscriber implements SubscriberInterface
+class ControllerSubscriber implements SubscriberInterface
 {
     /**
      * @var Container
@@ -40,7 +40,11 @@ class ControllerPathSubscriber implements SubscriberInterface
             // api controllers
             'Enlight_Controller_Dispatcher_ControllerPath_Api_Btorders' => 'onGetBtordersApiController',
             'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticles' => 'onGetBtarticlesApiController',
-            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticlestock' => 'onGetBtarticlestockApiController' 
+            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticlestock' => 'onGetBtarticlestockApiController',
+            
+            // others
+            'Enlight_Controller_Action_PostDispatchSecure_Backend_Index' => 'onActionPostDispatchSecureBackendIndex',
+            'Enlight_Controller_Action_PostDispatch_Backend_Article' => 'onActionPostDispatchBackendArticle'
         ];
     }
     
@@ -176,7 +180,7 @@ class ControllerPathSubscriber implements SubscriberInterface
     /**
      * @return string
      */
-    public function onGetBtordersApiController()
+    public function onGetBtordersApiController(\Enlight_Event_EventArgs $eventArg)
     {
         return __DIR__ . '/../Controllers/Api/Btorders.php';
     }
@@ -184,7 +188,7 @@ class ControllerPathSubscriber implements SubscriberInterface
     /**
      * @return string
      */
-    public function onGetBtarticlesApiController()
+    public function onGetBtarticlesApiController(\Enlight_Event_EventArgs $eventArg)
     {
         return __DIR__ . '/../Controllers/Api/Btarticles.php';
     }
@@ -192,8 +196,45 @@ class ControllerPathSubscriber implements SubscriberInterface
     /**
      * @return string
      */
-    public function onGetBtarticlestockApiController()
+    public function onGetBtarticlestockApiController(\Enlight_Event_EventArgs $eventArg)
     {
         return __DIR__ . '/../Controllers/Api/Btarticlestock.php';
+    }
+    
+    /**
+     * add plugin menu to backend
+     */
+    public function onActionPostDispatchSecureBackendIndex(\Enlight_Controller_ActionEventArgs $args)
+    {
+        /**@var $controller Shopware_Controllers_Frontend_Index */
+        $controller = $args->getSubject();
+
+        $view = $controller->View();
+
+        //Add our plugin template directory to load our slogan extension.
+        $view->addTemplateDir(__DIR__ . '/../Views/');
+
+        $this->container->get('snippets')->addConfigDir(
+            __DIR__ . '/../Snippets/'
+        );
+
+        if ($args->getRequest()->getActionName() === 'load') {
+            $view->extendsTemplate('backend/index/view/exitb_blisstribute/menu.js');
+        }
+    }
+    
+    /**
+     * add attribute to article
+     *
+     * @param Enlight_Event_EventArgs $args
+     */
+    public function onActionPostDispatchBackendArticle(\Enlight_Event_EventArgs $args)
+    {
+        $view = $args->getSubject()->View();
+        $view->addTemplateDir(__DIR__ . '/../Views/');
+
+        if ($args->getRequest()->getActionName() === 'load') {
+            $view->extendsTemplate('backend/attributes_article/model/attribute.js');
+        }
     }
 }

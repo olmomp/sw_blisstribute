@@ -3,10 +3,10 @@
 namespace Shopware\ExitBBlisstribute\Subscribers;
 
 use \Enlight\Event\SubscriberInterface;
-use Shopware\Components\DependencyInjection\Container;
+use \Shopware\Components\DependencyInjection\Container;
 
-use Shopware\ExitBBlisstribute\Components\Command\OrderExportCommand;
-use Shopware\ExitBBlisstribute\Components\Command\ArticleExportCommand;
+require_once __DIR__ . '/../Components/Blisstribute/Command/OrderExport.php';
+require_once __DIR__ . '/../Components/Blisstribute/Command/ArticleExport.php';
 
 class CommandSubscriber implements SubscriberInterface
 {
@@ -51,9 +51,9 @@ class CommandSubscriber implements SubscriberInterface
             $this->container->get('loader')->registerNamespace('Shopware\Components', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Components/');
         }
 
-        return new ArrayCollection(array(
-            new OrderExportCommand(),
-            new ArticleExportCommand()
-        ));
+        return new ArrayCollection([
+            new Shopware_Components_Blisstribute_Command_OrderExport(),
+            new Shopware_Components_Blisstribute_Command_ArticleExport()
+        ]);
     }
 }
