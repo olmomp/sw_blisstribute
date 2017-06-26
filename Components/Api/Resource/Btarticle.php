@@ -184,7 +184,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $attributes->setBlisstributeSupplierStock($params['attribute']['blisstributeSupplierStock']);
 
         $article = $detail->getArticle();
-        $article->setLastStock($params['lastStock']);
+        #$article->setLastStock($params['lastStock']);
 
         $violations = $this->getManager()->validate($detail);
         if ($violations->count() > 0) {
