@@ -99,12 +99,12 @@ class CronSubscriber implements SubscriberInterface
 
         $unmappedVouchers = $this->container->get('db')->fetchAll($sqlUnmappedVouchers);
 
-        $idArray = array();
+        $idArray = [];
         foreach ($unmappedVouchers as $voucher) {
             $idArray[] = $voucher['id'];
         }
 
-        $vouchers = $modelManager->getRepository('Shopware\Models\Voucher\Voucher')->findById($idArray);
+        $vouchers = $modelManager->getRepository('\Shopware\Models\Voucher\Voucher')->findById($idArray);
 
         /** @var \Shopware\Models\Voucher\Voucher $voucher */
         foreach ($vouchers as $voucher) {
@@ -126,7 +126,6 @@ class CronSubscriber implements SubscriberInterface
     {
         if(is_null($job)) return;
 
-
         // get unmapped orders
         $sql = "SELECT id FROM s_order WHERE id NOT IN (SELECT s_order_id FROM s_plugin_blisstribute_orders) AND ordernumber != 0";
 
@@ -137,9 +136,9 @@ class CronSubscriber implements SubscriberInterface
         $date = new \DateTime();
 
         foreach ($orders as $order) {
-            $blisstributeOrder = new BlisstributeOrder();
+            $blisstributeOrder = new \BlisstributeOrder();
             $blisstributeOrder->setTries(0);
-            $blisstributeOrder->setOrder($modelManager->getRepository('Shopware\Models\Order\Order')->find($order['id']));
+            $blisstributeOrder->setOrder($modelManager->getRepository('\Shopware\Models\Order\Order')->find($order['id']));
             $blisstributeOrder->setCreatedAt($date);
             $blisstributeOrder->setModifiedAt($date);
             $blisstributeOrder->setStatus(1);

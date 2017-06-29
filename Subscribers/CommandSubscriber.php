@@ -42,18 +42,20 @@ class CommandSubscriber implements SubscriberInterface
      */
     public function onAddConsoleCommand(\Enlight_Event_EventArgs $args)
     {
-        if ($this->container->get('models')->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy([
+        if ($this->container->get('models')->getRepository('\Shopware\Models\Plugin\Plugin')->findOneBy([
             'name' => 'SwagPromotion',
             'active' => true
         ])) {
-            $this->container->get('loader')->registerNamespace('Shopware\CustomModels', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Models/');
-            $this->container->get('loader')->registerNamespace('Shopware\SwagPromotion', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/');
-            $this->container->get('loader')->registerNamespace('Shopware\Components', Shopware()->DocPath() . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Components/');
+            $shopwareDocPath = Shopware()->DocPath();
+            
+            $this->container->get('loader')->registerNamespace('Shopware\CustomModels', $shopwareDocPath . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Models/');
+            $this->container->get('loader')->registerNamespace('Shopware\SwagPromotion', $shopwareDocPath . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/');
+            $this->container->get('loader')->registerNamespace('Shopware\Components', $shopwareDocPath . 'engine/Shopware/Plugins/Community/Frontend/SwagPromotion/Components/');
         }
 
         return new ArrayCollection([
-            new Shopware_Components_Blisstribute_Command_OrderExport(),
-            new Shopware_Components_Blisstribute_Command_ArticleExport()
+            new \Shopware_Components_Blisstribute_Command_OrderExport(),
+            new \Shopware_Components_Blisstribute_Command_ArticleExport()
         ]);
     }
 }

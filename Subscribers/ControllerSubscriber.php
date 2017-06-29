@@ -38,9 +38,9 @@ class ControllerSubscriber implements SubscriberInterface
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeCouponMapping' => 'getCouponMappingController',
             
             // api controllers
-            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btorders' => 'onGetBtordersApiController',
-            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticles' => 'onGetBtarticlesApiController',
-            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticlestock' => 'onGetBtarticlestockApiController',
+            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btorders' => 'getBtordersApiController',
+            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticles' => 'getBtarticlesApiController',
+            'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticlestock' => 'getBtarticlestockApiController',
             
             // others
             'Enlight_Controller_Action_PostDispatchSecure_Backend_Index' => 'onActionPostDispatchSecureBackendIndex',
@@ -188,7 +188,7 @@ class ControllerSubscriber implements SubscriberInterface
     /**
      * @return string
      */
-    public function onGetBtarticlesApiController(\Enlight_Event_EventArgs $eventArg)
+    public function getBtarticlesApiController(\Enlight_Event_EventArgs $eventArg)
     {
         return __DIR__ . '/../Controllers/Api/Btarticles.php';
     }
@@ -196,7 +196,7 @@ class ControllerSubscriber implements SubscriberInterface
     /**
      * @return string
      */
-    public function onGetBtarticlestockApiController(\Enlight_Event_EventArgs $eventArg)
+    public function getBtarticlestockApiController(\Enlight_Event_EventArgs $eventArg)
     {
         return __DIR__ . '/../Controllers/Api/Btarticlestock.php';
     }
