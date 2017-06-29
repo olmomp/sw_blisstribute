@@ -18,8 +18,7 @@ class CronSubscriber implements SubscriberInterface
     private $container;
 
     /**
-     * SearchBundleSubscriber constructor.
-     * @param Container $container
+     * CronSubscriber constructor
      */
     public function __construct()
     {

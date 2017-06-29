@@ -13,8 +13,7 @@ class ControllerSubscriber implements SubscriberInterface
     private $container;
 
     /**
-     * SearchBundleSubscriber constructor.
-     * @param Container $container
+     * ControllerSubscriber constructor
      */
     public function __construct()
     {

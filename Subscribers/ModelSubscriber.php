@@ -18,7 +18,7 @@ class ModelSubscriber implements SubscriberInterface
     private $container;
 
     /**
-     * ModelSubscriber constructor.
+     * ModelSubscriber constructor
      */
     public function __construct()
     {

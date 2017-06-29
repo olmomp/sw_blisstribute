@@ -16,8 +16,7 @@ class CommandSubscriber implements SubscriberInterface
     private $container;
 
     /**
-     * SearchBundleSubscriber constructor.
-     * @param Container $container
+     * CommandSubscriber constructor
      */
     public function __construct()
     {

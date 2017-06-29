@@ -15,8 +15,7 @@ class ServiceSubscriber implements SubscriberInterface
     private $container;
 
     /**
-     * SearchBundleSubscriber constructor.
-     * @param Container $container
+     * ServiceSubscriber constructor
      */
     public function __construct()
     {
