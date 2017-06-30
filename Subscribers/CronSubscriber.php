@@ -88,7 +88,8 @@ class CronSubscriber implements SubscriberInterface
     public function onRunBlisstributeEasyCouponMappingCron(\Shopware_Components_Cron_CronJob $job)
     {
         if(is_null($job)) return;
-
+        
+        try {
         $modelManager = $this->container->get('models');
 
         $sqlUnmappedVouchers = "SELECT voucher.id AS id FROM s_emarketing_vouchers voucher 
@@ -114,6 +115,10 @@ class CronSubscriber implements SubscriberInterface
         }
 
         $modelManager->flush();
+        } catch (\Exception $ex) {
+            echo "exception while syncing easy coupon " . $ex->getMessage();
+            return;
+        }
     }
     
     /**
@@ -124,28 +129,33 @@ class CronSubscriber implements SubscriberInterface
     public function onRunBlisstributeOrderMappingCron(\Shopware_Components_Cron_CronJob $job)
     {
         if(is_null($job)) return;
+        
+        try {
+            // get unmapped orders
+            $sql = "SELECT id FROM s_order WHERE id NOT IN (SELECT s_order_id FROM s_plugin_blisstribute_orders) AND ordernumber != 0";
 
-        // get unmapped orders
-        $sql = "SELECT id FROM s_order WHERE id NOT IN (SELECT s_order_id FROM s_plugin_blisstribute_orders) AND ordernumber != 0";
+            $modelManager = $this->container->get('models');
 
-        $modelManager = $this->container->get('models');
+            $orders = $this->container->get('db')->fetchAll($sql);
 
-        $orders = $this->container->get('db')->fetchAll($sql);
+            $date = new \DateTime();
 
-        $date = new \DateTime();
+            foreach ($orders as $order) {
+                $blisstributeOrder = new \BlisstributeOrder();
+                $blisstributeOrder->setTries(0);
+                $blisstributeOrder->setOrder($modelManager->getRepository('\Shopware\Models\Order\Order')->find($order['id']));
+                $blisstributeOrder->setCreatedAt($date);
+                $blisstributeOrder->setModifiedAt($date);
+                $blisstributeOrder->setStatus(1);
+                $blisstributeOrder->setLastCronAt($date);
 
-        foreach ($orders as $order) {
-            $blisstributeOrder = new \BlisstributeOrder();
-            $blisstributeOrder->setTries(0);
-            $blisstributeOrder->setOrder($modelManager->getRepository('\Shopware\Models\Order\Order')->find($order['id']));
-            $blisstributeOrder->setCreatedAt($date);
-            $blisstributeOrder->setModifiedAt($date);
-            $blisstributeOrder->setStatus(1);
-            $blisstributeOrder->setLastCronAt($date);
+                $modelManager->persist($blisstributeOrder);
+            }
 
-            $modelManager->persist($blisstributeOrder);
+            $modelManager->flush();
+        } catch (\Exception $ex) {
+            echo "exception while syncing orders " . $ex->getMessage();
+            return;
         }
-
-        $modelManager->flush();
     }
 }

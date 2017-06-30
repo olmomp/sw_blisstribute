@@ -474,7 +474,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 array(
                     'code' => $this->getSupplierCode($articleDetail),
                     'articleNumber' => $articleDetail->getSupplierNumber(),
-                    'purchasePrice' => $articleDetail->getPurchasePrice(),
+                    'purchasePrice' => $this->getMainDetailBasePrice($articleDetail),
                     'isPreferred' => true
                 )
             ),
