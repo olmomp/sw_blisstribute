@@ -90,31 +90,31 @@ class CronSubscriber implements SubscriberInterface
         if(is_null($job)) return;
         
         try {
-        $modelManager = $this->container->get('models');
+            $modelManager = $this->container->get('models');
 
-        $sqlUnmappedVouchers = "SELECT voucher.id AS id FROM s_emarketing_vouchers voucher 
-                                LEFT JOIN s_plugin_blisstribute_coupon coupon ON coupon.s_voucher_id = voucher.id
-                                LEFT JOIN s_emarketing_vouchers_attributes attributes ON attributes.voucherID = voucher.id
-                                WHERE coupon.id IS NULL AND attributes.neti_easy_coupon = 1";
+            $sqlUnmappedVouchers = "SELECT voucher.id AS id FROM s_emarketing_vouchers voucher 
+                                    LEFT JOIN s_plugin_blisstribute_coupon coupon ON coupon.s_voucher_id = voucher.id
+                                    LEFT JOIN s_emarketing_vouchers_attributes attributes ON attributes.voucherID = voucher.id
+                                    WHERE coupon.id IS NULL AND attributes.neti_easy_coupon = 1";
 
-        $unmappedVouchers = $this->container->get('db')->fetchAll($sqlUnmappedVouchers);
+            $unmappedVouchers = $this->container->get('db')->fetchAll($sqlUnmappedVouchers);
 
-        $idArray = [];
-        foreach ($unmappedVouchers as $voucher) {
-            $idArray[] = $voucher['id'];
-        }
+            $idArray = [];
+            foreach ($unmappedVouchers as $voucher) {
+                $idArray[] = $voucher['id'];
+            }
 
-        $vouchers = $modelManager->getRepository('\Shopware\Models\Voucher\Voucher')->findById($idArray);
+            $vouchers = $modelManager->getRepository('\Shopware\Models\Voucher\Voucher')->findById($idArray);
 
-        /** @var \Shopware\Models\Voucher\Voucher $voucher */
-        foreach ($vouchers as $voucher) {
-            $blisstributeCoupon = new BlisstributeCoupon();
-            $blisstributeCoupon->setVoucher($voucher)->setIsMoneyVoucher(true);
+            /** @var \Shopware\Models\Voucher\Voucher $voucher */
+            foreach ($vouchers as $voucher) {
+                $blisstributeCoupon = new BlisstributeCoupon();
+                $blisstributeCoupon->setVoucher($voucher)->setIsMoneyVoucher(true);
 
-            $modelManager->persist($blisstributeCoupon);
-        }
+                $modelManager->persist($blisstributeCoupon);
+            }
 
-        $modelManager->flush();
+            $modelManager->flush();
         } catch (\Exception $ex) {
             echo "exception while syncing easy coupon " . $ex->getMessage();
             return;
