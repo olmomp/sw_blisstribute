@@ -170,6 +170,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $this->installPluginSchema();
         $this->logDebug('creating config');
         $this->createConfig();
+        $this->logDebug('creating config translations');
+        $this->createConfigTranslations();
 
         try {
             $this->createAttributeCollection();
@@ -640,7 +642,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     }
 
     /**
-     * create plugin configuration
+     * creates the plugin configuration
      *
      * @return void
      */
@@ -652,7 +654,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'select',
             'blisstribute-soap-protocol',
             [
-                'label' => 'Protocol',
+                'label' => 'Protokoll',
                 'description' => 'SOAP-Protokoll für den Verbindungsaufbau zum Blisstribute-System',
                 'store' => [
                     [1, 'http'],
@@ -685,7 +687,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'text',
             'blisstribute-soap-client',
             [
-                'label' => 'Client',
+                'label' => 'SOAP-Client',
                 'description' => 'SOAP-Klientenkürzel für Ihren Blisstribute-Mandanten',
                 'maxLength' => 3,
                 'value' => ''
@@ -695,7 +697,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'text',
             'blisstribute-soap-username',
             [
-                'label' => 'Username',
+                'label' => 'SOAP-Benutzername',
                 'description' => 'SOAP-Benutzername für Ihren Blisstribute-Mandanten',
                 'maxLength' => 255,
                 'value' => ''
@@ -705,7 +707,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'text',
             'blisstribute-soap-password',
             [
-                'label' => 'Password',
+                'label' => 'SOAP-Passwort',
                 'description' => 'SOAP-Passwort für Ihren Blisstribute-Mandanten',
                 'maxLength' => 255,
                 'value' => ''
@@ -715,8 +717,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'text',
             'blisstribute-http-login',
             [
-                'label' => 'HTTP Username',
-                'description' => 'Zugangsdaten (Benutzername) für eine eventuelle .htaccess Authentifizierung',
+                'label' => 'HTTP-Benutzername',
+                'description' => 'HTTP-Benutzername für eine eventuelle .htaccess Authentifizierung',
                 'maxLength' => 255
             ]
         );
@@ -724,8 +726,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'text',
             'blisstribute-http-password',
             [
-                'label' => 'HTTP Password',
-                'description' => 'Zugangsdaten (Passwort) für eine eventuelle .htaccess Authentifizierung',
+                'label' => 'HTTP-Passwort',
+                'description' => 'HTTP-Passwort für eine eventuelle .htaccess Authentifizierung',
                 'maxLength' => 255
             ]
         );
@@ -798,7 +800,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'checkbox',
             'blisstribute-transfer-orders',
             [
-                'label' => 'Transfer Orders without verification',
+                'label' => 'Bestellungen ohne Adressvalidierung übertragen',
                 'description' => 'Wenn aktiviert, werden ausschließlich Bestellungen ins Blisstribute-System übertragen, deren Adressen erfolgreich verifiziert werden konnten.',
                 'value' => 1,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
@@ -808,12 +810,71 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'checkbox',
             'blisstribute-transfer-shop-article-prices',
             [
-                'label' => 'Transfer Article Prices of each shop',
+                'label' => 'Artikelpreise von jedem Shop übertragen',
                 'description' => 'Wenn aktiviert, werden die Preise eines Artikels anhand der beim Shop hinterlegten Kundengruppe und Währung zusätzlich ins Blisstribute-System übertragen.',
                 'value' => 0
             ]
         );
     }
+    
+    /**
+	 * creates the plugin configuration translations
+     *
+     * @return void
+	 */
+	private function createConfigTranslations()
+	{
+		$form = $this->Form();
+		
+		$shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
+ 
+		$translations = [
+			'en_GB' => [
+				'blisstribute-soap-protocol' => 'protocol',
+				'blisstribute-soap-host' => 'host',
+				'blisstribute-soap-port' => 'port',
+                'blisstribute-soap-client' => 'soap-client',
+				'blisstribute-soap-username' => 'soap-username',
+				'blisstribute-soap-password' => 'soap-password',
+				'blisstribute-http-login' => 'http-username',
+				'blisstribute-http-password' => 'http-password',
+				'blisstribute-auto-sync-order' => 'auto sync order',
+				'blisstribute-auto-hold-order' => 'auto hold order',
+				'blisstribute-auto-lock-order' => 'auto lock order',
+				'blisstribute-default-advertising-medium' => 'default advertising medium',
+				'blisstribute-google-address-validation' => 'use google address validation',
+				'blisstribute-google-maps-key' => 'google maps key',
+				'blisstribute-transfer-orders' => 'transfer orders without verification',
+				'blisstribute-transfer-shop-article-prices' => 'transfer article prices of each shop'
+			],
+		];
+ 
+		foreach($translations as $locale => $snippets) {
+			$localeModel = $shopRepository->findOneBy([
+				'locale' => $locale
+			]);
+	 
+			if($localeModel === null){
+				continue;
+			}
+
+			foreach($snippets as $element => $snippet) {
+				$elementModel = $form->getElement($element);
+	 
+				if($elementModel === null) {
+					continue;
+				}
+	 
+				$translationModel = new \Shopware\Models\Config\ElementTranslation();
+				$translationModel->setLabel($snippet);
+				$translationModel->setLocale($localeModel);
+
+				$elementModel->addTranslation($translationModel);
+			}
+    	}
+		
+		$form->save();	
+	}
 
     /**
      * creates menu items for blisstribute module
