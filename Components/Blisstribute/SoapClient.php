@@ -97,7 +97,7 @@ abstract class Shopware_Components_Blisstribute_SoapClient
         if ($this->_soapClient == null) {
             $soapClient = new nusoap_client($this->getServiceUrl(true), true);
 
-            if (!is_null($this->blisstributeHttpUser) && trim($this->blisstributeHttpPassword)) {
+            if (!is_null($this->blisstributeHttpUser) && !is_null($this->blisstributeHttpPassword)) {
                 $soapClient->setCredentials($this->blisstributeHttpUser, $this->blisstributeHttpPassword);
             }
 
