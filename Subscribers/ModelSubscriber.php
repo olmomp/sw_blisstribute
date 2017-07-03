@@ -701,11 +701,6 @@ class ModelSubscriber implements SubscriberInterface
         }
 
         $this->logInfo('processing order ' . $order->getNumber());
-        if ($pluginConfig->get('blisstribute-google-address-validation')) {
-            /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
-            $addressValidator = $this->container->get('blisstribute.google_address_validator');
-            $addressValidator->validateAddress($blisstributeOrder, $this->container->get('config'));
-        }
 
         if ($blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_TRANSFERRED
             || $blisstributeOrder->getStatus() == \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_IN_TRANSFER

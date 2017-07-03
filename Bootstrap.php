@@ -780,7 +780,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'checkbox',
             'blisstribute-google-address-validation',
             [
-                'label' => 'Google Maps Address Verification',
+                'label' => 'Google Maps Address Verifikation',
                 'description' => 'Wenn aktiviert, werden Liefer- und Rechnungsadresse bei Bestellübertragung mit der Google Maps API abgeglichen, um eventuelle Adressefehler zu korrigieren.',
                 'value' => 0,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
