@@ -93,7 +93,7 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
         $customerAddress = $shipping->getStreet() . ',' . $shipping->getZipCode() . ',' . $shipping->getCity() . ',' . $order->getShipping()->getCountry()->getName();
         $customerAddress = rawurlencode($customerAddress);
 
-        $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' . $customerAddress ."&key=" . $config->get('googleMapsKey');
+        $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' . $customerAddress ."&key=" . $config->get('blisstribute-google-maps-key');
 
         $codeResult = file_get_contents($url);
         $decodedResult = json_decode($codeResult, true);
@@ -142,7 +142,7 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
             return true;
         }
 
-        if (!$config->get('transferOrders')) {
+        if (!$config->get('blisstribute-transfer-orders')) {
             $hint = 'No address verification possible';
 
             $blisstributeOrder
@@ -156,6 +156,4 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
 
         return false;
     }
-
-
 }

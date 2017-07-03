@@ -330,6 +330,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
 
         try {
             $response = $this->processArticleSync(array('materialData' => $articleDataCollection));
+            
             if (!isset($response['materialConfirmationData']) || empty($response['materialConfirmationData'])) {
                 throw new Shopware_Components_Blisstribute_Exception_TransferException('no or invalid response given');
             }

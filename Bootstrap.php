@@ -109,7 +109,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function getInfo()
     {
-        return array(
+        return [
             'version' => $this->getVersion(),
             'label' => $this->getLabel(),
             'author' => $this->getSupplier(),
@@ -117,7 +117,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'description' => $this->getDescription(),
             'support' => $this->getSupport(),
             'link' => $this->getLink(),
-        );
+        ];
     }
 
     /**
@@ -146,18 +146,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {        
         // check the current sw version
         if (!$this->assertMinimumVersion('5.2')) {
-            return array(
+            return [
                 'success' => false,
                 'message' => 'Das Plugin benötigt mindestens Shopware 5.2.'
-            );
+            ];
         }
         
         // check needed plugins
-        if (!$this->assertRequiredPluginsPresent(array('Cron'))) {
-            return array(
+        if (!$this->assertRequiredPluginsPresent(['Cron'])) {
+            return [
                 'success' => false,
                 'message' => 'Bitte installieren und aktivieren Sie das Shopware Cron-Plugin.'
-            );
+            ];
         }        
         
         $this->logDebug('register cron jobs');
@@ -175,13 +175,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->createAttributeCollection();
             $this->createOrderStateCollection();
         } catch (Exception $e) {
-            return array(
+            return [
                 'success' => false,
                 'message' => $e->getMessage()
-            );
+            ];
         }
 
-        return array('success' => true, 'invalidateCache' => array('backend', 'proxy', 'config', 'frontend'));
+        return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
 
     /**
@@ -190,10 +190,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     public function update($version)
     {        
         if (version_compare($version, '0.8.0', '<')) {
-            return array('success' => false, 'message' => 'Bitte das Plugin neu installieren.');
+            return ['success' => false, 'message' => 'Bitte das Plugin neu installieren.'];
         }
 
-        return array('success' => true, 'invalidateCache' => array('backend', 'proxy', 'config', 'frontend'));
+        return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
 
     /**
@@ -201,7 +201,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function uninstall()
     {
-        return array('success' => true, 'invalidateCache' => array('backend', 'proxy', 'config', 'frontend'));
+        return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
 
     /**
@@ -310,13 +310,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $this->registerNamespaces();
         $this->registerSnippets();
         
-        $subscribers = array(
+        $subscribers = [
             new CommandSubscriber(),
             new CronSubscriber(),
             new ControllerSubscriber(),
             new ModelSubscriber(),
             new ServiceSubscriber()
-        );
+        ];
 
         foreach ($subscribers as $subscriber) {
             $this->get('events')->addSubscriber($subscriber);
@@ -428,7 +428,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $modelManager = $this->get('models');
 
         /** @var \Doctrine\ORM\Mapping\ClassMetadata[] $classMetadataCollection */
-        $classMetadataCollection = array(
+        $classMetadataCollection = [
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeArticle'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeArticleType'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\TaskLock'),
@@ -439,7 +439,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShop'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeCoupon'),
-        );
+        ];
 
         return $classMetadataCollection;
     }
@@ -471,7 +471,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     protected function pluginTableExists(\Doctrine\ORM\Mapping\ClassMetadata $classMetadata)
     {
         $schemaManager = $this->get('models')->getConnection()->getSchemaManager();
-        if (!$schemaManager->tablesExist(array($classMetadata->getTableName()))) {
+        if (!$schemaManager->tablesExist([$classMetadata->getTableName()])) {
             return false;
         }
 
@@ -497,7 +497,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $currentTable = $schemaManager->listTableDetails($classMetadata->getTableName());
 
         $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($modelManager);
-        $newSchema = $schemaTool->getSchemaFromMetadata(array($classMetadata));
+        $newSchema = $schemaTool->getSchemaFromMetadata([$classMetadata]);
         $newTable = $newSchema->getTable($classMetadata->getTableName());
 
         $comparator = new \Doctrine\DBAL\Schema\Comparator();
@@ -545,7 +545,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $schemaManager = $modelManager->getConnection()->getSchemaManager();
 
         $schemaTool = new \Doctrine\ORM\Tools\SchemaTool($modelManager);
-        $newSchema = $schemaTool->getSchemaFromMetadata(array($classMetadata));
+        $newSchema = $schemaTool->getSchemaFromMetadata([$classMetadata]);
         $newTable = $newSchema->getTable($classMetadata->getTableName());
 
         $databasePlatform = $schemaManager->getDatabasePlatform();
@@ -582,7 +582,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $this->logInfo('install default table values');
 
         try {
-            $defaultTableData = array(
+            $defaultTableData = [
                     "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
                     . "s_article_id, trigger_deleted, trigger_sync, tries, comment) SELECT CURRENT_TIMESTAMP, "
                     . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a",
@@ -598,7 +598,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     . "SELECT v.id, 0 FROM s_emarketing_vouchers AS v",
                     "DELETE FROM s_plugin_blisstribute_payment WHERE s_core_paymentmeans_id NOT IN (SELECT id FROM s_core_paymentmeans)",
                     "DELETE FROM s_plugin_blisstribute_shipment WHERE s_premium_dispatch_id NOT IN (SELECT id FROM s_premium_dispatch)",
-            );
+            ];
 
             foreach ($defaultTableData as $currentDataSet) {
                 $this->get('db')->query($currentDataSet);
@@ -622,10 +622,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $this->logInfo('delete default table values');
 
         try {
-            $defaultTableData = array(
+            $defaultTableData = [
                 'Shopware\CustomModels\Blisstribute\BlisstributeArticle' => "TRUNCATE TABLE s_plugin_blisstribute_articles",
                 'Locks' => "TRUNCATE TABLE s_plugin_blisstribute_task_lock",
-            );
+            ];
 
             foreach ($defaultTableData as $currentDataSet) {
                 $this->get('db')->query($currentDataSet);
@@ -651,167 +651,167 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $form->setElement(
             'select',
             'blisstribute-soap-protocol',
-            array(
+            [
                 'label' => 'Protocol',
                 'description' => 'SOAP-Protokoll für den Verbindungsaufbau zum Blisstribute-System',
-                'store' => array(
-                    array(1, 'http'),
-                    array(2, 'https')
-                ),
+                'store' => [
+                    [1, 'http'],
+                    [2, 'https']
+                ],
                 'value' => 1
-            )
+            ]
         );
         $form->setElement(
             'text',
             'blisstribute-soap-host',
-            array(
+            [
                 'label' => 'Host',
                 'description' => 'SOAP-Hostname für den Verbindungsaufbau zum Blisstribute-System',
                 'maxLength' => 255,
                 'value' => ''
-            )
+            ]
         );
         $form->setElement(
             'number',
             'blisstribute-soap-port',
-            array(
+            [
                 'label' => 'Port',
                 'description' => 'SOAP-Port für den Verbindungsaufbau zum Blisstribute-System',
                 'maxLength' => 4,
                 'value' => 80
-            )
+            ]
         );
         $form->setElement(
             'text',
             'blisstribute-soap-client',
-            array(
+            [
                 'label' => 'Client',
                 'description' => 'SOAP-Klientenkürzel für Ihren Blisstribute-Mandanten',
                 'maxLength' => 3,
                 'value' => ''
-            )
+            ]
         );
         $form->setElement(
             'text',
             'blisstribute-soap-username',
-            array(
+            [
                 'label' => 'Username',
                 'description' => 'SOAP-Benutzername für Ihren Blisstribute-Mandanten',
                 'maxLength' => 255,
                 'value' => ''
-            )
+            ]
         );
         $form->setElement(
             'text',
             'blisstribute-soap-password',
-            array(
+            [
                 'label' => 'Password',
                 'description' => 'SOAP-Passwort für Ihren Blisstribute-Mandanten',
                 'maxLength' => 255,
                 'value' => ''
-            )
+            ]
         );
         $form->setElement(
             'text',
             'blisstribute-http-login',
-            array(
+            [
                 'label' => 'HTTP Username',
                 'description' => 'Zugangsdaten (Benutzername) für eine eventuelle .htaccess Authentifizierung',
                 'maxLength' => 255
-            )
+            ]
         );
         $form->setElement(
             'text',
             'blisstribute-http-password',
-            array(
+            [
                 'label' => 'HTTP Password',
                 'description' => 'Zugangsdaten (Passwort) für eine eventuelle .htaccess Authentifizierung',
                 'maxLength' => 255
-            )
+            ]
         );
 
         $form->setElement(
             'checkbox',
             'blisstribute-auto-sync-order',
-            array(
+            [
                 'label' => 'Bestellung bei Anlage übermitteln',
                 'description' => 'Wenn aktiviert, wird die Bestellung sofort nach Abschluss des Checkout-Prozesses zum Blisstribute System übermittelt. Wenn deaktiviert, müssen die Bestellungen manuell, oder über den Cron übermittelt werden.',
                 'maxLength' => 255,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-            )
+            ]
         );
 
         $form->setElement(
             'checkbox',
             'blisstribute-auto-hold-order',
-            array(
+            [
                 'label' => 'Bestellung in Blisstribute anhalten',
                 'description' => 'Wenn aktiviert, wird die Bestellung sofort nach der Übertragung zu Blisstribute angehalten',
                 'maxLength' => 255,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-            )
+            ]
         );
 
         $form->setElement(
             'checkbox',
             'blisstribute-auto-lock-order',
-            array(
+            [
                 'label' => 'Bestellung in Blisstribute sperren',
                 'description' => 'Wenn aktiviert, wird die Bestellung sofort nach der Übertragung zu Blisstribute gesperrt',
                 'maxLength' => 255,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-            )
+            ]
         );
 
         $form->setElement(
             'text',
             'blisstribute-default-advertising-medium',
-            array(
+            [
                 'label' => 'Standard Werbemittel',
                 'description' => 'Das Standard-Werbemittel für die Bestellanlage',
                 'maxLength' => 3,
                 'value' => 'cen',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-            )
+            ]
         );
         $form->setElement(
             'checkbox',
-            'googleAddressValidation',
-            array(
+            'blisstribute-google-address-validation',
+            [
                 'label' => 'Google Maps Address Verification',
                 'description' => 'Wenn aktiviert, werden Liefer- und Rechnungsadresse bei Bestellübertragung mit der Google Maps API abgeglichen, um eventuelle Adressefehler zu korrigieren.',
                 'value' => 0,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-            )
+            ]
         );
         $form->setElement(
             'text',
-            'googleMapsKey',
-            array(
+            'blisstribute-google-maps-key',
+            [
                 'label' => 'Google Maps Key',
                 'description' => 'API-KEY für den Zugang zur Google Maps API.',
                 'value' => '',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-            )
+            ]
         );
         $form->setElement(
             'checkbox',
-            'transferOrders',
-            array(
+            'blisstribute-transfer-orders',
+            [
                 'label' => 'Transfer Orders without verification',
                 'description' => 'Wenn aktiviert, werden ausschließlich Bestellungen ins Blisstribute-System übertragen, deren Adressen erfolgreich verifiziert werden konnten.',
                 'value' => 1,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
-            )
+            ]
         );
         $form->setElement(
             'checkbox',
             'blisstribute-transfer-shop-article-prices',
-            array(
+            [
                 'label' => 'Transfer Article Prices of each shop',
                 'description' => 'Wenn aktiviert, werden die Preise eines Artikels anhand der beim Shop hinterlegten Kundengruppe und Währung zusätzlich ins Blisstribute-System übertragen.',
                 'value' => 0
-            )
+            ]
         );
     }
 
@@ -830,7 +830,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             }
         }
 
-        $this->createMenuItem(array(
+        $this->createMenuItem([
             'label' => 'Blisstribute Artikelexport Übersicht',
             'controller' => 'BlisstributeArticle',
             'class' => 'sprite-arrow-circle-double-135 contents--import-export',
@@ -838,7 +838,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'active' => 1,
             'position' => $position + 1,
             'parent' => $parent
-        ));
+        ]);
 
         $position = 0;
         $parent = $this->Menu()->findOneBy(['label' => 'Kunden']);
@@ -848,7 +848,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             }
         }
 
-        $this->createMenuItem(array(
+        $this->createMenuItem([
             'label' => 'Blisstribute Bestellexport Übersicht',
             'controller' => 'BlisstributeOrder',
             'class' => 'sprite-arrow-circle-double-135 contents--import-export',
@@ -856,7 +856,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'active' => 1,
             'position' => $position + 1,
             'parent' => $parent
-        ));
+        ]);
 
         $position = 0;
         $parent = $this->Menu()->findOneBy(['label' => 'Einstellungen']);
@@ -867,7 +867,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         $position += 1;
-        $this->createMenuItem(array(
+        $this->createMenuItem([
             'label' => 'Blisstribute Artikeltypen',
             'controller' => 'BlisstributeArticleType',
             'class' => 'sprite-arrow-circle-315',
@@ -875,10 +875,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'active' => 1,
             'position' => $position,
             'parent' => $parent
-        ));
+        ]);
 
         $position += 1;
-        $mappingItem = $this->createMenuItem(array(
+        $mappingItem = $this->createMenuItem([
             'label' => 'Blisstribute Mapping',
             'controller' => '',
             'class' => 'sprite-inbox',
@@ -886,9 +886,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'active' => 1,
             'position' => $position,
             'parent' => $parent
-        ));
+        ]);
 
-        $this->createMenuItem(array(
+        $this->createMenuItem([
             'label' => 'Versandarten',
             'controller' => 'BlisstributeShipmentMapping',
             'class' => 'sprite-envelope--arrow settings--delivery-charges',
@@ -896,9 +896,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'active' => 1,
             'position' => 1,
             'parent' => $mappingItem
-        ));
+        ]);
 
-        $this->createMenuItem(array(
+        $this->createMenuItem([
             'label' => 'Zahlarten',
             'controller' => 'BlisstributePaymentMapping',
             'class' => 'sprite-credit-cards settings--payment-methods',
@@ -906,9 +906,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'active' => 1,
             'position' => 2,
             'parent' => $mappingItem
-        ));
+        ]);
 
-        $this->createMenuItem(array(
+        $this->createMenuItem([
             'label' => 'Shops',
             'controller' => 'BlisstributeShopMapping',
             'class' => 'sprite-store-share',
@@ -916,9 +916,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'active' => 1,
             'position' => 3,
             'parent' => $mappingItem,
-        ));
+        ]);
 
-        $this->createMenuItem(array(
+        $this->createMenuItem([
             'label' => 'Wertgutscheine',
             'controller' => 'BlisstributeCouponMapping',
             'class' => 'sprite-money--pencil',
@@ -926,6 +926,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'active' => 1,
             'position' => 4,
             'parent' => $mappingItem,
-        ));
+        ]);
     }
 }

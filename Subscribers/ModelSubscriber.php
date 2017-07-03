@@ -68,16 +68,16 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preRemoveOrder(\Enlight_Event_EventArgs $args)
+    public function preRemoveOrder(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Order\Order $order */
-        $order = $args->get('entity');
+        $order = $eventArgs->get('entity');
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $repository->findByOrder($order);
@@ -90,16 +90,16 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function postPersistArticle(\Enlight_Event_EventArgs $args)
+    public function postPersistArticle(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Article $article */
-        $article = $args->get('entity');
+        $article = $eventArgs->get('entity');
 
         $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
         $blisstributeArticle->setLastCronAt(new \DateTime())
@@ -113,16 +113,16 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preUpdateArticle(\Enlight_Event_EventArgs $args)
+    public function preUpdateArticle(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Article $article */
-        $article = $args->get('entity');
+        $article = $eventArgs->get('entity');
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
         $blisstributeArticle = $repository->findOneBy(['article' => $article]);
@@ -145,16 +145,16 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preRemoveArticle(\Enlight_Event_EventArgs $args)
+    public function preRemoveArticle(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Article $article */
-        $article = $args->get('entity');
+        $article = $eventArgs->get('entity');
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
         $blisstributeArticle = $repository->findOneBy(['article' => $article]);
@@ -167,16 +167,16 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function postPersistDetail(\Enlight_Event_EventArgs $args)
+    public function postPersistDetail(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
         
         /** @var \Shopware\Models\Article\Detail $detail */
-        $detail = $args->get('entity');
+        $detail = $eventArgs->get('entity');
 
         // load article
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
@@ -200,16 +200,16 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preUpdateDetail(\Enlight_Event_EventArgs $args)
+    public function preUpdateDetail(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Detail $detail */
-        $detail = $args->get('entity');
+        $detail = $eventArgs->get('entity');
 
         $articleRepository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
 
@@ -235,16 +235,16 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preRemoveDetail(\Enlight_Event_EventArgs $args)
+    public function preRemoveDetail(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Detail $detail */
-        $detail = $args->get('entity');
+        $detail = $eventArgs->get('entity');
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
 
@@ -265,16 +265,16 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function postPersistProperty(\Enlight_Event_EventArgs $args)
+    public function postPersistProperty(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
             
         /** @var \Shopware\Models\Property\Group $entry */
-        $entity = $args->get('entity');
+        $entity = $eventArgs->get('entity');
 
         $articleType = new \Shopware\CustomModels\Blisstribute\BlisstributeArticleType();
         $articleType->setFilter($entity);
@@ -284,14 +284,14 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preRemoveProperty(\Enlight_Event_EventArgs $args)
+    public function preRemoveProperty(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
-        $entity = $args->get('entity');
+        $entity = $eventArgs->get('entity');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleTypeRepository $articleTypeRepository */
         $articleTypeRepository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticleType');
@@ -305,16 +305,16 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function postPersistShop(\Enlight_Event_EventArgs $args)
+    public function postPersistShop(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Shop\Shop $shop */
-        $shop = $args->get('entity');
+        $shop = $eventArgs->get('entity');
 
         $blisstributeShop = new \Shopware\CustomModels\Blisstribute\BlisstributeShop();
         $blisstributeShop->setShop($shop)->setAdvertisingMediumCode('');
@@ -324,16 +324,16 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preRemoveShop(\Enlight_Event_EventArgs $args)
+    public function preRemoveShop(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var Shopware\Models\Shop\ $blisstributeShop */
-        $shop = $args->get('entity');
+        $shop = $eventArgs->get('entity');
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeShop');
         $blisstributeShop = $repository->findOneByShop($shop->getId());
@@ -346,16 +346,16 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function postPersistVoucher(\Enlight_Event_EventArgs $args)
+    public function postPersistVoucher(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Voucher\Voucher $voucher */
-        $voucher = $args->get('entity');
+        $voucher = $eventArgs->get('entity');
 
         $blisstributeCoupon = new \Shopware\CustomModels\Blisstribute\BlisstributeCoupon();
         $blisstributeCoupon->setVoucher($voucher)->setIsMoneyVoucher(false);
@@ -365,16 +365,16 @@ class ModelSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preRemoveVoucher(\Enlight_Event_EventArgs $args)
+    public function preRemoveVoucher(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Voucher\Voucher $voucher */
-        $voucher = $args->get('entity');
+        $voucher = $eventArgs->get('entity');
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeCoupon');
         $blisstributeCoupon = $repository->findByCoupon($voucher->getId());
@@ -387,16 +387,16 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function postPersistPayment(\Enlight_Event_EventArgs $args)
+    public function postPersistPayment(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Payment\Payment $payment */
-        $payment = $args->get('entity');
+        $payment = $eventArgs->get('entity');
 
         $blisstributePayment = new \Shopware\CustomModels\Blisstribute\BlisstributePayment();
         $blisstributePayment->setPayment($payment)->setIsPayed(false);
@@ -406,16 +406,16 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preRemovePayment(\Enlight_Event_EventArgs $args)
+    public function preRemovePayment(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Payment\Payment $payment */
-        $payment = $args->get('entity');
+        $payment = $eventArgs->get('entity');
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributePayment');
         $blisstributePayment = $repository->findOneByPayment($payment->getId());
@@ -428,16 +428,16 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function postPersistDispatch(\Enlight_Event_EventArgs $args)
+    public function postPersistDispatch(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Dispatch\Dispatch $dispatch */
-        $dispatch = $args->get('entity');
+        $dispatch = $eventArgs->get('entity');
 
         $blisstributeShipment = new \Shopware\CustomModels\Blisstribute\BlisstributeShipment();
         $blisstributeShipment->setShipment($dispatch);
@@ -447,16 +447,16 @@ class ModelSubscriber implements SubscriberInterface
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preRemoveDispatch(\Enlight_Event_EventArgs $args)
+    public function preRemoveDispatch(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Dispatch\Dispatch $dispatch */
-        $dispatch = $args->get('entity');
+        $dispatch = $eventArgs->get('entity');
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeShipment');
         $blisstributeShipment = $repository->findOneByShipment($dispatch->getId());
@@ -580,14 +580,14 @@ class ModelSubscriber implements SubscriberInterface
     /**
      * article type event fired before db update
      *
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preUpdateBlisstributeArticle(\Enlight_Event_EventArgs $args)
+    public function preUpdateBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
     {
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticle $entity */
-        $entity = $args->get('entity');
+        $entity = $eventArgs->get('entity');
         $entity->setModifiedAt(new \DateTime());
     }   
 
@@ -611,31 +611,31 @@ class ModelSubscriber implements SubscriberInterface
     /**
      * article type event fired before update
      *
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preUpdateBlisstributeArticleType(\Enlight_Event_EventArgs $args)
+    public function preUpdateBlisstributeArticleType(\Enlight_Event_EventArgs $eventArgs)
     {
         $articleIdCollection = [];
 
         $modelManager = $this->container->get('models');
 
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
-        $entity = $args->get('entity');
+        $entity = $eventArgs->get('entity');
         $entity->setModifiedAt(new \DateTime());
         
         $articles = Shopware()->Db()->query('UPDATE s_plugin_blisstribute_articles SET trigger_sync = 1, modified_at = NOW(), tries = 0 WHERE s_article_id IN (SELECT articleID FROM s_filter_articles WHERE valueID = ?)', [$entity->getFilter()->getId()]);
     }
     
     /**
-     * @param \Enlight_Event_EventArgs $args
+     * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return bool
      */
-    public function onOrderSendMailBeforeSend(\Enlight_Event_EventArgs $args)
+    public function onOrderSendMailBeforeSend(\Enlight_Event_EventArgs $eventArgs)
     {        
-        $orderProxy = $args->get('subject');
+        $orderProxy = $eventArgs->get('subject');
         
         $pluginConfig = $this->container->get('plugins')->Backend()->ExitBBlisstribute()->Config();
 
@@ -701,7 +701,7 @@ class ModelSubscriber implements SubscriberInterface
         }
 
         $this->logInfo('processing order ' . $order->getNumber());
-        if ($pluginConfig->get('googleAddressValidation')) {
+        if ($pluginConfig->get('blisstribute-google-address-validation')) {
             /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
             $addressValidator = $this->container->get('blisstribute.google_address_validator');
             $addressValidator->validateAddress($blisstributeOrder, $this->container->get('config'));
