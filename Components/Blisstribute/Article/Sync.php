@@ -20,8 +20,6 @@ use Shopware\CustomModels\Blisstribute\BlisstributeArticle;
  */
 class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_Blisstribute_Sync
 {
-    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
-
     /**
      * count limit for articles to transfer to blisstribute
      *

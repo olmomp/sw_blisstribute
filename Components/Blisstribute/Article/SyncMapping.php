@@ -20,9 +20,7 @@ use Shopware\Models\Tax\Tax;
  * @method BlisstributeArticle getModelEntity()
  */
 class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Components_Blisstribute_SyncMapping
-{
-    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
-    
+{    
     private $container = null;
     
     protected function getConfig()

@@ -31,8 +31,6 @@ use Shopware\CustomModels\Blisstribute\BlisstributeShipmentRepository;
  */
 class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Components_Blisstribute_SyncMapping
 {
-    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
-
     /**
      * mapped order data
      *
