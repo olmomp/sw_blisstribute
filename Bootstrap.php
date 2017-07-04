@@ -422,6 +422,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     protected function registerNamespaces()
     {
         $this->get('loader')->registerNamespace('Shopware\ExitBBlisstribute', $this->Path());
+        $this->get('loader')->registerNamespace('Shopware\Components\Api', $this->Path(). '/Components/Api/');
     }
 
     /**

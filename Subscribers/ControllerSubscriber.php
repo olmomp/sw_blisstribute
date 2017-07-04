@@ -179,7 +179,7 @@ class ControllerSubscriber implements SubscriberInterface
     /**
      * @return string
      */
-    public function onGetBtordersApiController(\Enlight_Event_EventArgs $eventArg)
+    public function getBtordersApiController(\Enlight_Event_EventArgs $eventArg)
     {
         return __DIR__ . '/../Controllers/Api/Btorders.php';
     }
