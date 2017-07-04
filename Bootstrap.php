@@ -1,8 +1,8 @@
 <?php
 
 require_once __DIR__ . '/Components/Blisstribute/Domain/LoggerTrait.php';
-require_once(__DIR__ . '/Components/Blisstribute/Command/OrderExport.php');
-require_once(__DIR__ . '/Components/Blisstribute/Command/ArticleExport.php');
+require_once __DIR__ . '/Components/Blisstribute/Command/OrderExport.php';
+require_once __DIR__ . '/Components/Blisstribute/Command/ArticleExport.php';
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Shopware\ExitBBlisstribute\Subscribers\CronSubscriber;
