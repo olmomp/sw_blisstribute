@@ -491,10 +491,16 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     private function getSupplierCode($articleDetail)
     {
         $supplierCode = $articleDetail->getAttribute()->getBlisstributeSupplierCode();
+        $supplierCode = '';
+        if ($articleDetail->getAttribute() != null) {
+            $supplierCode = $articleDetail->getAttribute()->getBlisstributeSupplierCode();
+        }
+        
         if (trim($supplierCode) == '') {
+            if ($articleDetail->getArticle() != null && $articleDetail->getArticle()->getAttribute() != null)
             $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
         }
-
+        
         return $supplierCode;
     }
 
