@@ -2054,6 +2054,24 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => 0
             )
         );
+        $form->setElement(
+            'text',
+            'blisstribute-article-mapping-classification3',
+            array(
+                'label' => 'Classification 3 mapping',
+                'description' => '',
+                'value' => ''
+            )
+        );
+        $form->setElement(
+            'text',
+            'blisstribute-article-mapping-classification4',
+            array(
+                'label' => 'Classification 4 mapping',
+                'description' => '',
+                'value' => ''
+            )
+        );
     }
 
     /**

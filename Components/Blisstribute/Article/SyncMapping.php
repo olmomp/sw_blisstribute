@@ -89,6 +89,47 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
+     * @param Article $article
+     *
+     * @return string
+     */
+    protected function getClassification3($article)
+    {
+        $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification3');
+        return $this->getClassification($article, $fieldName);
+    }
+
+    /**
+     * @param Article $article
+     *
+     * @return string
+     */
+    protected function getClassification4($article)
+    {
+        $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification4');
+        return $this->getClassification($article, $fieldName);
+    }
+
+    /**
+     * @param Article $article
+     * @param string $fieldName
+     * @return string
+     */
+    protected function getClassification($article, $fieldName)
+    {
+        if (trim($fieldName) == '') {
+            return null;
+        }
+
+        $method = 'get' . ucfirst($fieldName);
+        if (!method_exists($article->getAttribute(), $method)) {
+            return null;
+        }
+
+        return $article->getAttribute()->$method();
+    }
+
+    /**
      * build base classification data
      *
      * @return array
@@ -98,8 +139,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $classificationData = array(
             'classification1' => $this->getArticle()->getName(),
             'classification2' => $this->getArticle()->getSupplier()->getName(),
-            'classification3' => '',
-            'classification4' => '',
+            'classification3' => $this->getClassification3($this->getArticle()),
+            'classification4' => $this->getClassification4($this->getArticle()),
             'classification5' => '',
             'classification6' => '',
             'classification7' => '',
@@ -595,6 +636,16 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             $tagCollection[] = array(
                 'type' => 'height',
                 'value' => $articleDetail->getHeight(),
+                'isMultiTag' => false,
+                'deliverer' => 'foreign'
+            );
+        }
+
+        /** @var \Shopware\Models\Property\Value $property */
+        foreach ($articleDetail->getArticle()->getPropertyValues() as $property) {
+            $tagCollection[] = array(
+                'type' => $property->getOption()->getName(),
+                'value' => $property->getValue(),
                 'isMultiTag' => false,
                 'deliverer' => 'foreign'
             );
