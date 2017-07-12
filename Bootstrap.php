@@ -843,6 +843,24 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => 0
             ]
         );
+        $form->setElement(
+            'text',
+            'blisstribute-article-mapping-classification3',
+            array(
+                'label' => 'Klassifikation 3 Verknüpfung',
+                'description' => '',
+                'value' => ''
+            )
+        );
+        $form->setElement(
+            'text',
+            'blisstribute-article-mapping-classification4',
+            array(
+                'label' => 'Klassifikation 4 Verknüpfung',
+                'description' => '',
+                'value' => ''
+            )
+        );
     }
     
     /**
@@ -873,7 +891,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 				'blisstribute-google-address-validation' => 'use google address validation',
 				'blisstribute-google-maps-key' => 'google maps key',
 				'blisstribute-transfer-orders' => 'transfer orders without verification',
-				'blisstribute-transfer-shop-article-prices' => 'transfer article prices of each shop'
+				'blisstribute-transfer-shop-article-prices' => 'transfer article prices of each shop',
+                'blisstribute-article-mapping-classification3' => 'Classification 3 mapping',
+                'blisstribute-article-mapping-classification4' => 'Classification 4 mapping'
 			],
 		];
  
