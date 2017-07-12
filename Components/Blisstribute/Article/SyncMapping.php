@@ -22,6 +22,13 @@ use Shopware\Models\Tax\Tax;
 class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Components_Blisstribute_SyncMapping
 {
     use Shopware_Components_Blisstribute_Domain_LoggerTrait;
+    
+    private $container = null;
+    
+    protected function getConfig()
+    {
+        return $this->container->get('config');
+    }
 
     /**
      * get shopware article for blisstribute mapped article
@@ -31,6 +38,11 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     protected function getArticle()
     {
         return $this->getModelEntity()->getArticle();
+    }
+    
+    public function __construct()
+    {
+        $this->container = Shopware()->Container();
     }
 
     /**
@@ -77,6 +89,47 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
+     * @param Article $article
+     *
+     * @return string
+     */
+    protected function getClassification3($article)
+    {
+        $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification3');
+        return $this->getClassification($article, $fieldName);
+    }
+
+    /**
+     * @param Article $article
+     *
+     * @return string
+     */
+    protected function getClassification4($article)
+    {
+        $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification4');
+        return $this->getClassification($article, $fieldName);
+    }
+
+    /**
+     * @param Article $article
+     * @param string $fieldName
+     * @return string
+     */
+    protected function getClassification($article, $fieldName)
+    {
+        if (trim($fieldName) == '') {
+            return null;
+        }
+
+        $method = 'get' . ucfirst($fieldName);
+        if (!method_exists($article->getAttribute(), $method)) {
+            return null;
+        }
+
+        return $article->getAttribute()->$method();
+    }
+
+    /**
      * build base classification data
      *
      * @return array
@@ -86,8 +139,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $classificationData = array(
             'classification1' => $this->getArticle()->getName(),
             'classification2' => $this->getArticle()->getSupplier()->getName(),
-            'classification3' => '',
-            'classification4' => '',
+            'classification3' => $this->getClassification3($this->getArticle()),
+            'classification4' => $this->getClassification4($this->getArticle()),
             'classification5' => '',
             'classification6' => '',
             'classification7' => '',
@@ -170,6 +223,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             && strtolower($baseCategory->getParent()->getName()) != 'root'
             && strtolower($baseCategory->getParent()->getName()) != 'deutsch'
             && strtolower($baseCategory->getParent()->getName()) != 'englisch'
+            && !preg_match('/\-de/i', $baseCategory->getParent()->getName())
+            && !preg_match('/\-en/i', $baseCategory->getParent()->getName())
             && $categoryLimit < 10
         ) {
             $baseCategory = $baseCategory->getParent();
@@ -181,36 +236,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $categoryNameCollection = array_reverse($categoryNameCollection);
         return array_slice($categoryNameCollection, 0, 4);
     }
-
-//    /**
-//     * @param \Shopware\Models\Article\Article $article
-//     * @return string
-//     * @throws Exception
-//     */
-//    protected function _determineArticleType(Shopware\Models\Article\Article $article)
-//    {
-//        $filter = $article->getPropertyGroup();
-//        $query = $this->blisstributeArticleRepository->getFilterQuery($filter->getId());
-//        $articleType = $query->execute();
-//        if (empty($articleType)) {
-//            throw new Exception('invalid blisstribute article type');
-//        }
-//        /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleType $articleType */
-//        $articleType = $articleType[0];
-//        switch ($articleType->getArticleType()) {
-//            case 1:
-//                return 'MUSIC';
-//            case 2:
-//                return 'WEAR';
-//            case 3:
-//                return 'WEAR-ATTIRE';
-//            case 4:
-//                return 'EQUIPMENT';
-//            case 0:
-//            default:
-//                throw new Exception('invalid blisstribute article type');
-//        }
-//    }
 
     /**
      * @todo implement tax rules ??
@@ -241,16 +266,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'countryIsoCode' => $germany->getIso(),
             'vatType' => $vatType
         );
-        //$countryCollection = $countryRepository->getCountriesQuery()->getResult();
-//        foreach ($countryCollection as $country) {
-//            if($country['iso'] == 'DE') {
-//                $vatCollection[] = array(
-//                    'countryIsoCode' => $country['iso'],
-//                    'vatType' => $vatType
-//                );
-//            }
-//
-//        }
+
         return $vatCollection;
     }
 
@@ -261,48 +277,54 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function buildPriceCollection(Detail $articleDetail)
     {
-        $price = null;
+        $mappedPriceCollection = array();
+        $shops = [
+            ['advertisingMediumCode' => '', 'currencyCode' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK']
+        ];
 
-        /** @var Price[] $priceCollection */
-        $priceCollection = $articleDetail->getPrices()->toArray();
-        foreach ($priceCollection as $currentPrice) {
-            if ($currentPrice->getTo() != 'beliebig'
-                or !$currentPrice->getCustomerGroup()->getTaxInput() or $currentPrice->getCustomerGroup()->getKey() != 'EK' 
-            ) {
+        if ($this->getConfig()->get('blisstribute-transfer-shop-article-prices')) {
+            $shops = array_merge($shops, Shopware()->Db()->fetchAll("SELECT spbs.advertising_medium_code AS advertisingMediumCode, scc.currency as currencyCode, scc.factor AS currencyFactor, sccg.groupkey AS customerGroup FROM s_core_shops scs LEFT JOIN s_core_currencies scc ON scs.currency_id = scc.id LEFT JOIN s_core_customergroups sccg ON scs.customer_group_id = sccg.id LEFT JOIN s_plugin_blisstribute_shop spbs ON scs.id = spbs.s_shop_id WHERE scs.active = 1"));
+        }
+
+        foreach($shops as $shop) {
+            $price = null;
+
+            /** @var Price[] $priceCollection */
+            $priceCollection = $articleDetail->getPrices()->toArray();
+            foreach ($priceCollection as $currentPrice) {
+                if ($currentPrice->getFrom() != '1'
+                    or $currentPrice->getCustomerGroup()->getKey() != $shop['customerGroup']
+                ) {
+                    continue;
+                }
+
+                $price = $currentPrice;
+                break;
+            }
+
+            if ($price == null) {
                 continue;
             }
 
-            $price = $currentPrice;
-            break;
-        }
-
-        if ($price == null) {
-            return array();
-        }
-
-        $isSpecialPrice = false;
-        $mappedPriceCollection = array();
-        if ($price->getPseudoPrice() > 0 && $price->getPseudoPrice() > $price->getPrice()) {
-                $isSpecialPrice = true;
-
+            $tax = $articleDetail->getArticle()->getTax()->getTax();
+            if ($price->getPseudoPrice() > 0) {
                 $mappedPriceCollection[] = $this->formatPricesFromNetToGross(
-                    $price->getPseudoPrice(),
-                    $articleDetail->getArticle()->getTax(),
-                    false
-            );
-        } else {
-        $mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
-            $price->getPrice(),
-            $articleDetail->getArticle()->getTax(),
-            true
-        );
-    }
+                    $shop['advertisingMediumCode'],
+                    $price->getPseudoPrice() * $shop['currencyFactor'],
+                    $tax,
+                    $shop['currencyCode'],
+                    true
+                );
+            }
 
-        $mappedPriceCollection[] =  $this->formatPricesFromNetToGross(
-            $price->getPrice(),
-            $articleDetail->getArticle()->getTax(),
-            $isSpecialPrice
-        );
+            $mappedPriceCollection[] = $this->formatPricesFromNetToGross(
+                $shop['advertisingMediumCode'],
+                $price->getPrice() * $shop['currencyFactor'],
+                $tax,
+                $shop['currencyCode'],
+                false
+            );
+        }
 
         return $mappedPriceCollection;
     }
@@ -310,25 +332,23 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     /**
      * Internal helper function to convert gross prices to net prices.
      *
-     * @todo implement advertising medium mapping
-     * @todo implement country mapping
-     *
-     * @param float $price
-     * @param Tax $tax
-     * @param bool $isSpecial
+     * @param string $advertisingMediumCode
+     * @param float $netPrice
+     * @param float $tax
+     * @param string $currency
+     * @param bool $isRecommendedRetailPrice
      *
      * @return array
      */
-    protected function formatPricesFromNetToGross($price, Tax $tax, $isSpecial = false)
+    protected function formatPricesFromNetToGross($advertisingMediumCode, $netPrice, $tax, $currency, $isRecommendedRetailPrice = false)
     {
         return array(
             'isoCode' => 'DE',
-            'currency' => 'EUR',
-            'price' => round($price / 100 * (100 + $tax->getTax()), 6),
-            'isSpecial' => $isSpecial,
-            'isNetPrice' => false,
-            'isRecommendedRetailPrice' => false,
-            'advertisingMediumCode' => '',
+            'currency' => $currency,
+            'price' => round($netPrice / 100 * (100 + $tax), 6),
+            'isRecommendedRetailPrice' => $isRecommendedRetailPrice,
+            'advertisingMediumCode' => $advertisingMediumCode,
+            'isSpecialPrice' => false
         );
     }
 
@@ -491,13 +511,39 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'reorder' => true,
             'noticeStockLevel' => (int)$articleDetail->getStockMin(),
             'reorderStockLevel' => (int)$articleDetail->getStockMin(),
-            'vendorCollection' => array(),
+            'vendorCollection' => array(
+                array(
+                    'code' => $this->getSupplierCode($articleDetail),
+                    'articleNumber' => $articleDetail->getSupplierNumber(),
+                    'purchasePrice' => $this->getMainDetailBasePrice($articleDetail),
+                    'isPreferred' => true
+                )
+            ),
             'priceCollection' => $this->buildPriceCollection($articleDetail),
             'seriesCorrelation' => array($this->buildSeriesCorrelation($articleDetail)),
             'tagCollection' => $this->buildTagCollection($articleDetail),
         );
 
         return $specificationData;
+    }
+
+    /**
+     * @param Detail $articleDetail
+     * @return mixed
+     */
+    private function getSupplierCode($articleDetail)
+    {
+        $supplierCode = '';
+        if ($articleDetail->getAttribute() != null) {
+            $supplierCode = $articleDetail->getAttribute()->getBlisstributeSupplierCode();
+        }
+
+        if (trim($supplierCode) == '') {
+            if ($articleDetail->getArticle() != null && $articleDetail->getArticle()->getAttribute() != null)
+            $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
+        }
+
+        return $supplierCode;
     }
 
     /**
@@ -567,32 +613,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function buildTagCollection(Detail $articleDetail)
     {
-
-//        // get configurator groups with multiple values
-//        $multiTagGroupIds = array();
-//        $usedGroups = array();
-
-//        // @todo use article properties ??
-//        /* @var Shopware\Models\Article\Configurator\Option $configuratorOption */
-//        foreach ($articleDetail->getConfiguratorOptions() as $configuratorOption) {
-//            if (in_array($configuratorOption->getGroup()->getId(), $usedGroups)) {
-//                $multiTagGroupIds[] = $configuratorOption->getGroup()->getId();
-//            } else {
-//                $usedGroups[] = $configuratorOption->getGroup()->getId();
-//            }
-//        }
-//
-//        /* @var \Shopware\Models\Article\Configurator\Option $configuratorOption */
-//        foreach ($articleDetail->getConfiguratorOptions() as $configuratorOption) {
-//            $configuratorGroup = $configuratorOption->getGroup();
-//            $tagCollection[] = array(
-//                'type' => $configuratorGroup->getName(),
-//                'value' => $configuratorOption->getName(),
-//                'isMultiTag' => in_array($configuratorGroup->getId(), $multiTagGroupIds),
-//                'deliverer' => 'foreign'
-//            );
-//        }
-
         $tagCollection = array();
         if ($articleDetail->getLen() !== null) {
             $tagCollection[] = array(
@@ -616,6 +636,16 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             $tagCollection[] = array(
                 'type' => 'height',
                 'value' => $articleDetail->getHeight(),
+                'isMultiTag' => false,
+                'deliverer' => 'foreign'
+            );
+        }
+
+        /** @var \Shopware\Models\Property\Value $property */
+        foreach ($articleDetail->getArticle()->getPropertyValues() as $property) {
+            $tagCollection[] = array(
+                'type' => $property->getOption()->getName(),
+                'value' => $property->getValue(),
                 'isMultiTag' => false,
                 'deliverer' => 'foreign'
             );

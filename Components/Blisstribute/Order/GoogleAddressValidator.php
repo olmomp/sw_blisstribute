@@ -24,7 +24,7 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
     {
         $this->logDebug('starting packing station check');
         $blackList = array(
-            'pack', 'station', 'packstation', 'packing', 'packing station', 'packingstation'
+            'pack', 'station', 'packstation', 'packing', 'packing station', 'packingstation', 'filiale', 'postfiliale', 'post'
         );
 
         foreach ($blackList as $currentBlackListItem) {

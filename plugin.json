@@ -8,10 +8,15 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.6.1",
+    "currentVersion": "0.7.1",
 
     "changelog": {
         "de": {
+            "0.7.1": "Submits article properties as tags",
+            "0.7.1": "Plugin configuration for classification3 and classification4",
+            "0.7.0": "Add supplier code attribute for articles",
+            "0.6.3": "Update article price logic, only default price and recommended retail price is available",
+            "0.6.2": "Add article prices for each shop",
             "0.6.1": "Disable packing station google address validation",
             "0.6.0": "Single Article Export CLI Command added",
             "0.5.9": "Single Order Export CLI Command improved",
@@ -102,7 +107,7 @@
 
     "compatibility": {
         "minimumVersion": "5.0.4",
-        "maximumVersion": "5.2.16",
+        "maximumVersion": "5.2.24",
         "blacklist": [
         ]
     }

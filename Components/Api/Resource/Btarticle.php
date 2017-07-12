@@ -184,12 +184,15 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $attributes->setBlisstributeSupplierStock($params['attribute']['blisstributeSupplierStock']);
 
         $article = $detail->getArticle();
-        $article->setLastStock($params['lastStock']);
 
         $violations = $this->getManager()->validate($detail);
         if ($violations->count() > 0) {
             throw new ApiException\ValidationException($violations);
         }
+
+        $this->getManager()->persist($detail);
+        $this->getManager()->persist($attributes);
+        $this->getManager()->persist($article);
 
         if ($detail->getKind() == 1 && $detail->getActive() == 0) {
             $detail->setKind(2);
