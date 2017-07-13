@@ -508,7 +508,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             /** @var Article $article */
             $article = $articleRepository->find($product->getArticleId());
 
-            $articleDataCollection[] = [
+            $articleData = [
                 'articleId' => $product->getArticleId(),
                 'lineId' => count($articleDataCollection) + 1,
                 'erpArticleNumber' => $this->getArticleDetail($product)->getAttribute()->getBlisstributeVhsNumber(),
@@ -529,6 +529,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'discountTotal' => 0,
                 'configuration' => '',
             ];
+            
+            $articleDataCollection[] = $this->applyCustomProducts($articleData, $product, $basketItems);
         }
 
         $articleDataCollection = $this->applyPromoDiscounts($articleDataCollection, $promotions, $orderNumbers, $shopwareDiscountsAmount, $orderId);
@@ -685,6 +687,55 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             WHERE articleID IN (" . implode(', ', $articleIds) . ")"
         );
+    }
+    
+    public function applyCustomProducts($articleData, $product, $basketItems)
+    {
+        // check if plugin SwagCustomProducts is installed
+        $plugin = $this->getPluginRepository()->findOneBy([
+            'name' => 'SwagCustomProducts',
+            'active' => true
+        ]);
+        
+        if (!$plugin) {
+            return $articleData;
+        }
+        
+        if ($product->getAttribute()->getSwagCustomProductsMode() == 1) {
+            $hash = $product->getAttribute()->getSwagCustomProductsConfigurationHash();
+            $configuration = [];
+            $configurationArticles = [];
+            
+            foreach ($basketItems as $product) {
+                if ($product->getAttribute()->getSwagCustomProductsConfigurationHash() == $hash && in_array($product->getAttribute()->getSwagCustomProductsMode(), [2,3])) {
+                    $configurationArticles[] = $product;
+                }
+            }
+            
+            foreach ($configurationArticles as $configurationArticle) {
+                $price = $configurationArticle->getPrice();
+                $quantity = $configurationArticle->getQuantity();
+                    
+                $articleData['originalPriceAmount'] += $price;
+                $articleData['originalPrice'] += $price * $quantity;
+                $articleData['priceAmount'] += round($price, 6);
+                $articleData['price'] += round(($price * $quantity), 6);
+                    
+                if ($configurationArticle->getAttribute()->getSwagCustomProductsMode() == 2) {
+                    $category_type = $configurationArticle->getArticleName();
+                } else {
+                    $configuration[] = ['category_type' => $category_type, 'category' => $configurationArticle->getArticleName()];
+                }
+            }
+            
+            if (!empty($configuration)) {
+                $articleData['configuration'] = json_encode($configuration);
+            }
+            
+            return $articleData;
+        }
+        
+        return $articleData;
     }
 
     public function applyPromoDiscounts($articleDataCollection, $promotions, $orderNumbers, $shopwareDiscountsAmount, $orderId)
