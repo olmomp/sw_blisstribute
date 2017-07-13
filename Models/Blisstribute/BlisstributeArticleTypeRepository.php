@@ -26,7 +26,7 @@ class BlisstributeArticleTypeRepository extends ModelRepository
     public function fetchByFilterType($filterId)
     {
         return $this->createQueryBuilder('at')
-            ->where('at.sFilter = :filterId')
+            ->where('at.filter = :filterId')
             ->setParameter('filterId', $filterId)
             ->getQuery()
             ->getOneOrNullResult();
