@@ -619,7 +619,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         FROM s_articles_details details
 
         LEFT JOIN s_order_details o
-        on o.ordernumber = details.ordernumber
+        on o.articleordernumber = details.ordernumber
         AND o.orderID = ?
         AND modus = 0
 
