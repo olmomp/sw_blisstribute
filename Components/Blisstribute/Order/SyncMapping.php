@@ -881,7 +881,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     function ($p) {
                         return $p['ordernumber'];
                     },
-                    array_slice($stack, 0, $discount)
+                    array_slice($stack, 0, ($discount > 0) ? $discount : NULL)
                 );
 
                 $productWithDiscount[] = $stackProduct[0];
@@ -908,9 +908,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $weight = $product['price'] / $basketAmount;
 
                 $countedAmountToDiscount = $promotionDiscount * $weight;
+                $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
 
-                $product['discountTotal'] += $countedAmountToDiscount;
+                $product['priceAmount'] -= $countedAmountToDiscountPerQty;
                 $product['price'] -= $countedAmountToDiscount;
+                $product['discountTotal'] += $countedAmountToDiscountPerQty;
             }
         }
 
@@ -945,7 +947,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                             return $product['price'];
                         },
                         // get the "free" items
-                        array_slice($stack, 0, $discount)
+                        array_slice($stack, 0, ($discount > 0) ? $discount : NULL)
                     )
                 );
             }
@@ -969,11 +971,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $weight = $product['price'] / $basketAmount;
 
             $countedAmountToDiscount = $promotionDiscount * $weight;
+            $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
 
-            $product['discountTotal'] += $countedAmountToDiscount;
+            $product['priceAmount'] -= $countedAmountToDiscountPerQty;
             $product['price'] -= $countedAmountToDiscount;
+            $product['discountTotal'] += $countedAmountToDiscountPerQty;
         }
-
         
         return $articleDataCollection;
     }
