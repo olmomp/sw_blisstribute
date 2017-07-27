@@ -990,9 +990,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $weight = $product['price'] / $basketAmount;
 
             $countedAmountToDiscount = $promotionDiscount * $weight;
-
-            $product['discountTotal'] += $countedAmountToDiscount;
+            $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
+            
+            $product['priceAmount'] -= $countedAmountToDiscountPerQty;
             $product['price'] -= $countedAmountToDiscount;
+            $product['discountTotal'] += $countedAmountToDiscountPerQty;
         }
 
         return $articleDataCollection;
@@ -1024,9 +1026,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $weight = $product['price'] / $totalProductAmount;
 
             $countedAmountToDiscount = abs($promotionDiscount) * $weight;
-
-            $product['discountTotal'] += $countedAmountToDiscount;
+            $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
+            
+            $product['priceAmount'] -= $countedAmountToDiscountPerQty;
             $product['price'] -= $countedAmountToDiscount;
+            $product['discountTotal'] += $countedAmountToDiscountPerQty;
         }
 
         return $articleDataCollection;
