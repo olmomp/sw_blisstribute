@@ -9,8 +9,6 @@ require_once __DIR__ . '/../Order/Sync.php';
 
 class Shopware_Components_Blisstribute_Command_OrderExport extends ShopwareCommand
 {
-    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
-
     /**
      * {@inheritdoc}
      */
@@ -37,17 +35,11 @@ EOF
         ;
     }
 
-    private function _bootstrap()
-    {
-    }
-
     /**
      * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->_bootstrap();
-
         $orderNumber = $input->getArgument('orderNumber');
         $force = (bool)$input->getArgument('force');
 
@@ -69,7 +61,6 @@ EOF
         if ($blisstributeOrder == null) {
             $output->writeln('<error>buuuhuuhuuu.. could not load blisstribute order. script terminated.</error>');
             return;
-
         }
 
         $orderSync = new Shopware_Components_Blisstribute_Order_Sync(
@@ -78,6 +69,5 @@ EOF
         $result = $orderSync->processSingleOrderSync($blisstributeOrder, $force);
 
         $output->writeln('<info>export result: ' . (int)$result . '</info>');
-
     }
 }

@@ -14,6 +14,8 @@ use Shopware\Components\Model\ModelEntity;
  */
 abstract class Shopware_Components_Blisstribute_SyncMapping
 {
+    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
+    
     /**
      * model entity to map
      *

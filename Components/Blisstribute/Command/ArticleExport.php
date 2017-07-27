@@ -9,8 +9,6 @@ require_once __DIR__ . '/../Article/Sync.php';
 
 class Shopware_Components_Blisstribute_Command_ArticleExport extends ShopwareCommand
 {
-    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
-
     /**
      * {@inheritdoc}
      */
@@ -27,17 +25,11 @@ EOF
         ;
     }
 
-    private function _bootstrap()
-    {
-    }
-
     /**
      * {@inheritdoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->_bootstrap();
-
         $identification = $input->getArgument('identification');
         $output->writeln('<info>blisstribute article export started for article(s) identified by ' . $identification . '</info>');
 
@@ -55,16 +47,13 @@ EOF
             $output->writeln('<error>buuuhuu.. could not find blisstribute article by identification ' . $identification . '. script terminated');
         }
 
-
         $articleSync = new Shopware_Components_Blisstribute_Article_Sync(
             $this->container->get('plugins')->Backend()->ExitBBlisstribute()->Config()
         );
         $result = $articleSync->processSingleArticleSync($blisstributeArticle);
 
         $output->writeln('<info>export result: ' . (int)$result . '</info>');
-
     }
-
 
     /**
      * Little helper function for the ...ByVhsNumber methods

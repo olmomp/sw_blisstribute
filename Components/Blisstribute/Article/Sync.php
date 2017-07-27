@@ -20,8 +20,6 @@ use Shopware\CustomModels\Blisstribute\BlisstributeArticle;
  */
 class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_Blisstribute_Sync
 {
-    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
-
     /**
      * count limit for articles to transfer to blisstribute
      *
@@ -330,6 +328,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
 
         try {
             $response = $this->processArticleSync(array('materialData' => $articleDataCollection));
+            
             if (!isset($response['materialConfirmationData']) || empty($response['materialConfirmationData'])) {
                 throw new Shopware_Components_Blisstribute_Exception_TransferException('no or invalid response given');
             }
