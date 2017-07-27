@@ -814,9 +814,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'cheapest'
             );
 
-            $amount = $promotion->getAmount();
-
             foreach ($stackedProducts as $stack) {
+                $amount = $promotion->getAmount();
+                
                 $stackProduct = array_map(
                     function ($p) {
                         return $p['ordernumber'];
@@ -825,9 +825,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     array_slice($stack, 0, $amount)
                 );
 
-
                 foreach ($articleDataCollection as &$product) {
-                    if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0 || $amount == 0) {
+                    if ($amount == 0) {
+                        break;
+                    }
+                    
+                    if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
                         continue;
                     }
 
