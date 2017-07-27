@@ -67,6 +67,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'removeDate' => $removeDate,
             'reorder' => true,
             'customsTariffNumber' => '',
+            'countryOfOriginCode' => '',
             'sex' => 0,
             'sale' => null,
             'priceCode' => '0000',
@@ -84,8 +85,16 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         } else {
             $articleData['specificationCollection'] = array($this->buildSpecificationCollection($this->getArticle()->getMainDetail()));
         }
-
-        return $articleData;
+        
+        // Allow plugins to change the data
+        return Enlight()->Events()->filter(
+            'ExitBBlisstribute_ArticleSyncMapping_AfterBuildBaseData',
+            $articleData,
+            array(
+                'subject' => $this,
+                'article' => $this->getArticle()
+            )
+        );
     }
 
     /**
