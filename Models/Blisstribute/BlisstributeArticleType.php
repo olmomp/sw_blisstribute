@@ -62,7 +62,7 @@ class BlisstributeArticleType extends ModelEntity
      * @ORM\OneToOne(targetEntity="\Shopware\Models\Property\Group")
      * @ORM\JoinColumn(name="s_filter_id", referencedColumnName="id"),
      */
-    private $filter = null;
+    private $filter;
 
     /**
      * @var integer $articleType
@@ -77,6 +77,17 @@ class BlisstributeArticleType extends ModelEntity
     public function getId()
     {
         return $this->id;
+    }
+    
+    /**
+     * @param int $id
+     *
+     * @return lisstributeArticleType
+     */
+    public function setId($id)
+    {
+        $this->id = $id;
+        return $this;
     }
 
     /**
