@@ -717,7 +717,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             //First apply free product discount
             if (array_key_exists('product.freegoods', $allPromotions)) {
-                $articleDataCollection = $this->applyFreeDiscount($allPromotions['product.freegoods'], $articleDataCollection);
+                $articleDataCollection = $this->applyFreeDiscount($allPromotions['product.freegoods'], $articleDataCollection, $products);
             }
 
             if (array_key_exists('product.buyxgetyfree', $allPromotions)) {
@@ -754,31 +754,45 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return $articleDataCollection;
     }
 
-    public function applyFreeDiscount($promotions, $articleDataCollection)
+    public function applyFreeDiscount($promotions, $articleDataCollection, $products)
     {
-        $freeArticleList = [];
-
+        /** @var \Shopware\SwagPromotion\Components\Promotion\ProductStacker\ProductStacker $productStackRegistry */
+        $productStackRegistry = $this->container->get('promotion.stacker.registry');
+        
         /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $promotion) {
-            $freeArticles = $promotion->getFreeGoodsArticle();
-            foreach ($freeArticles as $freeArticle) {
-                $freeArticleList[] = $freeArticle->getMainDetail()->getNumber();
-            }
-        }
+        foreach ($promotions as $promotion) {            
+            $stackedProducts = $productStackRegistry->getStacker($promotion->getStackMode())->getStack(
+                $products,
+                $promotion->getStep(),
+                $promotion->getMaxQuantity(),
+                'cheapest'
+            );
+            
+            $amount = $promotion->getAmount();
+            
+            foreach ($stackedProducts as $stack) {
+                $stackProducts = array_map(
+                    function ($p) {
+                        return $p['ordernumber'];
+                    },
+                    // get the "free" items
+                    array_slice($stack, 0, ($amount > 0) ? $amount : NULL)
+                );
+   
+                foreach ($articleDataCollection as &$product) {
+                    if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
+                        continue;
+                    }
 
-        //todo: only one product can be free in basket?
-        foreach ($articleDataCollection as &$product) {
-            if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
-                continue;
-            }
+                    if (in_array($product['articleNumber'], $stackProducts)) {
+                        $discount = $product['originalPriceAmount'] / $product['quantity'];
 
-            if (in_array($product['articleNumber'], $freeArticleList)) {
-                $discount = $product['priceAmount'];
-
-                $product['promoQuantity'] -= 1;
-                $product['price'] -= $discount;
-                $product['priceAmount'] -= $discount;
-                $product['discountTotal'] += $discount;
+                        $product['promoQuantity'] -= 1;
+                        $product['price'] -= $discount;
+                        $product['priceAmount'] -= $discount;
+                        $product['discountTotal'] += $discount;
+                    }
+                }
             }
         }
 
