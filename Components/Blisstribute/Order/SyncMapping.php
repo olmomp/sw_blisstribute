@@ -976,6 +976,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         /** @var \Shopware\SwagPromotion\Components\Promotion\ProductStacker\ProductStacker $productStackRegistry */
         $productStackRegistry = $this->container->get('promotion.stacker.registry');
 
+        $productWithDiscount = [];
         $totalProductAmount = 0;
         $promotionDiscount = 0;
         $basketAmount = 0;
@@ -995,39 +996,52 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $totalProductAmount += array_sum(
                 // return the price of the free items
                     array_map(
-                        function ($product) {
-                            return $product['price'];
+                        function ($p) {
+                            return $p['price'];
                         },
                         // get the "free" items
                         array_slice($stack, 0, ($discount > 0) ? $discount : NULL)
                     )
                 );
+                
+                $stackProduct = array_map(
+                    function ($p) {
+                        return $p['ordernumber'];
+                    },
+                    array_slice($stack, 0, ($discount > 0) ? $discount : NULL)
+                );
+                
+                $productWithDiscount[] = $stackProduct[0];
             }
 
             $promotionDiscount = $totalProductAmount * ($discount / 100);
         }
 
-        foreach ($articleDataCollection as $product) {
+        foreach ($articleDataCollection as $product) {            
             if ($product['promoQuantity'] == 0 && $product['price'] <= 0) {
                 continue;
             }
-
-            $basketAmount += $product['price'];
+            
+            if (!in_array($product['articleNumber'], $productWithDiscount)) {
+                $basketAmount += $product['price'];
+            }
         }
 
-        foreach ($articleDataCollection as &$product) {
+        foreach ($articleDataCollection as &$product) {            
             if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
                 continue;
             }
 
-            $weight = $product['price'] / $basketAmount;
+            if (in_array($product['articleNumber'], $productWithDiscount)) {
+                $weight = $product['price'] / $basketAmount;
 
-            $countedAmountToDiscount = $promotionDiscount * $weight;
-            $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
+                $countedAmountToDiscount = $promotionDiscount * $weight;
+                $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
 
-            $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-            $product['price'] -= $countedAmountToDiscount;
-            $product['discountTotal'] += $countedAmountToDiscountPerQty;
+                $product['priceAmount'] -= $countedAmountToDiscountPerQty;
+                $product['price'] -= $countedAmountToDiscount;
+                $product['discountTotal'] += $countedAmountToDiscountPerQty;
+            }
         }
         
         return $articleDataCollection;
