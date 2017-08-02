@@ -621,7 +621,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         LEFT JOIN s_order_details o
         on o.articleordernumber = details.ordernumber
         AND o.orderID = ?
-        AND modus = 0
+        AND o.modus = 0
 
         LEFT JOIN s_articles_attributes attributes
         ON attributes.articledetailsID = details.id
@@ -1022,7 +1022,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
             
-            if (!in_array($product['articleNumber'], $productWithDiscount)) {
+            if (in_array($product['articleNumber'], $productWithDiscount)) {
                 $basketAmount += $product['price'];
             }
         }
