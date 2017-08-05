@@ -487,7 +487,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $articleNumber = $product->getArticleNumber();
 
             if (in_array($mode, [3, 4])) {
-                if (in_array($articleNumber, ['sw-payment', 'sw-discount', 'sw-payment-absolute']) || $mode == 2) {
+                if (in_array($articleNumber, ['sw-payment', 'sw-discount', 'sw-payment-absolute'])) {
                     $shopwareDiscountsAmount += $product->getPrice();
                 } else {
                     $promotions[$product->getId()] = $product;
@@ -581,8 +581,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     private function getBaseProducts(array $orderNumbers, $orderId)
     {
-        $questionMarks = implode(', ', array_fill(0, count($orderNumbers), '?'));
-
         $info = new \Shopware\SwagPromotion\Components\MetaData\FieldInfo();
         $info = array_keys($info->get()['product']);
 
@@ -616,12 +614,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $sql = "SELECT details.ordernumber, {$fields}, o.quantity, o.price, details.articleID
 
-        FROM s_articles_details details
-
-        LEFT JOIN s_order_details o
-        on o.articleordernumber = details.ordernumber
-        AND o.orderID = ?
-        AND o.modus = 0
+        FROM s_order_details o
+        
+        LEFT JOIN s_articles_details details 
+        ON details.ordernumber = o.articleordernumber
 
         LEFT JOIN s_articles_attributes attributes
         ON attributes.articledetailsID = details.id
@@ -635,11 +631,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         LEFT JOIN s_articles_supplier supplier
         ON supplier.id = articles.supplierID
 
-        WHERE details.ordernumber IN ({$questionMarks})";
+        WHERE o.orderID = ?
+        AND o.modus = 0";
 
         $data = $this->container->get('db')->fetchAssoc(
-            $sql,
-            array_merge([$orderId], array_keys($orderNumbers))
+            $sql, [$orderId]
         );
 
         foreach ($data as $orderNumber => $product) {
@@ -746,7 +742,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         ]);
 
         $allPromotions = [];
-        $promoAmounts = [];
 
         if ($plugin) {
             /** @var Detail $promotionItem */
@@ -758,8 +753,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     continue;
                 }
 
-                $allPromotions[$promotion->getType()][] = $promotion;
-                $promoAmounts[$promotion->getType()][] = $promotionItem->getPrice();
+                $allPromotions[$promotion->getType()][] = ['promotion' => $promotion, 'promoAmount' => abs($promotionItem->getPrice())];
             }
             
             $products = $this->getProductContext($orderNumbers, $orderId);
@@ -796,26 +790,38 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             //Apply cart percent discount, this discount must be handled in special way
             if (array_key_exists('basket.percentage', $allPromotions)) {
-                $articleDataCollection = $this->applyCartPercentDiscount($allPromotions['basket.percentage'], $articleDataCollection, $promoAmounts['basket.percentage']);
+                $articleDataCollection = $this->applyCartPercentDiscount($allPromotions['basket.percentage'], $articleDataCollection);
             }
         }
 
         return $articleDataCollection;
     }
-
-    public function applyFreeDiscount($promotions, $articleDataCollection, $products)
+    
+    public function getPromotionStackedProducts($promotion, $products)
     {
+        /** @var \Shopware\SwagPromotion\Components\ProductMatcher $productMatcher */
+        $productMatcher = $this->container->get('promotion.product_matcher');
+        
         /** @var \Shopware\SwagPromotion\Components\Promotion\ProductStacker\ProductStacker $productStackRegistry */
         $productStackRegistry = $this->container->get('promotion.stacker.registry');
         
-        /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $promotion) {            
-            $stackedProducts = $productStackRegistry->getStacker($promotion->getStackMode())->getStack(
-                $products,
+        $promotionProducts = $productMatcher->getMatchingProducts($products, json_decode($promotion->getApplyRules(), true));
+            
+        return $productStackRegistry->getStacker($promotion->getStackMode())->getStack(
+                $promotionProducts,
                 $promotion->getStep(),
                 $promotion->getMaxQuantity(),
                 'cheapest'
-            );
+        );
+    }
+
+    public function applyFreeDiscount($promotions, $articleDataCollection, $products)
+    {        
+        /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
+        foreach ($promotions as $currentPromotion) {
+            $promotion = $currentPromotion['promotion'];
+            
+            $stackedProducts = $this->getPromotionStackedProducts($promotion, $products);
             
             $amount = $promotion->getAmount();
             
@@ -850,18 +856,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     public function applyXYDiscount($promotions, $articleDataCollection, $products)
     {
-        /** @var \Shopware\SwagPromotion\Components\Promotion\ProductStacker\ProductStacker $productStackRegistry */
-        $productStackRegistry = $this->container->get('promotion.stacker.registry');
-
-        //todo: clear foreaches
         /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $promotion) {
-            $stackedProducts = $productStackRegistry->getStacker($promotion->getStackMode())->getStack(
-                $products,
-                $promotion->getStep(),
-                $promotion->getMaxQuantity(),
-                'cheapest'
-            );
+        foreach ($promotions as $currentPromotion) {
+            $promotion = $currentPromotion['promotion'];
+            $stackedProducts = $this->getPromotionStackedProducts($promotion, $products);
 
             foreach ($stackedProducts as $stack) {
                 $amount = $promotion->getAmount();
@@ -900,8 +898,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                         $amount -= $qty;
                     }
                 }
-                
-                $this->logDebug('stackedProducts: ' . print_r($articleDataCollection, true));
             }
         }
 
@@ -910,61 +906,49 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     public function applyProductAbsoluteDiscount($promotions, $articleDataCollection, $products)
     {
-        /** @var \Shopware\SwagPromotion\Components\Promotion\ProductStacker\ProductStacker $productStackRegistry */
-        $productStackRegistry = $this->container->get('promotion.stacker.registry');
-
-        $productWithDiscount = [];
-        $promotionDiscount = 0;
-        $basketAmount = 0;
-
         /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $promotion) {
-            $stackedProducts = $productStackRegistry->getStacker($promotion->getStackMode())->getStack(
-                $products,
-                $promotion->getStep(),
-                $promotion->getMaxQuantity(),
-                'cheapest'
-            );
-
+        foreach ($promotions as $currentPromotion) {
+            $promotion = $currentPromotion['promotion'];
             $discount = $promotion->getAmount();
+            $maxQuantity = $promotion->getMaxQuantity();
+            $stackedProducts = $this->getPromotionStackedProducts($promotion, $products);
 
-            foreach ($stackedProducts as $stack) {
-                $stackProduct = array_map(
+            $basketAmount = 0;
+
+            foreach ($stackedProducts as $stack) {        
+                $productWithDiscount = array_map(
                     function ($p) {
                         return $p['ordernumber'];
                     },
-                    array_slice($stack, 0, ($discount > 0) ? $discount : NULL)
+                    array_slice($stack, 0, ($maxQuantity > 0) ? $maxQuantity : NULL)
                 );
-
-                $productWithDiscount[] = $stackProduct[0];
-                $promotionDiscount += $discount;
             }
-        }
+            
+            foreach ($articleDataCollection as $product) {
+                if ($product['promoQuantity'] == 0 && $product['price'] <= 0) {
+                    continue;
+                }
 
-        foreach ($articleDataCollection as $product) {
-            if ($product['promoQuantity'] == 0 && $product['price'] <= 0) {
-                continue;
-            }
-
-            if (in_array($product['articleNumber'], $productWithDiscount)) {
-                $basketAmount += $product['price'];
-            }
-        }
-
-        foreach ($articleDataCollection as &$product) {
-            if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
-                continue;
+                if (in_array($product['articleNumber'], $productWithDiscount)) {
+                    $basketAmount += $product['price'];
+                }
             }
 
-            if (in_array($product['articleNumber'], $productWithDiscount)) {
-                $weight = $product['price'] / $basketAmount;
+            foreach ($articleDataCollection as &$product) {
+                if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
+                    continue;
+                }
 
-                $countedAmountToDiscount = $promotionDiscount * $weight;
-                $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
+                if (in_array($product['articleNumber'], $productWithDiscount)) {
+                    $weight = $product['price'] / $basketAmount;
 
-                $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-                $product['price'] -= $countedAmountToDiscount;
-                $product['discountTotal'] += $countedAmountToDiscountPerQty;
+                    $countedAmountToDiscount = $currentPromotion['promoAmount'] * $weight;
+                    $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
+
+                    $product['priceAmount'] -= $countedAmountToDiscountPerQty;
+                    $product['price'] -= $countedAmountToDiscount;
+                    $product['discountTotal'] += $countedAmountToDiscountPerQty;
+                }
             }
         }
 
@@ -973,77 +957,52 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     public function applyProductPercentDiscount($promotions, $articleDataCollection, $products)
     {
-        /** @var \Shopware\SwagPromotion\Components\Promotion\ProductStacker\ProductStacker $productStackRegistry */
-        $productStackRegistry = $this->container->get('promotion.stacker.registry');
-
-        $productWithDiscount = [];
-        $totalProductAmount = 0;
-        $promotionDiscount = 0;
-        $basketAmount = 0;
-
         /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $promotion) {
+        foreach ($promotions as $currentPromotion) {
+            $promotion = $currentPromotion['promotion'];
             $discount = $promotion->getAmount();
+            $maxQuantity = $promotion->getMaxQuantity();
+            $stackedProducts = $this->getPromotionStackedProducts($promotion, $products);
+            
+            $basketAmount = 0;
 
-            $stackedProducts = $productStackRegistry->getStacker($promotion->getStackMode())->getStack(
-                $products,
-                $promotion->getStep(),
-                $promotion->getMaxQuantity(),
-                'cheapest'
-            );
-
-            foreach ($stackedProducts as $stack) {
-                $totalProductAmount += array_sum(
-                // return the price of the free items
-                    array_map(
-                        function ($p) {
-                            return $p['price'];
-                        },
-                        // get the "free" items
-                        array_slice($stack, 0, ($discount > 0) ? $discount : NULL)
-                    )
-                );
-                
-                $stackProduct = array_map(
+            foreach ($stackedProducts as $stack) {        
+                $productWithDiscount = array_map(
                     function ($p) {
                         return $p['ordernumber'];
                     },
-                    array_slice($stack, 0, ($discount > 0) ? $discount : NULL)
+                    array_slice($stack, 0, ($maxQuantity > 0) ? $maxQuantity : NULL)
                 );
-                
-                $productWithDiscount[] = $stackProduct[0];
-            }
-
-            $promotionDiscount = $totalProductAmount * ($discount / 100);
-        }
-
-        foreach ($articleDataCollection as $product) {            
-            if ($product['promoQuantity'] == 0 && $product['price'] <= 0) {
-                continue;
             }
             
-            if (in_array($product['articleNumber'], $productWithDiscount)) {
-                $basketAmount += $product['price'];
+            foreach ($articleDataCollection as $product) {            
+                if ($product['promoQuantity'] == 0 && $product['price'] <= 0) {
+                    continue;
+                }
+
+                if (in_array($product['articleNumber'], $productWithDiscount)) {
+                    $basketAmount += $product['price'];
+                }
+            }
+
+            foreach ($articleDataCollection as &$product) {            
+                if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
+                    continue;
+                }
+
+                if (in_array($product['articleNumber'], $productWithDiscount)) {
+                    $weight = $product['price'] / $basketAmount;
+
+                    $countedAmountToDiscount = $currentPromotion['promoAmount'] * $weight;
+                    $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
+
+                    $product['priceAmount'] -= $countedAmountToDiscountPerQty;
+                    $product['price'] -= $countedAmountToDiscount;
+                    $product['discountTotal'] += $countedAmountToDiscountPerQty;
+                }
             }
         }
 
-        foreach ($articleDataCollection as &$product) {            
-            if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
-                continue;
-            }
-
-            if (in_array($product['articleNumber'], $productWithDiscount)) {
-                $weight = $product['price'] / $basketAmount;
-
-                $countedAmountToDiscount = $promotionDiscount * $weight;
-                $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
-
-                $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-                $product['price'] -= $countedAmountToDiscount;
-                $product['discountTotal'] += $countedAmountToDiscountPerQty;
-            }
-        }
-        
         return $articleDataCollection;
     }
 
@@ -1053,8 +1012,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $basketAmount = 0;
 
         /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $promotion) {
-            $promotionDiscount += $promotion->getAmount();
+        foreach ($promotions as $currentPromotion) {
+            $promotionDiscount += $currentPromotion['promotion']->getAmount();
         }
 
         foreach ($articleDataCollection as $product) {
@@ -1083,14 +1042,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return $articleDataCollection;
     }
 
-    public function applyCartPercentDiscount($promotions, $articleDataCollection, $promoAmounts)
+    public function applyCartPercentDiscount($promotions, $articleDataCollection)
     {
         $promotionDiscount = 0;
-        $totalProductAmount = 0;
+        $basketAmount = 0;
 
         /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $key => $promotion) {
-            $promotionDiscount += $promoAmounts[$key];
+        foreach ($promotions as $currentPromotion) {
+            $promotionDiscount += $currentPromotion['promoAmount'];
         }
 
         foreach ($articleDataCollection as $product) {
@@ -1098,7 +1057,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $totalProductAmount += $product['price'];
+            $basketAmount += $product['price'];
         }
 
         foreach ($articleDataCollection as &$product) {
@@ -1106,9 +1065,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $weight = $product['price'] / $totalProductAmount;
+            $weight = $product['price'] / $basketAmount;
 
-            $countedAmountToDiscount = abs($promotionDiscount) * $weight;
+            $countedAmountToDiscount = $promotionDiscount * $weight;
             $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
             
             $product['priceAmount'] -= $countedAmountToDiscountPerQty;
