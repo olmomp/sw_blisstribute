@@ -800,7 +800,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'label' => 'Standard Werbemittel',
                 'description' => 'Das Standard-Werbemittel für die Bestellanlage',
                 'maxLength' => 3,
-                'value' => 'cen',
+                'value' => '',
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );
