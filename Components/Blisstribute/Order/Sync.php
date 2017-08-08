@@ -100,7 +100,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
             }
         }
 
-        $result = $this->processOrderSync($blisstributeOrder);
+        $result = $this->processOrderSync($blisstributeOrder, false);
 
         $this->unlockTask();
         
@@ -126,13 +126,23 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
      *
      * @return bool
      */
-    protected function processOrderSync(BlisstributeOrder $blisstributeOrder)
+    protected function processOrderSync(BlisstributeOrder $blisstributeOrder, $batchModus = true)
     {
         $result = true;
 
         $this->logMessage('start sync::' . $blisstributeOrder->getOrder()->getNumber(), __FUNCTION__);
 
         try {
+            if ($this->config->get('blisstribute-google-address-validation')) {
+                /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
+                $addressValidator = Shopware()->Container()->get('blisstribute.google_address_validator');
+                $addressValidatorResponse = $addressValidator->validateAddress($blisstributeOrder, $this->config);
+                    
+                if (!$addressValidatorResponse && !$this->config->get('blisstribute-transfer-orders')) {
+                    throw new Exception('could not validate the order address.');
+                }
+            }        
+        
             $orderData = $this->initializeModelMapping($blisstributeOrder);
 
             $soapClient = new Shopware_Components_Blisstribute_Order_SoapClient($this->config);
@@ -242,16 +252,6 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
 
                     $this->logMessage('order aborted', __FUNCTION__, Logger::ERROR);
                     throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('order aborted');
-                }
-                
-                if ($this->config->get('blisstribute-google-address-validation')) {
-                    /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
-                    $addressValidator = Shopware()->Container()->get('blisstribute.google_address_validator');
-                    $addressValidatorResponse = $addressValidator->validateAddress($blisstributeOrder, $this->config);
-                    
-                    if (!$addressValidatorResponse) {
-                        throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('could not validate the order address, order aborted');
-                    }
                 }
 
                 return true;

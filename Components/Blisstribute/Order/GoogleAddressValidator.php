@@ -23,9 +23,9 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
     private function _isPackingStation(\Shopware\Models\Order\Billing $billingAddress, \Shopware\Models\Order\Shipping $shippingAddress)
     {
         $this->logDebug('starting packing station check');
-        $blackList = array(
+        $blackList = [
             'pack', 'station', 'packstation', 'packing', 'packing station', 'packingstation', 'filiale', 'postfiliale', 'post'
-        );
+        ];
 
         foreach ($blackList as $currentBlackListItem) {
             if (preg_match('/' . $currentBlackListItem . '/i', $billingAddress->getStreet())) {
@@ -93,7 +93,7 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
         $shipping = $order->getShipping();
 
         if ($this->_isPackingStation($billing, $shipping)) {
-            return false;
+            return true;
         }
 
         $customerAddress = $shipping->getStreet() . ',' . $shipping->getZipCode() . ',' . $shipping->getCity() . ',' . $order->getShipping()->getCountry()->getName();
@@ -107,8 +107,8 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
         $this->logDebug('google response :: ' . print_r($decodedResult, true));
 
         if ($decodedResult['status'] == 'OK') {
-            $street = array();
-            $data = array();
+            $street = [];
+            $data = [];
 
             $forUpdate = false;
             $googleResult = $decodedResult['results'][0]['address_components'];
@@ -148,18 +148,6 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
             }
 
             return true;
-        }
-
-        if (!$config->get('blisstribute-transfer-orders')) {
-            $hint = 'No address verification possible';
-
-            $blisstributeOrder
-                ->setStatus(\Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_VALIDATION_ERROR)
-                ->setErrorComment($hint)
-                ->setTries(0);
-
-            $models->persist($blisstributeOrder);
-            $models->flush();
         }
 
         return false;
