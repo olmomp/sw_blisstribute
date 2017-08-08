@@ -100,7 +100,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
             }
         }
 
-        $result = $this->processOrderSync($blisstributeOrder, false);
+        $result = $this->processOrderSync($blisstributeOrder);
 
         $this->unlockTask();
         
@@ -126,7 +126,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
      *
      * @return bool
      */
-    protected function processOrderSync(BlisstributeOrder $blisstributeOrder, $batchModus = true)
+    protected function processOrderSync(BlisstributeOrder $blisstributeOrder)
     {
         $result = true;
 
