@@ -37,7 +37,6 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNamePayOneELV: '{s name=blisstribute/paymentPayOneELV}PayOneELV{/s}',
         classNameAmazonPayments: '{s name=blisstribute/paymentAmazonPayments}Amazon Payments{/s}',
         classNameBillsafe: '{s name=blisstribute/paymentBillsafe}Billsafe{/s}',
-        classNameDawanda: '{s name=blisstribute/paymentDawanda}Dawanda{/s}'
     },
 
     configure: function() {
@@ -146,9 +145,6 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                             case 'Billsafe':
                                 return me.snippets.classNameBillsafe;
 
-                            case 'Dawanda':
-                                return me.snippets.classNameDawanda;
-
                             default:
                                 return me.snippets.classNameNone;
                         }
@@ -180,7 +176,6 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['PayOneELV', me.snippets.classNamePayOneELV],
                                 ['AmazonPayments', me.snippets.classNameAmazonPayments],
                                 ['Billsafe', me.snippets.classNameBillsafe]
-                                ['Dawanda', me.snippets.classNameDawanda]
                             ]
                         }),
                         allowBlank: false,
