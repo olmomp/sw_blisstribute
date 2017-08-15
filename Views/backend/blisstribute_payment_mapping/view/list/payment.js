@@ -33,6 +33,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameSelfcollectorCashEc: '{s name=blisstribute/paymentSelfcollectorCashEc}EC (Selbstabholer){/s}',
         classNameSelfcollectorCashCreditCard: '{s name=blisstribute/paymentSelfcollectorCashCreditCard}Kreditkarte (Selbstabholer){/s}',
         classNameVrPayCC: '{s name=blisstribute/paymentVrPayCC}vrPayCC{/s}',
+        classNamePayOneCC: '{s name=blisstribute/paymentPayOneCC}PayOneCC{/s}',
         classNameAmazonPayments: '{s name=blisstribute/paymentAmazonPayments}Amazon Payments{/s}',
         classNameBillsafe: '{s name=blisstribute/paymentBillsafe}Billsafe{/s}'
     },
@@ -131,6 +132,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                             case 'VrPayCC':
                                 return me.snippets.classNameVrPayCC;
 
+                            case 'PayOneCC':
+                                return me.snippets.classNamePayOneCC;
+
                             case 'AmazonPayments':
                                 return me.snippets.classNameAmazonPayments;
 
@@ -164,6 +168,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['SelfcollectorCashEc', me.snippets.classNameSelfcollectorCashEc],
                                 ['SelfcollectorCashCreditCard', me.snippets.classNameSelfcollectorCashCreditCard],
                                 ['VrPayCC', me.snippets.classNameVrPayCC],
+                                ['PayOneCC', me.snippets.classNamePayOneCC],
                                 ['AmazonPayments', me.snippets.classNameAmazonPayments],
                                 ['Billsafe', me.snippets.classNameBillsafe]
                             ]

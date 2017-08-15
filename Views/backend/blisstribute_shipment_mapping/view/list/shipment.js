@@ -13,6 +13,7 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
         className: '{s name=blisstribute/shipment}Blisstribute Versandart{/s}',
         classNameNone: '{s name=blisstribute/combo_shipment_none}Bitte wählen{/s}',
         classNameDhl: '{s name=blisstribute/combo_shipment_dhl}DHL{/s}',
+        classNameHer: '{s name=blisstribute/combo_shipment_her}HERMES{/s}',
         classNameDhlexpress: '{s name=blisstribute/combo_shipment_dhlexpress}DHL Express{/s}',
         classNameDpd: '{s name=blisstribute/combo_shipment_dpd}DPD{/s}',
         classNameDpde12: '{s name=blisstribute/combo_shipment_dpde12}DPD E12{/s}',
@@ -32,6 +33,7 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
             data: [
                 [null, me.snippets.classNameNone],
                 ['Dhl', me.snippets.classNameDhl],
+                ['Her', me.snippets.classNameHer],
                 ['Dhlexpress', me.snippets.classNameDhlexpress],
                 ['Dpd', me.snippets.classNameDpd],
                 ['Dpde12', me.snippets.classNameDpde12],
