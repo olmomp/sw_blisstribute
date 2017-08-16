@@ -486,7 +486,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $mode = $product->getMode();
             $articleNumber = $product->getArticleNumber();
 
-            if (in_array($mode, [3, 4]) && $product->getPrice < 0) {
+            if (in_array($mode, [3, 4]) && $price <= 0) {
                 if (in_array($articleNumber, ['sw-payment', 'sw-discount', 'sw-payment-absolute'])) {
                     $shopwareDiscountsAmount += $product->getPrice();
                 } else {
