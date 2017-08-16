@@ -760,7 +760,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             //First apply free product discount
             if (array_key_exists('product.freegoods', $allPromotions)) {
-                $articleDataCollection = $this->applyFreeDiscount($allPromotions['product.freegoods'], $articleDataCollection, $products);
+                $articleDataCollection = $this->applyFreeDiscount($allPromotions['product.freegoods'], $articleDataCollection);
             }
 
             if (array_key_exists('product.buyxgetyfree', $allPromotions)) {
@@ -815,44 +815,36 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         );
     }
 
-    public function applyFreeDiscount($promotions, $articleDataCollection, $products)
+    public function applyFreeDiscount($promotions, $articleDataCollection)
     {        
         /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
         foreach ($promotions as $currentPromotion) {
             $promotion = $currentPromotion['promotion'];
-            $stackedProducts = $this->getPromotionStackedProducts($promotion, $products);
-
             $freeProducts = [];
             
-            foreach ($stackedProducts as $stack) {
-                $stackProducts = array_map(
-                    function ($p) {
-                        return $p['ordernumber'];
-                    },
-                    // get the "free" items
-                    $stack
-                );
-                
-                if (!array_key_exists($stackProducts[0], $freeProducts)) {
-                    $freeProducts[$stackProducts[0]] = 1;
-                } else {
-                    $freeProducts[$stackProducts[0]]++;
-                }
+            foreach ($promotion->getFreeGoodsArticle() as $article) {
+                $freeProducts[] = $article->getId();
             }
    
             foreach ($articleDataCollection as &$product) {
                 if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
                     continue;
                 }
+                
+                if (!in_array($product['articleId'], $freeProducts)) {
+                    continue;
+                }
 
-                if (array_key_exists($product['articleNumber'], $freeProducts)) {                    
-                    $countedAmountToDiscount = $freeProducts[$product['articleNumber']] * $product['originalPriceAmount'];
+                if ($product['originalPriceAmount'] == $currentPromotion['promoAmount']) {                    
+                    $countedAmountToDiscount = $product['originalPriceAmount'];
                     $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
 
                     $product['promoQuantity'] -= 1;
                     $product['priceAmount'] -= $countedAmountToDiscountPerQty;
                     $product['price'] -= $countedAmountToDiscount;
                     $product['discountTotal'] += $countedAmountToDiscountPerQty;
+                    
+                    break;
                 }
             }
         }
