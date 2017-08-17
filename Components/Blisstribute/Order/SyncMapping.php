@@ -486,7 +486,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $mode = $product->getMode();
             $articleNumber = $product->getArticleNumber();
 
-            if (in_array($mode, [3, 4])) {
+            if (in_array($mode, [3, 4]) && $price <= 0) {
                 if (in_array($articleNumber, ['sw-payment', 'sw-discount', 'sw-payment-absolute'])) {
                     $shopwareDiscountsAmount += $product->getPrice();
                 } else {
@@ -706,7 +706,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     $configurationArticles[] = $product;
                 }
             }
-            
+
+            $this->logDebug('got configuration articles ' . count($configurationArticles));
+
             foreach ($configurationArticles as $configurationArticle) {
                 $price = $configurationArticle->getPrice();
                 $quantity = $configurationArticle->getQuantity();
@@ -715,11 +717,27 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $articleData['originalPrice'] += $price * $quantity;
                 $articleData['priceAmount'] += round($price, 6);
                 $articleData['price'] += round(($price * $quantity), 6);
-                    
+
+                // todo ultra dirty, but should work for gusti
                 if ($configurationArticle->getAttribute()->getSwagCustomProductsMode() == 2) {
-                    $category_type = $configurationArticle->getArticleName();
-                } else {
-                    $configuration[] = ['category_type' => $category_type, 'category' => $configurationArticle->getArticleName()];
+                    $categoryType = $configurationArticle->getArticleName();
+
+                    $this->logDebug('load configuration by hash ' . $hash);
+
+                    $configurationData = $this->container->get('db')->fetchAll(
+                        "SELECT configuration
+                          FROM s_plugin_custom_products_configuration_hash
+
+                          WHERE hash = :hash", array('hash' => $hash)
+                    );
+
+                    foreach ($configurationData as $currentConfiguration) {
+                        $currentConfigurationData = json_decode($currentConfiguration['configuration'], true);
+                        $configuration[] = array(
+                            'category_type' => $categoryType, 'category' => trim(implode(',', array_shift($currentConfigurationData)))
+                        );
+                    }
+
                 }
             }
             

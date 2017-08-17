@@ -76,11 +76,11 @@ class Shopware_Components_Blisstribute_Order_Payment_Abstract
 
         /** @var Detail $currentDetail */
         foreach ($this->order->getDetails() as $currentDetail) {
-            if(!in_array($currentDetail->getArticleNumber(), array('sw-payment', 'sw-payment-absolute', 'sw-surcharge'))) {
+            if (!in_array($currentDetail->getArticleNumber(), ['sw-payment', 'sw-payment-absolute', 'sw-surcharge'])) {
                 continue;
             }
 
-            if($currentDetail->getPrice() > 0) {
+            if ($currentDetail->getPrice() > 0) {
                 $paymentCosts += $currentDetail->getPrice();
             }
         }
