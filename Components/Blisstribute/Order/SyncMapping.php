@@ -488,7 +488,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             if (in_array($mode, [3, 4]) && $price <= 0) {
                 if (in_array($articleNumber, ['sw-payment', 'sw-discount', 'sw-payment-absolute'])) {
-                    $shopwareDiscountsAmount += $product->getPrice();
+                    $shopwareDiscountsAmount += $price;
                 } else {
                     $promotions[$product->getId()] = $product;
                 }
@@ -498,7 +498,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            if (isset($orderNumbers[$articleNumber])) {
+            if (array_key_exists($articleNumber, $orderNumbers)) {
                 $orderNumbers[$articleNumber] += $quantity;
             } else {
                 $orderNumbers[$articleNumber] = $quantity;
