@@ -777,8 +777,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Bestellung in Blisstribute anhalten',
                 'description' => 'Wenn aktiviert, wird die Bestellung sofort nach der Übertragung zu Blisstribute angehalten',
-                'maxLength' => 255,
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'maxLength' => 255
             ]
         );
 
@@ -788,8 +787,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Bestellung in Blisstribute sperren',
                 'description' => 'Wenn aktiviert, wird die Bestellung sofort nach der Übertragung zu Blisstribute gesperrt',
-                'maxLength' => 255,
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'maxLength' => 255
             ]
         );
 
@@ -798,10 +796,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-default-advertising-medium',
             [
                 'label' => 'Standard Werbemittel',
-                'description' => 'Das Standard-Werbemittel für die Bestellanlage',
+                'description' => 'Das Standard-Werbemittel für die Bestellanlage, falls kein Werbemittel gefunden werden kann',
                 'maxLength' => 3,
                 'value' => '',
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );
         $form->setElement(
@@ -810,8 +807,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Google Maps Address Verifikation',
                 'description' => 'Wenn aktiviert, werden Liefer- und Rechnungsadresse bei Bestellübertragung mit der Google Maps API abgeglichen, um eventuelle Adressefehler zu korrigieren.',
-                'value' => 0,
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => 0
             ]
         );
         $form->setElement(
@@ -820,8 +816,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Google Maps Key',
                 'description' => 'API-KEY für den Zugang zur Google Maps API.',
-                'value' => '',
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => ''
             ]
         );
         $form->setElement(
@@ -830,8 +825,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Bestellungen ohne Adressvalidierung übertragen',
                 'description' => 'Wenn aktiviert, werden ausschließlich Bestellungen ins Blisstribute-System übertragen, deren Adressen erfolgreich verifiziert werden konnten.',
-                'value' => 1,
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                'value' => 1
             ]
         );
         $form->setElement(
