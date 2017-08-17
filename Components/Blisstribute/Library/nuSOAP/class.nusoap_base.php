@@ -222,7 +222,7 @@ class nusoap_base {
 	*
 	* @access	public
 	*/
-	function nusoap_base() {
+	function __construct() {
 		$this->debugLevel = $GLOBALS['_transient']['static']['nusoap_base']['globalDebugLevel'];
 	}
 
@@ -992,5 +992,3 @@ function usleepWindows($usec)
 	while ($timePassed < $usec);
 }
 
-
-?>
