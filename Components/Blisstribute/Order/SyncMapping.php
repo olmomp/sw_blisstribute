@@ -733,13 +733,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
                     foreach ($configurationData as $currentConfiguration) {
                         $currentConfigurationData = json_decode($currentConfiguration['configuration'], true);
-                        $this->logDebug('current configuration data' . json_encode($currentConfigurationData['1']));
-                        /*if ($product->getNumber() != $currentConfigurationData['number']) {
-                            continue;
-                        }*/
-
                         $configuration[] = array(
-                            'category_type' => $categoryType, 'category' => trim(implode(',', $currentConfigurationData['1']))
+                            'category_type' => $categoryType, 'category' => trim(implode(',', array_shift($currentConfigurationData)))
                         );
                     }
 
