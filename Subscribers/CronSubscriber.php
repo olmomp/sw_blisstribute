@@ -141,7 +141,7 @@ class CronSubscriber implements SubscriberInterface
             $date = new \DateTime();
 
             foreach ($orders as $order) {
-                $blisstributeOrder = new \BlisstributeOrder();
+                $blisstributeOrder = new BlisstributeOrder();
                 $blisstributeOrder->setTries(0);
                 $blisstributeOrder->setOrder($modelManager->getRepository('\Shopware\Models\Order\Order')->find($order['id']));
                 $blisstributeOrder->setCreatedAt($date);
