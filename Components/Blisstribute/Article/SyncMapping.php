@@ -103,6 +103,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     protected function getClassification3($article)
     {
         $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification3');
+        $this->logDebug('articleSyncMapping::classification3::fieldName ' . $fieldName);
         return $this->getClassification($article, $fieldName);
     }
 
@@ -114,6 +115,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     protected function getClassification4($article)
     {
         $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification4');
+        $this->logDebug('articleSyncMapping::classification4::fieldName ' . $fieldName);
         return $this->getClassification($article, $fieldName);
     }
 
@@ -130,6 +132,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         $method = 'get' . ucfirst($fieldName);
         if (!method_exists($article->getAttribute(), $method)) {
+            $this->logDebug('articleSyncMapping::getClassification::getterNotFound' . $method);
             return null;
         }
 
