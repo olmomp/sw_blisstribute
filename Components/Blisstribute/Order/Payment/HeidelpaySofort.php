@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/AbstractExternalPayment.php';
+require_once __DIR__ . '/AbstractHeidelpay.php';
 
 /**
  * heidelpay sofort payment implementation
@@ -11,39 +12,10 @@ require_once __DIR__ . '/AbstractExternalPayment.php';
  * @since     1.0.0
  */
 class Shopware_Components_Blisstribute_Order_Payment_HeidelpaySofort
-    extends Shopware_Components_Blisstribute_Order_Payment_AbstractExternalPayment
+    extends Shopware_Components_Blisstribute_Order_Payment_AbstractHeidelpay
 {
     /**
      * @inheritdoc
      */
     protected $code = 'heidelpaySofort';
-
-    /**
-     * @inheritdoc
-     */
-    protected function checkPaymentStatus()
-    {
-        $status = parent::checkPaymentStatus();
-
-        if (trim($this->order->getTransactionId()) == '') {
-            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('no card alias id given');
-        }
-
-        if (trim($this->order->getTemporaryId()) == '') {
-            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('no token given');
-        }
-
-        return $status;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function getAdditionalPaymentInformation()
-    {
-        return array(
-            'resToken' => trim($this->order->getTemporaryId()),
-            'cardAlias' => trim($this->order->getTransactionId()),
-        );
-    }
 }
