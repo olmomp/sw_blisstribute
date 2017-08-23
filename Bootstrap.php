@@ -777,7 +777,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Bestellung in Blisstribute anhalten',
                 'description' => 'Wenn aktiviert, wird die Bestellung sofort nach der Übertragung zu Blisstribute angehalten',
-                'maxLength' => 255
+                'maxLength' => 255,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );
 
@@ -787,7 +788,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Bestellung in Blisstribute sperren',
                 'description' => 'Wenn aktiviert, wird die Bestellung sofort nach der Übertragung zu Blisstribute gesperrt',
-                'maxLength' => 255
+                'maxLength' => 255,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );
 
@@ -799,6 +801,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'description' => 'Das Standard-Werbemittel für die Bestellanlage, falls kein Werbemittel gefunden werden kann',
                 'maxLength' => 3,
                 'value' => '',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );
         $form->setElement(
