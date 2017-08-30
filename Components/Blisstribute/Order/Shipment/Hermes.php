@@ -16,5 +16,5 @@ class Shopware_Components_Blisstribute_Order_Shipment_Hermes
     /**
      * @inheritdoc
      */
-    protected $code = 'HER';
+    protected $code = 'HERMES';
 }
