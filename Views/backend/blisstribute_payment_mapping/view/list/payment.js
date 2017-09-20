@@ -28,6 +28,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameHeidelpayCreditCard: '{s name=blisstribute/paymentHeidelpayCreditCard}Kreditkarte (Heidelpay){/s}',
 		classNameHeidelpaySofort: '{s name=blisstribute/paymentHeidelpaySofort}Sofortueberweisung (Heidelpay){/s}',
 		classNameHeidelpayIdeal: '{s name=blisstribute/paymentHeidelpayIdeal}iDEAL (Heidelpay){/s}',
+        classNameHeidelpayPostFinance: '{s name=blisstribute/paymentHeidelpayPostFinance}PostFinance (Heidelpay){/s}',
         classNameMarketplace: '{s name=blisstribute/paymentMarketplace}Marktplatz{/s}',
         classNameSelfcollectorCash: '{s name=blisstribute/paymentSelfcollectorCash}Bar (Selbstabholer){/s}',
         classNameSelfcollectorCashEc: '{s name=blisstribute/paymentSelfcollectorCashEc}EC (Selbstabholer){/s}',
@@ -117,6 +118,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
 							
 							case 'HeidelpayIdeal':
                                 return me.snippets.classNameHeidelpayIdeal;
+                                
+                            case 'HeidelpayPostFinance':
+                                return me.snippets.classNameHeidelpayPostFinance;
 
                             case 'Marketplace':
                                 return me.snippets.classNameMarketplace;
@@ -167,6 +171,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['HeidelpayCreditCard', me.snippets.classNameHeidelpayCreditCard],
 								['HeidelpaySofort', me.snippets.classNameHeidelpaySofort],
 								['HeidelpayIdeal', me.snippets.classNameHeidelpayIdeal],
+                                ['HeidelpayPostFinance', me.snippets.classNameHeidelpayPostFinance],
                                 ['Marketplace', me.snippets.classNameMarketplace],
                                 ['SelfcollectorCash', me.snippets.classNameSelfcollectorCash],
                                 ['SelfcollectorCashEc', me.snippets.classNameSelfcollectorCashEc],
