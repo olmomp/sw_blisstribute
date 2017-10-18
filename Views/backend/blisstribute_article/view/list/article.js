@@ -31,7 +31,7 @@ Ext.define('Shopware.apps.BlisstributeArticle.view.list.Article', {
                    editor: null,
                    dataIndex: 'articleNumber'
                 },
-                articleEan: {
+                /*articleEan: {
                     header: 'EAN',
                     flex: 2,
                     sortable: true,
@@ -69,7 +69,7 @@ Ext.define('Shopware.apps.BlisstributeArticle.view.list.Article', {
                     flex: 3,
                     sortable: true,
                     dataIndex: 'comment'
-                }
+                }*/
             },
             rowEditing: true,
             editColumn: false,
