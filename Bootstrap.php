@@ -248,12 +248,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'custom' => 1
         ]);
 
-        $crud->update('s_articles_attributes', 'blisstribute_drop_shipment_provider', 'combobox', [
-            'displayInBackend' => true,
-            'label' => 'blisstribute drop shipment provider',
-            'custom' => 1
-        ]);
-
         $crud->update('s_articles_attributes', 'blisstribute_vhs_number', 'string', [
             'displayInBackend' => true,
             'label' => 'blisstribute vhs article number',
