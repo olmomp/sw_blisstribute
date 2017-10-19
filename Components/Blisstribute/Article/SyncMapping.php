@@ -560,6 +560,26 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      * @param Detail $articleDetail
      * @return string
      */
+    private function getDropShipmentProviderCode($articleDetail)
+    {
+        $dropShipmentProvider = '';
+        if ($articleDetail->getAttribute() != null) {
+            $dropShipmentProvider = $articleDetail->getAttribute()->getBlisstributeDropShipmentProvider();
+        }
+
+        if (trim($dropShipmentProvider) == '') {
+            if ($articleDetail->getArticle() != null && $articleDetail->getArticle()->getAttribute() != null)
+                $dropShipmentProvider = $articleDetail->getArticle()->getAttribute()->getBlisstributeDropShipmentProvider();
+        }
+        $this->logDebug($dropShipmentProvider);
+
+        return $dropShipmentProvider;
+    }
+
+    /**
+     * @param Detail $articleDetail
+     * @return string
+     */
     private function getArticleVhsNumber($articleDetail)
     {
         $vhsArticleNumber = $articleDetail->getAttribute()->getBlisstributeVhsNumber();
@@ -646,6 +666,17 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             $tagCollection[] = array(
                 'type' => 'height',
                 'value' => $articleDetail->getHeight(),
+                'isMultiTag' => false,
+                'deliverer' => 'foreign'
+            );
+        }
+
+        // blisstribute drop shipment provider
+        $dropShipmentProvider = $this->getDropShipmentProviderCode($articleDetail);
+        if (trim($dropShipmentProvider) != '') {
+            $tagCollection[] = array(
+                'type' => 'DSP',
+                'value' => $dropShipmentProvider,
                 'isMultiTag' => false,
                 'deliverer' => 'foreign'
             );
