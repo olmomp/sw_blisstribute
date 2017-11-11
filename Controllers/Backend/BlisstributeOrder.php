@@ -139,7 +139,25 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
         Shopware()->Db()->query($sql, array('taskName' => '%order_sync%'));
 
         $this->View()->assign(array(
-            'success' => true
+            'success' => true,
+            'message' => 'foobar'
+        ));
+    }
+
+    /**
+     * resets the order sync locks
+     *
+     * @return void
+     */
+    public function resetOrderSyncAction()
+    {
+        $blisstributeOrderId = $this->Request()->getParam('id');
+        $sql = 'UPDATE s_plugin_blisstribute_orders set transfer_status = 1 WHERE s_order_id = :orderId';
+        Shopware()->Db()->query($sql, array('orderId' => $blisstributeOrderId));
+
+        $this->View()->assign(array(
+            'success' => true,
+            'order_id' => $blisstributeOrderId
         ));
     }
 

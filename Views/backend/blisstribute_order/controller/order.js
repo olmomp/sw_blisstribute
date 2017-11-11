@@ -8,13 +8,13 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
                 'blisstribute-order-selection-changed': me.onSelectionChange,
                 'sync': me.displaySyncProgress,
                 'reset-btorder-lock': me.onResetBtOrderLock,
+                'reset-sync': me.onResetOrderSync,
                 'edit': me.onEdit,
                 'openOrder': me.onOpenOrder
             }
         });
 
         Shopware.app.Application.on('blisstribute-sync-process', me.onSync);
-
         me.mainWindow = me.getView('list.Window').create({ }).show();
     },
 
@@ -66,8 +66,10 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
     onSelectionChange: function(grid, selModel) {
         if (selModel.hasSelection()) {
             grid.syncButton.enable();
+            grid.resetSyncButton.enable();
         } else {
             grid.syncButton.disable();
+            grid.resetSyncButton.disable();
         }
     },
 
@@ -79,6 +81,7 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
      * @param callback
      */
     onSync: function(task, record, callback) {
+        console.log(task, record, callback);
         Ext.Ajax.request({
             url: '{url controller=BlisstributeOrder action=sync}',
             method: 'POST',
@@ -99,6 +102,7 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
      * @param callback
      */
     onResetBtOrderLock: function(task, record, callback) {
+        console.log(task, record, callback);
         Ext.Ajax.request({
             url: '{url controller=BlisstributeOrder action=resetLock}',
             method: 'POST',
@@ -110,13 +114,33 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
     },
 
     /**
+     * event listener for trigger sync batch action
+     *
+     * @param task
+     * @param record
+     * @param callback
+     */
+    onResetOrderSync: function(task, record, callback) {
+        console.log(task, record, callback);
+        Ext.Ajax.request({
+            url: '{url controller=BlisstributeOrder action=resetOrderSync}',
+            method: 'POST',
+            params: {
+                id: record.get('id')
+            },
+            success: function(response, operation) {
+                Shopware.Notification.createGrowlMessage('Erfolg','Der Bestell-Sync-Status wurde erfolgreich zurückgesetzt');
+            }
+        });
+    },
+
+    /**
      * display progress window for sync action
      *
      * @param grid
      */
     displaySyncProgress: function(grid) {
         var selection = grid.getSelectionModel().getSelection();
-
         if (selection.length <= 0) return;
 
         this.displayProgressWindow(grid, {

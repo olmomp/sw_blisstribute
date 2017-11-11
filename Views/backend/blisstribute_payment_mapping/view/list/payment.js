@@ -26,8 +26,8 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNamePayolutionInstallment: '{s name=blisstribute/paymentPayolutionInstallment}Ratenkauf (Payolution){/s}',
         classNamePayolutionELV: '{s name=blisstribute/paymentPayolutionELV}ELV (Payolution){/s}',
         classNameHeidelpayCreditCard: '{s name=blisstribute/paymentHeidelpayCreditCard}Kreditkarte (Heidelpay){/s}',
-		classNameHeidelpaySofort: '{s name=blisstribute/paymentHeidelpaySofort}Sofortueberweisung (Heidelpay){/s}',
-		classNameHeidelpayIdeal: '{s name=blisstribute/paymentHeidelpayIdeal}iDEAL (Heidelpay){/s}',
+        classNameHeidelpaySofort: '{s name=blisstribute/paymentHeidelpaySofort}Sofortueberweisung (Heidelpay){/s}',
+        classNameHeidelpayIdeal: '{s name=blisstribute/paymentHeidelpayIdeal}iDEAL (Heidelpay){/s}',
         classNameHeidelpayPostFinance: '{s name=blisstribute/paymentHeidelpayPostFinance}PostFinance (Heidelpay){/s}',
         classNameMarketplace: '{s name=blisstribute/paymentMarketplace}Marktplatz{/s}',
         classNameSelfcollectorCash: '{s name=blisstribute/paymentSelfcollectorCash}Bar (Selbstabholer){/s}',
@@ -36,6 +36,8 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameVrPayCC: '{s name=blisstribute/paymentVrPayCC}vrPayCC{/s}',
         classNamePayOneCC: '{s name=blisstribute/paymentPayOneCC}PayOneCC{/s}',
         classNamePayOneELV: '{s name=blisstribute/paymentPayOneELV}PayOneELV{/s}',
+        classNameKlarna: '{s name=blisstribute/paymentKlarna}Klarna{/s}',
+        classNameKlarnaSofort: '{s name=blisstribute/paymentKlarnaSofort}Klarna Sofort{/s}',
         classNameAmazonPayments: '{s name=blisstribute/paymentAmazonPayments}Amazon Payments{/s}',
         classNameBillsafe: '{s name=blisstribute/paymentBillsafe}Billsafe{/s}',
     },
@@ -112,11 +114,11 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
 
                             case 'HeidelpayCreditCard':
                                 return me.snippets.classNameHeidelpayCreditCard;
-							
-							case 'HeidelpaySofort':
+                            
+                            case 'HeidelpaySofort':
                                 return me.snippets.classNameHeidelpaySofort;
-							
-							case 'HeidelpayIdeal':
+                            
+                            case 'HeidelpayIdeal':
                                 return me.snippets.classNameHeidelpayIdeal;
                                 
                             case 'HeidelpayPostFinance':
@@ -142,6 +144,12 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
 
                             case 'PayOneELV':
                                 return me.snippets.classNamePayOneELV;
+
+                            case 'Klarna':
+                                return me.snippets.classNameKlarna;
+
+                            case 'KlarnaSofort':
+                                return me.snippets.classNameKlarnaSofort;
 
                             case 'AmazonPayments':
                                 return me.snippets.classNameAmazonPayments;
@@ -169,14 +177,16 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['PayolutionInstallment', me.snippets.classNamePayolutionInstallment],
                                 ['Sofort', me.snippets.classNameSofort],
                                 ['HeidelpayCreditCard', me.snippets.classNameHeidelpayCreditCard],
-								['HeidelpaySofort', me.snippets.classNameHeidelpaySofort],
-								['HeidelpayIdeal', me.snippets.classNameHeidelpayIdeal],
+                                ['HeidelpaySofort', me.snippets.classNameHeidelpaySofort],
+                                ['HeidelpayIdeal', me.snippets.classNameHeidelpayIdeal],
                                 ['HeidelpayPostFinance', me.snippets.classNameHeidelpayPostFinance],
                                 ['Marketplace', me.snippets.classNameMarketplace],
                                 ['SelfcollectorCash', me.snippets.classNameSelfcollectorCash],
                                 ['SelfcollectorCashEc', me.snippets.classNameSelfcollectorCashEc],
                                 ['SelfcollectorCashCreditCard', me.snippets.classNameSelfcollectorCashCreditCard],
                                 ['VrPayCC', me.snippets.classNameVrPayCC],
+                                ['Klarna', me.snippets.classNameKlarna],
+                                ['KlarnaSofort', me.snippets.classNameKlarnaSofort],
                                 ['PayOneCC', me.snippets.classNamePayOneCC],
                                 ['PayOneELV', me.snippets.classNamePayOneELV],
                                 ['AmazonPayments', me.snippets.classNameAmazonPayments],
