@@ -195,9 +195,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $this->getManager()->persist($attributes);
         $this->getManager()->persist($article);
 
-        if ($detail->getKind() == 1 && $detail->getActive() == 0) {
-            $detail->setKind(2);
-
+        if ($detail->getActive() == 0) {
             /** @var Detail $currentNewDetail */
             foreach ($article->getDetails() as $currentNewDetail) {
                 if (!$currentNewDetail->getActive()) {
@@ -208,7 +206,6 @@ class Btarticle extends BtArticleResource implements BatchInterface
                     continue;
                 }
 
-                $currentNewDetail->setKind(1);
                 $this->getManager()->persist($currentNewDetail);
                 $article->setMainDetail($currentNewDetail);
                 break;
