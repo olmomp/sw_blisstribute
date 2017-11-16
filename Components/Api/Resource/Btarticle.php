@@ -195,27 +195,31 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $this->getManager()->persist($attributes);
         $this->getManager()->persist($article);
 
-        if ($detail->getActive() == 0) {
-            /** @var Detail $currentNewDetail */
-            foreach ($article->getDetails() as $currentNewDetail) {
-                if (!$currentNewDetail->getActive()) {
-                    continue;
-                }
+        if ($article->getConfiguratorSet() != null) {
+            if ($detail->getKind() == 1 && $detail->getActive() == 0) {
+                /** @var Detail $currentNewDetail */
+                foreach ($article->getDetails() as $currentNewDetail) {
+                    if (!$currentNewDetail->getActive()) {
+                        continue;
+                    }
 
-                if ($currentNewDetail->getInStock() == 0) {
-                    continue;
-                }
+                    if ($currentNewDetail->getInStock() == 0) {
+                        continue;
+                    }
 
-                $this->getManager()->persist($currentNewDetail);
-                $article->setMainDetail($currentNewDetail);
-                break;
+                    $detail->setKind(2);
+                    $currentNewDetail->setKind(1);
+                    $this->getManager()->persist($currentNewDetail);
+                    $article->setMainDetail($currentNewDetail);
+                    break;
+                }
             }
-        }
 
-        $this->getManager()->persist($detail);
-        $this->getManager()->persist($attributes);
-        $this->getManager()->persist($article);
-        $this->flush();
+            $this->getManager()->persist($detail);
+            $this->getManager()->persist($attributes);
+            $this->getManager()->persist($article);
+            $this->flush();
+        }
 
         return $detail;
     }
