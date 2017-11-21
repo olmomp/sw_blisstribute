@@ -150,7 +150,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $detail->setEan($params['ean']);
         $detail->setStockMin($params['stockMin']);
         $detail->setShippingTime($params['shippingTime']);
-        $detail->setReleaseDate($params['attribute']['blisstributeEstimatedDeliveryDate']);
+        //$detail->setReleaseDate($params['attribute']['blisstributeEstimatedDeliveryDate']);
 
         if (version_compare(\Shopware::VERSION, '5.2.1') >= 0) {
             $detail->setPurchasePrice(round($params['evaluatedStockPrice'], 2));
