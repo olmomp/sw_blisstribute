@@ -194,6 +194,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $this->getManager()->persist($detail);
         $this->getManager()->persist($attributes);
         $this->getManager()->persist($article);
+        $this->flush();
 
         if ($article->getConfiguratorSet() != null) {
             if ($detail->getKind() == 1 && $detail->getActive() == 0) {
