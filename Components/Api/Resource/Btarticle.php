@@ -126,28 +126,13 @@ class Btarticle extends BtArticleResource implements BatchInterface
         switch ($status) {
             case 0: {
                 $params['active'] = false;
-                $params['lastStock'] = false;
                 break;
             }
-            case 1: {
-                $params['active'] = true;
-                $params['lastStock'] = false;
-                break;
-            }
+            case 1:
             case 2:
-                $params['active'] = true;
-                $params['lastStock'] = true;
-                break;
             case 3:
             default: {
-                if ($params['inStock'] > 0) {
-                    $params['active'] = true;
-                    $params['lastStock'] = true;
-                } else {
-                    $params['active'] = true;
-                    $params['lastStock'] = false;
-                }
-
+                $params['active'] = true;
                 break;
             }
         }
