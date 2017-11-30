@@ -175,7 +175,6 @@ class Btarticle extends BtArticleResource implements BatchInterface
 
         $this->getManager()->persist($detail);
         $this->getManager()->persist($attributes);
-        $this->flush();
 
         $article = $detail->getArticle();
         if ($article->getConfiguratorSet() != null) {
@@ -201,9 +200,9 @@ class Btarticle extends BtArticleResource implements BatchInterface
             $this->getManager()->persist($detail);
             $this->getManager()->persist($attributes);
             $this->getManager()->persist($article);
-            $this->flush();
         }
 
+        $this->flush();
         return $detail;
     }
 }
