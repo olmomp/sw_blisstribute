@@ -314,6 +314,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $this->subscribeEvent('Shopware_CronJob_BlisstributeArticleSyncCron', 'onRunBlisstributeArticleSyncCron');
         $this->subscribeEvent('Shopware_CronJob_BlisstributeEasyCouponMappingCron', 'onRunBlisstributeEasyCouponMappingCron');
         $this->subscribeEvent('Shopware_CronJob_BlisstributeOrderMappingCron', 'onRunBlisstributeOrderMappingCron');
+        $this->subscribeEvent('Shopware_CronJob_BlisstributeArticleMappingCron', 'onRunBlisstributeArticleMappingCron');
     }
 
     /**
@@ -436,6 +437,31 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             return;
         }
     }
+    /**
+     * Import all orders that might have been added using pure sql
+     *
+     * @param \Shopware_Components_Cron_CronJob $job
+     */
+    public function onRunBlisstributeArticleMappingCron(\Shopware_Components_Cron_CronJob $job)
+    {
+        if(is_null($job)) return;
+
+        try {
+            $this->logDebug('onRunBlisstributeArticleMappingCron::start');
+            $blisstributeArticleMappingSql = "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
+                . "s_article_id, trigger_deleted, trigger_sync, tries, comment) SELECT CURRENT_TIMESTAMP, "
+                . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a";
+
+
+            $this->get('db')->query($blisstributeArticleMappingSql);
+
+            $this->logDebug('onRunBlisstributeArticleMappingCron::done');
+            return true;
+        } catch (\Exception $ex) {
+            echo "exception while mapping articles " . $ex->getMessage();
+            return false;
+        }
+    }
 
 
     /**
@@ -533,6 +559,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->createCronJob(
                 'Blisstribute Order Mapping',
                 'Shopware_CronJob_BlisstributeOrderMappingCron',
+                3600, // 1 hour
+                true
+            );
+        } catch (Exception $e) {
+            // do nothing
+        }
+
+        // import all orders that might have been added using pure sql
+        try {
+            $this->createCronJob(
+                'Blisstribute Article Mapping',
+                'Shopware_CronJob_BlisstributeArticleMappingCron',
                 3600, // 1 hour
                 true
             );
