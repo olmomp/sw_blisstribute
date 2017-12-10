@@ -369,6 +369,17 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if(is_null($job)) return;
 
         try {
+            // check if plugin SwagPromotion is installed
+            $plugin = Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy([
+                'name' => 'NetiEasyCoupon',
+                'active' => true
+            ]);
+
+            if (!$plugin) {
+                return;
+            }
+
+
             $modelManager = Shopware()->Container()->get('models');
 
             $sqlUnmappedVouchers = "SELECT voucher.id AS id FROM s_emarketing_vouchers voucher 
