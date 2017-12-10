@@ -523,7 +523,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->createCronJob(
                 'Blisstribute Order Sync',
                 'Shopware_CronJob_BlisstributeOrderSyncCron',
-                3600, // 1 hour
+                900, // 15 min
                 true
             );
         } catch (Exception $e) {
@@ -535,7 +535,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->createCronJob(
                 'Blisstribute Article Sync',
                 'Shopware_CronJob_BlisstributeArticleSyncCron',
-                3600, // 1 hour
+                900, // 15 min
                 true
             );
         } catch (Exception $e) {
@@ -559,7 +559,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->createCronJob(
                 'Blisstribute Order Mapping',
                 'Shopware_CronJob_BlisstributeOrderMappingCron',
-                3600, // 1 hour
+                120, // 2 minutes
                 true
             );
         } catch (Exception $e) {
@@ -571,7 +571,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->createCronJob(
                 'Blisstribute Article Mapping',
                 'Shopware_CronJob_BlisstributeArticleMappingCron',
-                3600, // 1 hour
+                120, // 2 min
                 true
             );
         } catch (Exception $e) {
