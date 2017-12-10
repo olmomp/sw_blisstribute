@@ -99,8 +99,11 @@ class Btarticle extends BtArticleResource implements BatchInterface
     public function update($detailId, array $params)
     {
         $this->checkPrivilege('update');
-        $this->logDebug('beginning update');
+        $this->logDebug(sprintf('%s - begin update (%s)', $detailId, json_encode($params)));
 
+        $config = Shopware()->Container()->get('shopware.plugin.config_reader')->getByPluginName('ExitBBlisstribute');
+        $this->logDebug('plugin config loaded');
+        
         if (empty($detailId)) {
             throw new ApiException\ParameterMissingException();
         }
@@ -145,12 +148,24 @@ class Btarticle extends BtArticleResource implements BatchInterface
             $params['attribute']['blisstributeEstimatedDeliveryDate'] = trim($params['attribute']['blisstributeEstimatedDeliveryDate']);
         }
 
+        if ($config['blisstribute-article-sync-sync-active-flag']) {
+            $this->logDebug(sprintf('%s - set article active %s', $detailId, (int)$params['active']));
+            $detail->setActive($params['active']);
+        }
+
+        if ($config['blisstribute-article-sync-sync-ean']) {
+            $this->logDebug(sprintf('%s - set article ean %s', $detailId, $params['ean']));
+            $detail->setEan($params['ean']);
+        }
+
+        if ($config['blisstribute-article-sync-sync-release-date']) {
+            $this->logDebug(sprintf('%s - set article release date %s', $detailId, $params['attribute']['blisstributeEstimatedDeliveryDate']));
+            $detail->setReleaseDate($params['attribute']['blisstributeEstimatedDeliveryDate']);
+        }
+
         $detail->setInStock($params['inStock']);
-        $detail->setActive($params['active']);
-        $detail->setEan($params['ean']);
         $detail->setStockMin($params['stockMin']);
         $detail->setShippingTime($params['shippingTime']);
-        //$detail->setReleaseDate($params['attribute']['blisstributeEstimatedDeliveryDate']);
 
         if (version_compare(\Shopware::VERSION, '5.2.1') >= 0) {
             $detail->setPurchasePrice(round($params['evaluatedStockPrice'], 2));
@@ -189,6 +204,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
                         continue;
                     }
 
+                    $this->logDebug(sprintf('%s - set new main detail %s', $detailId, $currentNewDetail->getId()));
                     $detail->setKind(2);
                     $currentNewDetail->setKind(1);
                     $this->getManager()->persist($currentNewDetail);
@@ -203,6 +219,8 @@ class Btarticle extends BtArticleResource implements BatchInterface
         }
 
         $this->flush();
+        $this->logDebug(sprintf('%s - update done', $detailId));
+
         return $detail;
     }
 }
