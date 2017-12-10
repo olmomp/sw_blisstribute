@@ -20,9 +20,9 @@ use Shopware\Models\Tax\Tax;
  * @method BlisstributeArticle getModelEntity()
  */
 class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Components_Blisstribute_SyncMapping
-{    
+{
     private $container = null;
-    
+
     protected function getConfig()
     {
         return $this->container->get('config');
@@ -37,7 +37,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     {
         return $this->getModelEntity()->getArticle();
     }
-    
+
     public function __construct()
     {
         $this->container = Shopware()->Container();
@@ -83,7 +83,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         } else {
             $articleData['specificationCollection'] = array($this->buildSpecificationCollection($this->getArticle()->getMainDetail()));
         }
-        
+
         // Allow plugins to change the data
         return Enlight()->Events()->filter(
             'ExitBBlisstribute_ArticleSyncMapping_AfterBuildBaseData',
@@ -174,6 +174,40 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
+     * @return array
+     */
+    protected function getMainShopCategories()
+    {
+        /** @var \Doctrine\DBAL\Query\QueryBuilder $queryBuilder */
+        $queryBuilder = Shopware()->Container()->get('dbal_connection')->createQueryBuilder();
+        $mainCategories = $queryBuilder->select('s1.category_id as id')
+            ->from('s_core_shops', 's1')
+            ->leftJoin('s1', 's_core_shops', 's2', 's1.template_id = s2.template_id AND s2.default = 1 AND s1.id != s2.id')
+            ->where('s1.active = 1')
+            ->andWhere('s1.main_id IS NULL')
+            ->andWhere('s2.id IS NULL')
+            ->orderBy('s1.id', 'ASC')
+            ->execute()->fetchAll();
+
+        return $mainCategories;
+    }
+
+    /**
+     * @param $category \Shopware\Models\Category\Category
+     * @param $mainShopCategories array
+     * @return bool
+     */
+    protected function isMainShopCategory($category, $mainShopCategories)
+    {
+        foreach ($mainShopCategories as $mainCategory) {
+            if (strpos($category->getPath(), "|{$mainCategory['id']}|") !== false)
+                return true;
+        }
+
+        return false;
+    }
+
+    /**
      * get article category list
      *
      * @return array
@@ -183,20 +217,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $deepLevel = 0;
         $baseCategory = null;
 
-        // get english category to exclude
-        $categoryRepository = Shopware()->Models()->getRepository('Shopware\Models\Category\Category');
-        /** @var Category|null $englishCategory */
-        $englishCategory = $categoryRepository->createQueryBuilder('category')
-            ->select('c')
-            ->from('Shopware\Models\Category\Category', 'c')
-            ->where('c.name = :categoryName')
-            ->andWhere('c.active = :categoryActive')
-            ->setParameters(array(
-                'categoryName' => 'Englisch',
-                'categoryActive' => true,
-            ))
-            ->getQuery()
-            ->getOneOrNullResult();
+        $mainShopCategories = $this->getMainShopCategories();
 
         /** @var Category[] $categoryCollection */
         $categoryCollection = $this->getArticle()->getCategories()->toArray();
@@ -211,9 +232,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 continue;
             }
 
-            if ($englishCategory != null
-                && strpos($currentCategory->getPath(), '|' . $englishCategory->getId() . '|') !== false
-            ) {
+            if (!$this->isMainShopCategory($currentCategory, $mainShopCategories)) {
                 continue;
             }
 
@@ -443,12 +462,12 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         $imageCollection = $detail['images'];
         if (count($imageCollection) == 0) {
-        $sql = 'SELECT media_id FROM s_articles_img WHERE articleID = :articleId AND main = 1 AND media_id IS NOT NULL';
+            $sql = 'SELECT media_id FROM s_articles_img WHERE articleID = :articleId AND main = 1 AND media_id IS NOT NULL';
             $mediaId = (int)Shopware()->Db()->fetchOne($sql, array('articleId' => (int)$articleDetail->getArticle()->getId()));
 
-        if ($mediaId) {
-            return $this->_loadImage($mediaId);
-        }
+            if ($mediaId) {
+                return $this->_loadImage($mediaId);
+            }
 
             return null;
         }
@@ -550,7 +569,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         if (trim($supplierCode) == '') {
             if ($articleDetail->getArticle() != null && $articleDetail->getArticle()->getAttribute() != null)
-            $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
+                $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
         }
 
         return $supplierCode;
