@@ -589,6 +589,13 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
         }
 
+        $mainDetail = $articleDetail->getArticle()->getMainDetail();
+        if (trim($supplierCode) == '') {
+             if ($mainDetail != null && $mainDetail->getAttribute() != null) {
+                $supplierCode = $mainDetail->getAttribute()->getBlisstributeSupplierCode();
+            }
+        }
+
         return $supplierCode;
     }
 
