@@ -84,7 +84,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                             $articleData = $this->initializeModelMapping($currentArticle);
                             if (count($articleData) <= 0) {
                                 $this->logMessage(
-                                    'could not create data for article::' . $currentArticle->getMainDetail()->getNumber(),
+                                    'could not create data for article::' . $currentArticle->getId(),
                                     __FUNCTION__,
                                     Logger::ERROR
                                 );
@@ -107,7 +107,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                             $this->modelManager->persist($currentArticle);
                         } catch (Shopware_Components_Blisstribute_Exception_ArticleNotChangedException $ex) {
                             $this->logMessage(
-                                'no change detected::' . $currentArticle->getMainDetail()->getNumber(),
+                                'no change detected::' . $currentArticle->getId(),
                                 __FUNCTION__,
                                 Logger::ERROR
                             );
@@ -121,7 +121,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                             continue;
                         } catch (Exception $ex) {
                             $this->logMessage(
-                                'mapping failure::' . $currentArticle->getMainDetail()->getNumber(),
+                                'mapping failure::' . $currentArticle->getId(),
                                 __FUNCTION__,
                                 Logger::ERROR
                             );
