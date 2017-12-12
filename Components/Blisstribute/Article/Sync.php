@@ -311,7 +311,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                 throw new Shopware_Components_Blisstribute_Exception_ArticleNotChangedException('article not changed');
             }
         } catch (Exception $ex) {
-            $this->logWarn($ex->getMessage());
+            $this->logWarn($ex->getMessage() . $ex->getTraceAsString());
             throw $ex;
         }
 
