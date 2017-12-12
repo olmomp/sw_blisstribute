@@ -25,7 +25,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
     protected function getConfig()
     {
-        return $this->container->get('config');
+        return Shopware()->Container()->get('shopware.plugin.config_reader')->getByPluginName('ExitBBlisstribute');
     }
 
     /**
