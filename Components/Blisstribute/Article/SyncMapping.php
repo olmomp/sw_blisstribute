@@ -148,13 +148,17 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $method = 'get' . ucfirst($fieldName);
         if ($mainDetail) {
             $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute ' . $method);
-            $value = $mainDetail->getAttribute()->$method();
+            if (method_exists($mainDetail->getArticle(), $method)) {
+                $value = $mainDetail->getAttribute()->$method();
+            }
             $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute value ' . $value);
         }
 
         if (trim($value) == '') {
             $this->logDebug('articleSyncMapping::getClassification::switch to article attribute');
-            $value = $article->getAttribute()->$method();
+            if (method_exists($article, $method)) {
+                $value = $article->getAttribute()->$method();
+            }
             $this->logDebug('articleSyncMapping::getClassification::article attribute value ' . $value);
         }
 
