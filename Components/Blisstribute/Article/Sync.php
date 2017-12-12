@@ -303,11 +303,16 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
         $syncMapping = new Shopware_Components_Blisstribute_Article_SyncMapping();
         $syncMapping->setModelEntity($modelEntity);
 
-        $articleData = $syncMapping->buildMapping();
-        $this->logMessage('articleData::' . json_encode($articleData), __FUNCTION__);
-        $checksum = trim(sha1(json_encode($articleData)));
-        if (trim($modelEntity->getSyncHash()) == $checksum) {
-            throw new Shopware_Components_Blisstribute_Exception_ArticleNotChangedException('article not changed');
+        try {
+            $articleData = $syncMapping->buildMapping();
+            $this->logMessage('articleData::' . json_encode($articleData), __FUNCTION__);
+            $checksum = trim(sha1(json_encode($articleData)));
+            if (trim($modelEntity->getSyncHash()) == $checksum) {
+                throw new Shopware_Components_Blisstribute_Exception_ArticleNotChangedException('article not changed');
+            }
+        } catch (Exception $ex) {
+            $this->logWarn($ex->getMessage());
+            throw $ex;
         }
 
         $this->logMessage('done::' . $modelEntity->getArticle()->getMainDetail()->getNumber(), __FUNCTION__);
