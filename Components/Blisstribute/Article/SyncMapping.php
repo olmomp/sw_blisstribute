@@ -130,13 +130,30 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             return null;
         }
 
+        $value = '';
         $method = 'get' . ucfirst($fieldName);
-        if (!method_exists($article->getAttribute(), $method)) {
-            $this->logDebug('articleSyncMapping::getClassification::getterNotFound' . $method);
-            return null;
+        if (method_exists($article->getAttribute(), $method)) {
+            $this->logDebug('articleSyncMapping::getClassification::article ' . $method);
+            $value = $article->getAttribute()->$method();
+            $this->logDebug('articleSyncMapping::getClassification::article value ' . $value);
+        } else {
+            $this->logDebug('articleSyncMapping::getClassification::article getterNotFound' . $method);
         }
 
-        return $article->getAttribute()->$method();
+        if (trim($value) != '') {
+            return $value;
+        }
+
+        $mainDetail = $article->getMainDetail();
+        if (method_exists($mainDetail->getAttribute(), $method)) {
+            $this->logDebug('articleSyncMapping::getClassification::mainDetail ' . $method);
+            $value = $article->getAttribute()->$method();
+            $this->logDebug('articleSyncMapping::getClassification::mainDetail value ' . $value);
+        } else {
+            $this->logDebug('articleSyncMapping::getClassification::mainDetail getterNotFound' . $method);
+        }
+
+        return $value;
     }
 
     /**
