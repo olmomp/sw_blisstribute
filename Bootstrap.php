@@ -460,8 +460,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         try {
             $this->logDebug('onRunBlisstributeArticleMappingCron::start');
             $blisstributeArticleMappingSql = "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
-                . "s_article_id, trigger_deleted, trigger_sync, tries, comment) SELECT CURRENT_TIMESTAMP, "
-                . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a";
+                . "s_article_id, trigger_deleted, trigger_sync, tries, comment) "
+                . "SELECT CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a where a.id not in (select distinct s_article_id from s_plugin_blisstribute_articles)";
 
 
             $this->get('db')->query($blisstributeArticleMappingSql);
