@@ -144,29 +144,41 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         $value = '';
+        $mainDetail = $this->_getMainDetail($article);
         $method = 'get' . ucfirst($fieldName);
-        if (method_exists($article->getAttribute(), $method)) {
-            $this->logDebug('articleSyncMapping::getClassification::article ' . $method);
-            $value = $article->getAttribute()->$method();
-            $this->logDebug('articleSyncMapping::getClassification::article value ' . $value);
-        } else {
-            $this->logDebug('articleSyncMapping::getClassification::article getterNotFound' . $method);
+        if ($mainDetail) {
+            $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute ' . $method);
+            $value = $mainDetail->getAttribute()->$method();
+            $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute value ' . $value);
         }
 
-        if (trim($value) != '') {
-            return $value;
-        }
-
-        $mainDetail = $article->getMainDetail();
-        if (method_exists($mainDetail->getAttribute(), $method)) {
-            $this->logDebug('articleSyncMapping::getClassification::mainDetail ' . $method);
+        if (trim($value) == '') {
+            $this->logDebug('articleSyncMapping::getClassification::switch to article attribute');
             $value = $article->getAttribute()->$method();
-            $this->logDebug('articleSyncMapping::getClassification::mainDetail value ' . $value);
-        } else {
-            $this->logDebug('articleSyncMapping::getClassification::mainDetail getterNotFound' . $method);
+            $this->logDebug('articleSyncMapping::getClassification::article attribute value ' . $value);
         }
 
         return $value;
+    }
+
+    /**
+     * @param Article $article
+     *
+     * @return Detail|null
+     */
+    private function _getMainDetail($article)
+    {
+        if ($article->getConfiguratorSet() != null) {
+
+            /** @var Detail $currentDetail */
+            foreach ($article->getDetails() as $currentDetail) {
+                if ($currentDetail->getKind() == 1) {
+                    return $currentDetail;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -602,7 +614,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
         }
 
-        $mainDetail = $articleDetail->getArticle()->getMainDetail();
+        $mainDetail = $this->_getMainDetail($articleDetail->getArticle());
         if (trim($supplierCode) == '') {
              if ($mainDetail != null && $mainDetail->getAttribute() != null) {
                 $supplierCode = $mainDetail->getAttribute()->getBlisstributeSupplierCode();
