@@ -23,6 +23,10 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 {
     private $container = null;
 
+    /**
+     * @return mixed
+     * @throws Exception
+     */
     protected function getConfig()
     {
         try {
@@ -111,7 +115,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function getClassification3($article)
     {
-        $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification3');
+        $fieldName = $this->getConfig()['blisstribute-article-mapping-classification3'];
         $this->logDebug('articleSyncMapping::classification3::fieldName ' . $fieldName);
         return $this->getClassification($article, $fieldName);
     }
@@ -123,7 +127,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function getClassification4($article)
     {
-        $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification4');
+        $fieldName = $this->getConfig()['blisstribute-article-mapping-classification4'];
         $this->logDebug('articleSyncMapping::classification4::fieldName ' . $fieldName);
         return $this->getClassification($article, $fieldName);
     }
@@ -337,7 +341,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             ['advertisingMediumCode' => '', 'currencyCode' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK']
         ];
 
-        if ($this->getConfig()->get('blisstribute-transfer-shop-article-prices')) {
+        if ($this->getConfig()['blisstribute-transfer-shop-article-prices']) {
             $shops = array_merge($shops, Shopware()->Db()->fetchAll("SELECT spbs.advertising_medium_code AS advertisingMediumCode, scc.currency as currencyCode, scc.factor AS currencyFactor, sccg.groupkey AS customerGroup FROM s_core_shops scs LEFT JOIN s_core_currencies scc ON scs.currency_id = scc.id LEFT JOIN s_core_customergroups sccg ON scs.customer_group_id = sccg.id LEFT JOIN s_plugin_blisstribute_shop spbs ON scs.id = spbs.s_shop_id WHERE scs.active = 1"));
         }
 
