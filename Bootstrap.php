@@ -205,6 +205,27 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if (version_compare($version, '0.9.6', '<')) {
             return ['success' => false, 'message' => 'Bitte das Plugin neu installieren.'];
         }
+        if (version_compare($version, '0.10.3', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'checkbox',
+                'blisstribute-article-sync-sync-last-stock',
+                [
+                    'label' => 'Abverkauf synchronisieren',
+                    'description' => 'Wenn aktiviert, wird das Abverkaufs-Flag (LastStock) am Artikel synchronisiert.',
+                    'value' => 1
+                ]
+            );
+            $form->setElement(
+                'checkbox',
+                'blisstribute-article-sync-sync-sale-price',
+                [
+                    'label' => 'Werbemittelpreise synchronisieren',
+                    'description' => 'Wenn aktiviert, werden übertragene Preise von Blisstribute synchronisiert.',
+                    'value' => 1
+                ]
+            );
+        }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
@@ -421,13 +442,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if(is_null($job)) return;
 
         try {
-            // get unmapped orders
+            $this->logDebug('onRunBlisstributeOrderMappingCron::start');
+            $this->logDebug('onRunBlisstributeOrderMappingCron::cleaning obsolete referenced orders');
+            $sql = "DELETE FROM s_plugin_blisstribute_orders WHERE s_order_id NOT IN (SELECT id FROM s_order)";
+            $this->get('db')->query($sql);
+            $this->logDebug('onRunBlisstributeOrderMappingCron::cleaning obsolete referenced orders done');
+
+            $this->logDebug('onRunBlisstributeOrderMappingCron::creating new order references');
             $sql = "SELECT id FROM s_order WHERE id NOT IN (SELECT s_order_id FROM s_plugin_blisstribute_orders) AND ordernumber != 0";
-
             $modelManager = Shopware()->Container()->get('models');
-
             $orders = Shopware()->Container()->get('db')->fetchAll($sql);
-
             $date = new \DateTime();
 
             foreach ($orders as $order) {
@@ -443,6 +467,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             }
 
             $modelManager->flush();
+
+            $this->logDebug('onRunBlisstributeOrderMappingCron::done');
         } catch (\Exception $ex) {
             echo "exception while syncing orders " . $ex->getMessage();
             return;
@@ -459,10 +485,15 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         try {
             $this->logDebug('onRunBlisstributeArticleMappingCron::start');
+            $this->logDebug('onRunBlisstributeArticleMappingCron::cleaning obsolete referenced articles');
+            $sql = "DELETE FROM s_plugin_blisstribute_articles WHERE s_article_id NOT IN (SELECT id FROM s_articles)";
+            $this->get('db')->query($sql);
+            $this->logDebug('onRunBlisstributeArticleMappingCron::cleaning obsolete referenced articles done');
+
+            $this->logDebug('onRunBlisstributeArticleMappingCron::create new article references');
             $blisstributeArticleMappingSql = "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
                 . "s_article_id, trigger_deleted, trigger_sync, tries, comment) "
                 . "SELECT CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a where a.id not in (select distinct s_article_id from s_plugin_blisstribute_articles)";
-
 
             $this->get('db')->query($blisstributeArticleMappingSql);
 
@@ -1068,6 +1099,15 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Veröffentlichungsdatum synchronisieren',
                 'description' => 'Wenn aktiviert, wird das Veröffentlichungsdatum am Artikel synchronisiert.',
+                'value' => 1
+            ]
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-article-sync-sync-last-stock',
+            [
+                'label' => 'Abverkauf synchronisieren',
+                'description' => 'Wenn aktiviert, wird das Abverkaufs-Flag (LastStock) am Artikel synchronisiert.',
                 'value' => 1
             ]
         );

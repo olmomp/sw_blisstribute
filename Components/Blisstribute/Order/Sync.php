@@ -51,13 +51,14 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
         while (count($orderCollection) > 0) {
             foreach ($orderCollection as $currentOrder) {
                 try {
+
                     $this->checkStatus($currentOrder);
+                    $this->processOrderSync($currentOrder);
+
                 } catch (Exception $ex) {
                     $this->logMessage('export status check failed::' . $ex->getMessage(), __FUNCTION__, Logger::ERROR);
                     continue;
                 }
-                
-                $this->processOrderSync($currentOrder);
             }
 
             $orderCollection = $orderRepository->findTransferableOrders($startDate);
@@ -130,7 +131,8 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
     {
         $result = true;
 
-        $this->logMessage('start sync::' . $blisstributeOrder->getOrder()->getNumber(), __FUNCTION__);
+        $this->logMessage('start sync::blisstribute order id' . $blisstributeOrder->getId(), __FUNCTION__);
+        $this->logMessage('start sync::sw order number' . $blisstributeOrder->getOrder()->getNumber(), __FUNCTION__);
 
         try {
             if ($this->config->get('blisstribute-google-address-validation')) {

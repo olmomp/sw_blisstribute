@@ -126,16 +126,47 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $timeFrom = $params['attribute']['blisstributeDeliveryTimeFrom'];
         $timeTo = $params['attribute']['blisstributeDeliveryTimeTo'];
 
+        $syncLastStock = false;
+        if ($config['blisstribute-article-sync-sync-last-stock']) {
+            $this->logDebug('last stock sync active');
+            $syncLastStock = true;
+        }
+
         switch ($status) {
             case 0: {
                 $params['active'] = false;
+                if ($syncLastStock) {
+                    $params['lastStock'] = false;
+                }
                 break;
             }
-            case 1:
+            case 1: {
+                $params['active'] = true;
+                if ($syncLastStock) {
+                    $params['lastStock'] = false;
+                }
+                break;
+            }
             case 2:
+                $params['active'] = true;
+                if ($syncLastStock) {
+                    $params['lastStock'] = true;
+                }
+                break;
             case 3:
             default: {
-                $params['active'] = true;
+                if ($params['inStock'] > 0) {
+                    $params['active'] = true;
+                    if ($syncLastStock) {
+                        $params['lastStock'] = true;
+                    }
+                } else {
+                    $params['active'] = true;
+                    if ($syncLastStock) {
+                        $params['lastStock'] = false;
+                    }
+                }
+
                 break;
             }
         }
@@ -149,39 +180,38 @@ class Btarticle extends BtArticleResource implements BatchInterface
         }
 
         if ($config['blisstribute-article-sync-sync-active-flag']) {
-            $this->logDebug(sprintf('%s - set article active %s', $detailId, (int)$params['active']));
+            $this->logDebug(sprintf('%s - set detail active %s', $detailId, (int)$params['active']));
             $detail->setActive($params['active']);
         }
 
         if ($config['blisstribute-article-sync-sync-ean']) {
-            $this->logDebug(sprintf('%s - set article ean %s', $detailId, $params['ean']));
+            $this->logDebug(sprintf('%s - set detail ean %s', $detailId, $params['ean']));
             $detail->setEan($params['ean']);
         }
 
         if ($config['blisstribute-article-sync-sync-release-date']) {
-            $this->logDebug(sprintf('%s - set article release date %s', $detailId, $params['attribute']['blisstributeEstimatedDeliveryDate']));
+            $this->logDebug(sprintf('%s - set detail release date %s', $detailId, $params['attribute']['blisstributeEstimatedDeliveryDate']));
             $detail->setReleaseDate($params['attribute']['blisstributeEstimatedDeliveryDate']);
         }
 
         $detail->setInStock($params['inStock']);
+        $this->logDebug(sprintf('%s - set detail stock %s', $detailId, $params['inStock']));
+
         $detail->setStockMin($params['stockMin']);
+        $this->logDebug(sprintf('%s - set detail min stock %s', $detailId, $params['stockMin']));
+
         $detail->setShippingTime($params['shippingTime']);
+        $this->logDebug(sprintf('%s - set detail shipping time %s', $detailId, $params['shippingTime']));
 
         if (version_compare(\Shopware::VERSION, '5.2.1') >= 0) {
             $detail->setPurchasePrice(round($params['evaluatedStockPrice'], 2));
+            $this->logDebug(sprintf('%s - set detail purchase price %s', $detailId, round($params['evaluatedStockPrice'], 2)));
         }
-
-        // reimplement for price sync from blisstribute
-        /*$prices = $detail->getPrices();
-        /** @var Price $price * /
-        foreach($prices as $price) {
-            $price->setBasePrice($params['evaluatedStockPrice']);
-            $this->getManager()->persist($price);
-        }*/
 
         $attributes = $detail->getAttribute();
         /** @noinspection PhpUndefinedMethodInspection */
         $attributes->setBlisstributeSupplierStock($params['attribute']['blisstributeSupplierStock']);
+        $this->logDebug(sprintf('%s - set attribute supplier stock %s', $attributes->getId(), $params['attribute']['blisstributeSupplierStock']));
 
         $violations = $this->getManager()->validate($detail);
         if ($violations->count() > 0) {
@@ -192,6 +222,14 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $this->getManager()->persist($attributes);
 
         $article = $detail->getArticle();
+        if ($syncLastStock) {
+            $this->logDebug(sprintf('%s - set article lastStock %s', $article->getId(), (int)$params['lastStock']));
+            $article->setLastStock($params['lastStock']);
+
+            $this->getManager()->persist($article);
+            $this->logDebug(sprintf('%s - article saved', $article->getId()));
+        }
+
         if ($article->getConfiguratorSet() != null) {
             if ($detail->getKind() == 1 && $detail->getActive() == 0) {
                 /** @var Detail $currentNewDetail */

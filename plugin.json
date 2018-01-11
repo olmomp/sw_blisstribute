@@ -8,10 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.10.1",
+    "currentVersion": "0.10.3",
 
     "changelog": {
         "de": {
+            "0.10.3": "price sync from blisstribute",
+            "0.10.2": "last stock sync config",
             "0.10.1": "fix article mapping cron",
             "0.10.0": "Remove cron subscriber",
             "0.9.5": "Stock / kind update for variant articles only",
@@ -114,7 +116,7 @@
 
     "compatibility": {
         "minimumVersion": "5.2.0",
-        "maximumVersion": "5.2.26",
+        "maximumVersion": "5.3.6",
         "blacklist": [
         ]
     }
