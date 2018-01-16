@@ -64,12 +64,12 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
     protected function getListQuery()
     {
         $builder = parent::getListQuery();
-
         $builder->innerJoin('blisstribute_article.article', 'article');
         $builder->innerJoin('article.mainDetail', 'mainDetail');
-        $builder->innerJoin('article.attribute', 'attribute');
+        $builder->innerJoin('mainDetail.attribute', 'attribute');
         $builder->addSelect(array('article', 'mainDetail', 'attribute'));
         $builder->addOrderBy('blisstribute_article.id', 'DESC');
+
 
         // searching
         $filters = $this->Request()->getParam('filter');
@@ -89,6 +89,9 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
                 }
             }
         }
+
+        \Shopware()->PluginLogger()->log(Monolog\Logger::INFO, $builder->getQuery()->getSQL());
+
 
         return $builder;
     }

@@ -3,6 +3,8 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
     alias:  'widget.blisstribute-order-listing-grid',
     region: 'center',
     syncButton: null,
+    resetSyncButton: null,
+    resetLockButton: null,
 
     /**
      * contains all snippets for the controller
@@ -143,7 +145,7 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
         items = Ext.Array.insert(
             items,
             0,
-            [ me.createResetLockButton(),me.createSyncButton() ]
+            [ me.createResetLockButton(), me.createSyncButton(),me.createResetSyncButton() ]
         );
 
         return items;
@@ -151,7 +153,7 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
 
     createResetLockButton: function() {
         var me = this;
-        return this.triggerSyncButton = Ext.create('Ext.button.Button', {
+        return this.resetLockButton = Ext.create('Ext.button.Button', {
             text: 'Sperren aufheben',
             scope: this,
             handler: function() {
@@ -168,6 +170,18 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
             scope: this,
             handler: function() {
                 me.fireEvent('sync', me);
+            }
+        });
+    },
+
+    createResetSyncButton: function() {
+        var me = this;
+        return this.resetSyncButton = Ext.create('Ext.button.Button', {
+            disabled: true,
+            text: 'Übertragung zurücksetzen',
+            scope: this,
+            handler: function() {
+                me.fireEvent('reset-sync', me);
             }
         });
     }

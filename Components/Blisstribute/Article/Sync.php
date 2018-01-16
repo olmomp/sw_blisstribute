@@ -69,7 +69,10 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                 $this->logMessage('start::page ' . $page, __FUNCTION__);
 
                 foreach ($articleCollection as $currentArticle) {
-                    if ($currentArticle->getArticle() == null || $currentArticle->getArticle() == null) {
+                    $this->logMessage('start worker with article::' . $currentArticle->getId(), __FUNCTION__, Logger::DEBUG);
+
+                    if ($currentArticle->getArticle() == null) {
+                        $this->logMessage('article invalid - skipping::' . $currentArticle->getId(), __FUNCTION__, Logger::DEBUG);
                         $currentArticle->setDeleted(true);
                         $currentArticle->setTries(0);
                         $currentArticle->setComment(null);
@@ -83,12 +86,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                         try {
                             $articleData = $this->initializeModelMapping($currentArticle);
                             if (count($articleData) <= 0) {
-                                $this->logMessage(
-                                    'could not create data for article::' . $currentArticle->getMainDetail()->getNumber(),
-                                    __FUNCTION__,
-                                    Logger::ERROR
-                                );
-
+                                $this->logMessage('article mapping failed::' . $currentArticle->getId(), __FUNCTION__, Logger::ERROR);
                                 $currentArticle->setTries($currentArticle->getTries() + 1)
                                     ->setComment('Fehler beim Erstellen der zu übermittelnden Daten')
                                     ->setLastCronAt(new DateTime())
@@ -107,9 +105,9 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                             $this->modelManager->persist($currentArticle);
                         } catch (Shopware_Components_Blisstribute_Exception_ArticleNotChangedException $ex) {
                             $this->logMessage(
-                                'no change detected::' . $currentArticle->getMainDetail()->getNumber(),
+                                'no change detected::' . $currentArticle->getId(),
                                 __FUNCTION__,
-                                Logger::ERROR
+                                Logger::INFO
                             );
 
                             $currentArticle->setTriggerSync(false)
@@ -121,7 +119,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                             continue;
                         } catch (Exception $ex) {
                             $this->logMessage(
-                                'mapping failure::' . $currentArticle->getMainDetail()->getNumber(),
+                                'mapping failure::' . $currentArticle->getId(),
                                 __FUNCTION__,
                                 Logger::ERROR
                             );
@@ -298,16 +296,22 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
     protected function initializeModelMapping(ModelEntity $modelEntity)
     {
         /** @var BlisstributeArticle  $modelEntity */
-        $this->logMessage('start::' . $modelEntity->getArticle()->getMainDetail()->getNumber(), __FUNCTION__);
+        $this->logMessage('start blisstribute article id::' . $modelEntity->getId(), __FUNCTION__);
+        $this->logMessage('start sw article id::' . $modelEntity->getArticle()->getId(), __FUNCTION__);
 
         $syncMapping = new Shopware_Components_Blisstribute_Article_SyncMapping();
         $syncMapping->setModelEntity($modelEntity);
 
-        $articleData = $syncMapping->buildMapping();
-        $this->logMessage('articleData::' . json_encode($articleData), __FUNCTION__);
-        $checksum = trim(sha1(json_encode($articleData)));
-        if (trim($modelEntity->getSyncHash()) == $checksum) {
-            throw new Shopware_Components_Blisstribute_Exception_ArticleNotChangedException('article not changed');
+        try {
+            $articleData = $syncMapping->buildMapping();
+            $this->logMessage('articleData::' . json_encode($articleData), __FUNCTION__);
+            $checksum = trim(sha1(json_encode($articleData)));
+            if (trim($modelEntity->getSyncHash()) == $checksum) {
+                throw new Shopware_Components_Blisstribute_Exception_ArticleNotChangedException('article not changed');
+            }
+        } catch (Exception $ex) {
+            $this->logWarn($ex->getMessage() . $ex->getTraceAsString());
+            throw $ex;
         }
 
         $this->logMessage('done::' . $modelEntity->getArticle()->getMainDetail()->getNumber(), __FUNCTION__);

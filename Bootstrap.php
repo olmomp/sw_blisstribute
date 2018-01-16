@@ -3,9 +3,12 @@
 require_once __DIR__ . '/Components/Blisstribute/Domain/LoggerTrait.php';
 require_once __DIR__ . '/Components/Blisstribute/Command/OrderExport.php';
 require_once __DIR__ . '/Components/Blisstribute/Command/ArticleExport.php';
+require_once __DIR__ . '/Components/Blisstribute/Article/Sync.php';
+require_once __DIR__ . '/Components/Blisstribute/Order/Sync.php';
 
+use \Shopware\CustomModels\Blisstribute\BlisstributeCoupon;
+use \Shopware\CustomModels\Blisstribute\BlisstributeOrder;
 use Doctrine\Common\Collections\ArrayCollection;
-use Shopware\ExitBBlisstribute\Subscribers\CronSubscriber;
 use Shopware\ExitBBlisstribute\Subscribers\ControllerSubscriber;
 use Shopware\ExitBBlisstribute\Subscribers\ModelSubscriber;
 use Shopware\ExitBBlisstribute\Subscribers\ServiceSubscriber;
@@ -128,7 +131,11 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {        
         $this->logInfo('plugin enabled');
         $this->subscribeEvents();
-        return $this->installDefaultTableValues();
+
+        $result = $this->installDefaultTableValues();
+        $this->createAttributeCollection();
+
+        return $result;
     }
 
     /**
@@ -195,8 +202,30 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if (version_compare($version, '0.8.0', '<')) {
             return ['success' => false, 'message' => 'Bitte das Plugin neu installieren.'];
         }
-        
-        $this->createAttributeCollection();
+        if (version_compare($version, '0.9.6', '<')) {
+            return ['success' => false, 'message' => 'Bitte das Plugin neu installieren.'];
+        }
+        if (version_compare($version, '0.10.3', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'checkbox',
+                'blisstribute-article-sync-sync-last-stock',
+                [
+                    'label' => 'Abverkauf synchronisieren',
+                    'description' => 'Wenn aktiviert, wird das Abverkaufs-Flag (LastStock) am Artikel synchronisiert.',
+                    'value' => 1
+                ]
+            );
+            $form->setElement(
+                'checkbox',
+                'blisstribute-article-sync-sync-sale-price',
+                [
+                    'label' => 'Werbemittelpreise synchronisieren',
+                    'description' => 'Wenn aktiviert, werden übertragene Preise von Blisstribute synchronisiert.',
+                    'value' => 1
+                ]
+            );
+        }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
@@ -257,18 +286,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'label' => 'blisstribute supplier stock',
             'custom' => 1
         ]);
-        
-        $crud->update('s_articles_attributes', 'blisstribute_customs_tariff_number', 'string', [
-            'displayInBackend' => true,
-            'label' => 'blisstribute customs tariff number',
-            'custom' => 1
-        ]);
-        
-        $crud->update('s_articles_attributes', 'blisstribute_country_of_origin', 'string', [
-            'displayInBackend' => true,
-            'label' => 'blisstribute country of origin (iso2 code)',
-            'custom' => 1
-        ]);
 
         $crud->update('s_order_details_attributes', 'blisstribute_quantity_canceled', 'integer');
         $crud->update('s_order_details_attributes', 'blisstribute_quantity_returned', 'integer');
@@ -314,8 +331,181 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {
         $this->subscribeEvent('Shopware_Console_Add_Command', 'onAddConsoleCommand');
         $this->subscribeEvent('Enlight_Controller_Front_StartDispatch', 'startDispatch');
+        $this->subscribeEvent('Shopware_CronJob_BlisstributeOrderSyncCron', 'onRunBlisstributeOrderSyncCron');
+        $this->subscribeEvent('Shopware_CronJob_BlisstributeArticleSyncCron', 'onRunBlisstributeArticleSyncCron');
+        $this->subscribeEvent('Shopware_CronJob_BlisstributeEasyCouponMappingCron', 'onRunBlisstributeEasyCouponMappingCron');
+        $this->subscribeEvent('Shopware_CronJob_BlisstributeOrderMappingCron', 'onRunBlisstributeOrderMappingCron');
+        $this->subscribeEvent('Shopware_CronJob_BlisstributeArticleMappingCron', 'onRunBlisstributeArticleMappingCron');
     }
-    
+
+    /**
+     * Blisstribute Order Sync CronJob
+     *
+     * @param \Shopware_Components_Cron_CronJob $job
+     */
+    public function onRunBlisstributeOrderSyncCron(\Shopware_Components_Cron_CronJob $job)
+    {
+        if(is_null($job)) return;
+
+        try {
+            $controller = new \Shopware_Components_Blisstribute_Order_Sync(
+                Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config()
+            );
+
+            $controller->processBatchOrderSync();
+        } catch (\Exception $ex) {
+            echo "exception while syncing orders " . $ex->getMessage();
+            return;
+        }
+    }
+
+    /**
+     * Blisstribute Article Sync CronJob
+     *
+     * @param \Shopware_Components_Cron_CronJob $job
+     */
+    public function onRunBlisstributeArticleSyncCron(\Shopware_Components_Cron_CronJob $job)
+    {
+        if(is_null($job)) return;
+
+        try {
+            $controller = new \Shopware_Components_Blisstribute_Article_Sync(
+                Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config()
+            );
+
+            $controller->processBatchArticleSync();
+        } catch (\Exception $ex) {
+            echo "exception while syncing articles " . $ex->getMessage();
+            return;
+        }
+    }
+
+    /**
+     * EasyCoupon Wertgutscheine
+     *
+     * @param \Shopware_Components_Cron_CronJob $job
+     */
+    public function onRunBlisstributeEasyCouponMappingCron(\Shopware_Components_Cron_CronJob $job)
+    {
+        if(is_null($job)) return;
+
+        try {
+            // check if plugin SwagPromotion is installed
+            $plugin = Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy([
+                'name' => 'NetiEasyCoupon',
+                'active' => true
+            ]);
+
+            if (!$plugin) {
+                return;
+            }
+
+
+            $modelManager = Shopware()->Container()->get('models');
+
+            $sqlUnmappedVouchers = "SELECT voucher.id AS id FROM s_emarketing_vouchers voucher 
+                                    LEFT JOIN s_plugin_blisstribute_coupon coupon ON coupon.s_voucher_id = voucher.id
+                                    LEFT JOIN s_emarketing_vouchers_attributes attributes ON attributes.voucherID = voucher.id
+                                    WHERE coupon.id IS NULL AND attributes.neti_easy_coupon = 1";
+
+            $unmappedVouchers = Shopware()->Container()->get('db')->fetchAll($sqlUnmappedVouchers);
+
+            $idArray = [];
+            foreach ($unmappedVouchers as $voucher) {
+                $idArray[] = $voucher['id'];
+            }
+
+            $vouchers = $modelManager->getRepository('\Shopware\Models\Voucher\Voucher')->findById($idArray);
+
+            /** @var \Shopware\Models\Voucher\Voucher $voucher */
+            foreach ($vouchers as $voucher) {
+                $blisstributeCoupon = new BlisstributeCoupon();
+                $blisstributeCoupon->setVoucher($voucher)->setIsMoneyVoucher(true);
+
+                $modelManager->persist($blisstributeCoupon);
+            }
+
+            $modelManager->flush();
+        } catch (\Exception $ex) {
+            echo "exception while syncing easy coupon " . $ex->getMessage();
+            return;
+        }
+    }
+
+    /**
+     * Import all orders that might have been added using pure sql
+     *
+     * @param \Shopware_Components_Cron_CronJob $job
+     */
+    public function onRunBlisstributeOrderMappingCron(\Shopware_Components_Cron_CronJob $job)
+    {
+        if(is_null($job)) return;
+
+        try {
+            $this->logDebug('onRunBlisstributeOrderMappingCron::start');
+            $this->logDebug('onRunBlisstributeOrderMappingCron::cleaning obsolete referenced orders');
+            $sql = "DELETE FROM s_plugin_blisstribute_orders WHERE s_order_id NOT IN (SELECT id FROM s_order)";
+            $this->get('db')->query($sql);
+            $this->logDebug('onRunBlisstributeOrderMappingCron::cleaning obsolete referenced orders done');
+
+            $this->logDebug('onRunBlisstributeOrderMappingCron::creating new order references');
+            $sql = "SELECT id FROM s_order WHERE id NOT IN (SELECT s_order_id FROM s_plugin_blisstribute_orders) AND ordernumber != 0";
+            $modelManager = Shopware()->Container()->get('models');
+            $orders = Shopware()->Container()->get('db')->fetchAll($sql);
+            $date = new \DateTime();
+
+            foreach ($orders as $order) {
+                $blisstributeOrder = new BlisstributeOrder();
+                $blisstributeOrder->setTries(0);
+                $blisstributeOrder->setOrder($modelManager->getRepository('\Shopware\Models\Order\Order')->find($order['id']));
+                $blisstributeOrder->setCreatedAt($date);
+                $blisstributeOrder->setModifiedAt($date);
+                $blisstributeOrder->setStatus(1);
+                $blisstributeOrder->setLastCronAt($date);
+
+                $modelManager->persist($blisstributeOrder);
+            }
+
+            $modelManager->flush();
+
+            $this->logDebug('onRunBlisstributeOrderMappingCron::done');
+        } catch (\Exception $ex) {
+            echo "exception while syncing orders " . $ex->getMessage();
+            return;
+        }
+    }
+    /**
+     * Import all orders that might have been added using pure sql
+     *
+     * @param \Shopware_Components_Cron_CronJob $job
+     */
+    public function onRunBlisstributeArticleMappingCron(\Shopware_Components_Cron_CronJob $job)
+    {
+        if(is_null($job)) return;
+
+        try {
+            $this->logDebug('onRunBlisstributeArticleMappingCron::start');
+            $this->logDebug('onRunBlisstributeArticleMappingCron::cleaning obsolete referenced articles');
+            $sql = "DELETE FROM s_plugin_blisstribute_articles WHERE s_article_id NOT IN (SELECT id FROM s_articles)";
+            $this->get('db')->query($sql);
+            $this->logDebug('onRunBlisstributeArticleMappingCron::cleaning obsolete referenced articles done');
+
+            $this->logDebug('onRunBlisstributeArticleMappingCron::create new article references');
+            $blisstributeArticleMappingSql = "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
+                . "s_article_id, trigger_deleted, trigger_sync, tries, comment) "
+                . "SELECT CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a where a.id not in (select distinct s_article_id from s_plugin_blisstribute_articles)";
+
+            $this->get('db')->query($blisstributeArticleMappingSql);
+
+            $this->logDebug('onRunBlisstributeArticleMappingCron::done');
+            return true;
+        } catch (\Exception $ex) {
+            echo "exception while mapping articles " . $ex->getMessage();
+            return false;
+        }
+    }
+
+
     /**
      * add blisstribute cli commands
      *
@@ -355,7 +545,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $this->registerSnippets();
         
         $subscribers = [
-            new CronSubscriber(),
             new ControllerSubscriber(),
             new ModelSubscriber(),
             new ServiceSubscriber()
@@ -376,7 +565,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->createCronJob(
                 'Blisstribute Order Sync',
                 'Shopware_CronJob_BlisstributeOrderSyncCron',
-                3600, // 1 hour
+                900, // 15 min
                 true
             );
         } catch (Exception $e) {
@@ -388,7 +577,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->createCronJob(
                 'Blisstribute Article Sync',
                 'Shopware_CronJob_BlisstributeArticleSyncCron',
-                3600, // 1 hour
+                900, // 15 min
                 true
             );
         } catch (Exception $e) {
@@ -412,7 +601,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->createCronJob(
                 'Blisstribute Order Mapping',
                 'Shopware_CronJob_BlisstributeOrderMappingCron',
-                3600, // 1 hour
+                120, // 2 minutes
+                true
+            );
+        } catch (Exception $e) {
+            // do nothing
+        }
+
+        // import all orders that might have been added using pure sql
+        try {
+            $this->createCronJob(
+                'Blisstribute Article Mapping',
+                'Shopware_CronJob_BlisstributeArticleMappingCron',
+                120, // 2 min
                 true
             );
         } catch (Exception $e) {
@@ -872,68 +1073,106 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => ''
             )
         );
+
+
+        $form->setElement(
+            'checkbox',
+            'blisstribute-article-sync-sync-active-flag',
+            [
+                'label' => 'Aktivitätsstatus synchronisieren',
+                'description' => 'Wenn aktiviert, werden die Artikel de- bzw. aktiviert.',
+                'value' => 1
+            ]
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-article-sync-sync-ean',
+            [
+                'label' => 'EAN synchronisieren',
+                'description' => 'Wenn aktiviert, wird der EAN am Artikel aktualisiert.',
+                'value' => 1
+            ]
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-article-sync-sync-release-date',
+            [
+                'label' => 'Veröffentlichungsdatum synchronisieren',
+                'description' => 'Wenn aktiviert, wird das Veröffentlichungsdatum am Artikel synchronisiert.',
+                'value' => 1
+            ]
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-article-sync-sync-last-stock',
+            [
+                'label' => 'Abverkauf synchronisieren',
+                'description' => 'Wenn aktiviert, wird das Abverkaufs-Flag (LastStock) am Artikel synchronisiert.',
+                'value' => 1
+            ]
+        );
     }
     
     /**
-	 * creates the plugin configuration translations
+     * creates the plugin configuration translations
      *
      * @return void
-	 */
-	private function createConfigTranslations()
-	{
-		$form = $this->Form();
-		
-		$shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
+     */
+    private function createConfigTranslations()
+    {
+        $form = $this->Form();
+        
+        $shopRepository = Shopware()->Models()->getRepository('\Shopware\Models\Shop\Locale');
  
-		$translations = [
-			'en_GB' => [
-				'blisstribute-soap-protocol' => 'protocol',
-				'blisstribute-soap-host' => 'host',
-				'blisstribute-soap-port' => 'port',
-                		'blisstribute-soap-client' => 'soap-client',
-				'blisstribute-soap-username' => 'soap-username',
-				'blisstribute-soap-password' => 'soap-password',
-				'blisstribute-http-login' => 'http-username',
-				'blisstribute-http-password' => 'http-password',
-				'blisstribute-auto-sync-order' => 'auto sync order',
-				'blisstribute-auto-hold-order' => 'auto hold order',
-				'blisstribute-auto-lock-order' => 'auto lock order',
-				'blisstribute-default-advertising-medium' => 'default advertising medium',
-				'blisstribute-google-address-validation' => 'use google address validation',
-				'blisstribute-google-maps-key' => 'google maps key',
-				'blisstribute-transfer-orders' => 'transfer orders without verification',
-				'blisstribute-transfer-shop-article-prices' => 'transfer article prices of each shop',
-                		'blisstribute-article-mapping-classification3' => 'Classification 3 mapping',
-                		'blisstribute-article-mapping-classification4' => 'Classification 4 mapping'
-			],
-		];
+        $translations = [
+            'en_GB' => [
+                'blisstribute-soap-protocol' => 'protocol',
+                'blisstribute-soap-host' => 'host',
+                'blisstribute-soap-port' => 'port',
+                        'blisstribute-soap-client' => 'soap-client',
+                'blisstribute-soap-username' => 'soap-username',
+                'blisstribute-soap-password' => 'soap-password',
+                'blisstribute-http-login' => 'http-username',
+                'blisstribute-http-password' => 'http-password',
+                'blisstribute-auto-sync-order' => 'auto sync order',
+                'blisstribute-auto-hold-order' => 'auto hold order',
+                'blisstribute-auto-lock-order' => 'auto lock order',
+                'blisstribute-default-advertising-medium' => 'default advertising medium',
+                'blisstribute-google-address-validation' => 'use google address validation',
+                'blisstribute-google-maps-key' => 'google maps key',
+                'blisstribute-transfer-orders' => 'transfer orders without verification',
+                'blisstribute-transfer-shop-article-prices' => 'transfer article prices of each shop',
+                        'blisstribute-article-mapping-classification3' => 'Classification 3 mapping',
+                        'blisstribute-article-mapping-classification4' => 'Classification 4 mapping'
+            ],
+        ];
  
-		foreach($translations as $locale => $snippets) {
-			$localeModel = $shopRepository->findOneBy([
-				'locale' => $locale
-			]);
-	 
-			if($localeModel === null){
-				continue;
-			}
+        foreach($translations as $locale => $snippets) {
+            $localeModel = $shopRepository->findOneBy([
+                'locale' => $locale
+            ]);
+     
+            if($localeModel === null){
+                continue;
+            }
 
-			foreach($snippets as $element => $snippet) {
-				$elementModel = $form->getElement($element);
-	 
-				if($elementModel === null) {
-					continue;
-				}
-	 
-				$translationModel = new \Shopware\Models\Config\ElementTranslation();
-				$translationModel->setLabel($snippet);
-				$translationModel->setLocale($localeModel);
+            foreach($snippets as $element => $snippet) {
+                $elementModel = $form->getElement($element);
+     
+                if($elementModel === null) {
+                    continue;
+                }
+     
+                $translationModel = new \Shopware\Models\Config\ElementTranslation();
+                $translationModel->setLabel($snippet);
+                $translationModel->setLocale($localeModel);
 
-				$elementModel->addTranslation($translationModel);
-			}
-    	}
-		
-		$form->save();	
-	}
+                $elementModel->addTranslation($translationModel);
+            }
+        }
+        
+        $form->save();    
+    }
 
     /**
      * creates menu items for blisstribute module

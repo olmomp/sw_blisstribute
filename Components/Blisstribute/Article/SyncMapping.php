@@ -20,12 +20,25 @@ use Shopware\Models\Tax\Tax;
  * @method BlisstributeArticle getModelEntity()
  */
 class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Components_Blisstribute_SyncMapping
-{    
+{
     private $container = null;
-    
+
+    /**
+     * @return mixed
+     * @throws Exception
+     */
     protected function getConfig()
     {
-        return $this->container->get('config');
+        try {
+            $this->logDebug('articleSyncMapping::load config');
+            $c = $this->container->get('shopware.plugin.config_reader')->getByPluginName('ExitBBlisstribute');
+            $this->logDebug('articleSyncMapping::load config done');
+
+            return $c;
+        }catch (Exception $ex) {
+            $this->logWarn($ex->getMessage());
+            throw $ex;
+        }
     }
 
     /**
@@ -37,7 +50,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     {
         return $this->getModelEntity()->getArticle();
     }
-    
+
     public function __construct()
     {
         $this->container = Shopware()->Container();
@@ -83,7 +96,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         } else {
             $articleData['specificationCollection'] = array($this->buildSpecificationCollection($this->getArticle()->getMainDetail()));
         }
-        
+
         // Allow plugins to change the data
         return Enlight()->Events()->filter(
             'ExitBBlisstribute_ArticleSyncMapping_AfterBuildBaseData',
@@ -102,7 +115,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function getClassification3($article)
     {
-        $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification3');
+        $fieldName = $this->getConfig()['blisstribute-article-mapping-classification3'];
         $this->logDebug('articleSyncMapping::classification3::fieldName ' . $fieldName);
         return $this->getClassification($article, $fieldName);
     }
@@ -114,7 +127,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function getClassification4($article)
     {
-        $fieldName = $this->getConfig()->get('blisstribute-article-mapping-classification4');
+        $fieldName = $this->getConfig()['blisstribute-article-mapping-classification4'];
         $this->logDebug('articleSyncMapping::classification4::fieldName ' . $fieldName);
         return $this->getClassification($article, $fieldName);
     }
@@ -130,13 +143,49 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             return null;
         }
 
+        $value = '';
+        $mainDetail = $this->_getMainDetail($article);
+        $this->logDebug('articleSyncMapping::getClassification::got mainDetail ' . $mainDetail->getId());
+        $attribute = $mainDetail->getAttribute();
+        $this->logDebug('articleSyncMapping::getClassification::got attribute ' . $attribute->getId());
         $method = 'get' . ucfirst($fieldName);
-        if (!method_exists($article->getAttribute(), $method)) {
-            $this->logDebug('articleSyncMapping::getClassification::getterNotFound' . $method);
-            return null;
+        if ($mainDetail) {
+            $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute ' . $method);
+            if (method_exists($mainDetail->getAttribute(), $method)) {
+                $value = $mainDetail->getAttribute()->$method();
+            }
+            $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute value ' . $value);
         }
 
-        return $article->getAttribute()->$method();
+        if (trim($value) == '') {
+            $this->logDebug('articleSyncMapping::getClassification::switch to article attribute');
+            if (method_exists($article, $method)) {
+                $value = $article->getAttribute()->$method();
+            }
+            $this->logDebug('articleSyncMapping::getClassification::article attribute value ' . $value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param Article $article
+     *
+     * @return Detail|null
+     */
+    private function _getMainDetail($article)
+    {
+        if ($article->getConfiguratorSet() != null) {
+
+            /** @var Detail $currentDetail */
+            foreach ($article->getDetails() as $currentDetail) {
+                if ($currentDetail->getKind() == 1) {
+                    return $currentDetail;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -174,6 +223,40 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
+     * @return array
+     */
+    protected function getMainShopCategories()
+    {
+        /** @var \Doctrine\DBAL\Query\QueryBuilder $queryBuilder */
+        $queryBuilder = Shopware()->Container()->get('dbal_connection')->createQueryBuilder();
+        $mainCategories = $queryBuilder->select('s1.category_id as id')
+            ->from('s_core_shops', 's1')
+            ->leftJoin('s1', 's_core_shops', 's2', 's1.template_id = s2.template_id AND s2.default = 1 AND s1.id != s2.id')
+            ->where('s1.active = 1')
+            ->andWhere('s1.main_id IS NULL')
+            ->andWhere('s2.id IS NULL')
+            ->orderBy('s1.id', 'ASC')
+            ->execute()->fetchAll();
+
+        return $mainCategories;
+    }
+
+    /**
+     * @param $category \Shopware\Models\Category\Category
+     * @param $mainShopCategories array
+     * @return bool
+     */
+    protected function isMainShopCategory($category, $mainShopCategories)
+    {
+        foreach ($mainShopCategories as $mainCategory) {
+            if (strpos($category->getPath(), "|{$mainCategory['id']}|") !== false)
+                return true;
+        }
+
+        return false;
+    }
+
+    /**
      * get article category list
      *
      * @return array
@@ -183,20 +266,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $deepLevel = 0;
         $baseCategory = null;
 
-        // get english category to exclude
-        $categoryRepository = Shopware()->Models()->getRepository('Shopware\Models\Category\Category');
-        /** @var Category|null $englishCategory */
-        $englishCategory = $categoryRepository->createQueryBuilder('category')
-            ->select('c')
-            ->from('Shopware\Models\Category\Category', 'c')
-            ->where('c.name = :categoryName')
-            ->andWhere('c.active = :categoryActive')
-            ->setParameters(array(
-                'categoryName' => 'Englisch',
-                'categoryActive' => true,
-            ))
-            ->getQuery()
-            ->getOneOrNullResult();
+        $mainShopCategories = $this->getMainShopCategories();
 
         /** @var Category[] $categoryCollection */
         $categoryCollection = $this->getArticle()->getCategories()->toArray();
@@ -211,9 +281,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 continue;
             }
 
-            if ($englishCategory != null
-                && strpos($currentCategory->getPath(), '|' . $englishCategory->getId() . '|') !== false
-            ) {
+            if (!$this->isMainShopCategory($currentCategory, $mainShopCategories)) {
                 continue;
             }
 
@@ -292,7 +360,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             ['advertisingMediumCode' => '', 'currencyCode' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK']
         ];
 
-        if ($this->getConfig()->get('blisstribute-transfer-shop-article-prices')) {
+        if ($this->getConfig()['blisstribute-transfer-shop-article-prices']) {
             $shops = array_merge($shops, Shopware()->Db()->fetchAll("SELECT spbs.advertising_medium_code AS advertisingMediumCode, scc.currency as currencyCode, scc.factor AS currencyFactor, sccg.groupkey AS customerGroup FROM s_core_shops scs LEFT JOIN s_core_currencies scc ON scs.currency_id = scc.id LEFT JOIN s_core_customergroups sccg ON scs.customer_group_id = sccg.id LEFT JOIN s_plugin_blisstribute_shop spbs ON scs.id = spbs.s_shop_id WHERE scs.active = 1"));
         }
 
@@ -443,12 +511,12 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         $imageCollection = $detail['images'];
         if (count($imageCollection) == 0) {
-        $sql = 'SELECT media_id FROM s_articles_img WHERE articleID = :articleId AND main = 1 AND media_id IS NOT NULL';
+            $sql = 'SELECT media_id FROM s_articles_img WHERE articleID = :articleId AND main = 1 AND media_id IS NOT NULL';
             $mediaId = (int)Shopware()->Db()->fetchOne($sql, array('articleId' => (int)$articleDetail->getArticle()->getId()));
 
-        if ($mediaId) {
-            return $this->_loadImage($mediaId);
-        }
+            if ($mediaId) {
+                return $this->_loadImage($mediaId);
+            }
 
             return null;
         }
@@ -550,7 +618,14 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         if (trim($supplierCode) == '') {
             if ($articleDetail->getArticle() != null && $articleDetail->getArticle()->getAttribute() != null)
-            $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
+                $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
+        }
+
+        $mainDetail = $this->_getMainDetail($articleDetail->getArticle());
+        if (trim($supplierCode) == '') {
+             if ($mainDetail != null && $mainDetail->getAttribute() != null) {
+                $supplierCode = $mainDetail->getAttribute()->getBlisstributeSupplierCode();
+            }
         }
 
         return $supplierCode;
