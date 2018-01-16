@@ -195,6 +195,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if (version_compare($version, '0.8.0', '<')) {
             return ['success' => false, 'message' => 'Bitte das Plugin neu installieren.'];
         }
+        
+        $this->createAttributeCollection();
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
@@ -253,6 +255,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $crud->update('s_articles_attributes', 'blisstribute_supplier_stock', 'integer', [
             'displayInBackend' => true,
             'label' => 'blisstribute supplier stock',
+            'custom' => 1
+        ]);
+        
+        $crud->update('s_articles_attributes', 'blisstribute_customs_tariff_number', 'string', [
+            'displayInBackend' => true,
+            'label' => 'blisstribute customs tariff number',
+            'custom' => 1
+        ]);
+        
+        $crud->update('s_articles_attributes', 'blisstribute_country_of_origin', 'string', [
+            'displayInBackend' => true,
+            'label' => 'blisstribute country of origin (iso2 code)',
             'custom' => 1
         ]);
 
