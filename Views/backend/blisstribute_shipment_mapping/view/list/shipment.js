@@ -23,7 +23,8 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
         classNameFedex: '{s name=blisstribute/combo_shipment_fedex}FEDEX{/s}',
         classNamePat: '{s name=blisstribute/combo_shipment_pat}Post AT{/s}',
         classNamePatexpress: '{s name=blisstribute/combo_shipment_patexpress}Post AT Express{/s}',
-        classNameSelfcollector: '{s name=blisstribute/combo_shipment_selfcollector}Selbstabholer{/s}'
+        classNameSelfcollector: '{s name=blisstribute/combo_shipment_selfcollector}Selbstabholer{/s}',
+        classNameLettershipment: '{s name=blisstribute/combo_shipment_lettershipment}Briefversand{/s}'
     },
 
     configure: function() {
@@ -43,7 +44,8 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
                 ['Fedex', me.snippets.classNameFedex],
                 ['Pat', me.snippets.classNamePat],
                 ['Patexpress', me.snippets.classNamePatexpress],
-                ['Selfcollector', me.snippets.classNameSelfcollector]
+                ['Selfcollector', me.snippets.classNameSelfcollector],
+                ['Lettershipment', me.snippets.classNameLettershipment]
             ]
         });
 
