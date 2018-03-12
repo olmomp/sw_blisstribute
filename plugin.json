@@ -8,10 +8,11 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.10.3",
+    "currentVersion": "0.10.4",
 
     "changelog": {
         "de": {
+            "0.10.4": "letter shipment",
             "0.10.3": "price sync from blisstribute",
             "0.10.2": "last stock sync config",
             "0.10.1": "fix article mapping cron",
