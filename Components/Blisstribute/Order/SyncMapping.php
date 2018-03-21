@@ -200,7 +200,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
             $customerBirthday = $customer->getBirthday();
         } else {
-            $customerBirthday = $customer->getBilling()->getBirthday();
+            $customerBirthday = $customer->getDefaultBillingAddress()->getBirthday();
         }
         
         if (!is_null($customerBirthday)) {
@@ -210,7 +210,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return [
             'externalCustomerNumber' => $customerNumber,
             'externalCustomerEmail' => $customer->getEmail(),
-            'externalCustomerPhoneNumber' => $customer->getBilling()->getPhone(),
+            'externalCustomerPhoneNumber' => $customer->getDefaultBillingAddress()->getPhone(),
             'externalCustomerMobilePhoneNumber' => '',
             'externalCustomerFaxNumber' => '',
             'customerBirthdate' => $customerBirthday,
@@ -581,7 +581,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     private function getBaseProducts(array $orderNumbers, $orderId)
     {
-        $info = new \Shopware\SwagPromotion\Components\MetaData\FieldInfo();
+        if (class_exists('\Shopware\SwagPromotion\Components\MetaData\FieldInfo')) {
+            $info = new \Shopware\SwagPromotion\Components\MetaData\FieldInfo();
+        } elseif (class_exists('SwagPromotion\Components\MetaData\FieldInfo')) {
+            $info = new SwagPromotion\Components\MetaData\FieldInfo();
+        } else {
+            $this->logWarn('orderSyncMapping::could not load promostionsuite field info class');
+            return array();
+        }
         $info = array_keys($info->get()['product']);
 
         $mapping = [

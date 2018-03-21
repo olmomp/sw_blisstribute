@@ -17,4 +17,26 @@ class Shopware_Components_Blisstribute_Order_Payment_DebitAdvice
      * @inheritdoc
      */
     protected $code = 'debitAdvice';
+
+    /**
+     * @inheritdoc
+     */
+    protected function getAdditionalPaymentInformation()
+    {
+        $customer = $this->order->getCustomer();
+        $paymentData = Shopware()->Models()->getRepository('Shopware\Models\Payment\PaymentInstance')->findOneBy(array(
+            'customer' => $customer->getId()
+        ));
+
+        if ($paymentData == null) {
+            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('no bank data found');
+        }
+
+        return array(
+            'bankOwner' => $paymentData->getAccountHolder(),
+            'bankName' => $paymentData->getBankName(),
+            'iban' => $paymentData->getIban(),
+            'bic' => $paymentData->getBic()
+        );
+    }
 }

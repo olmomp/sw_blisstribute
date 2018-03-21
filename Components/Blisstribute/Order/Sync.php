@@ -245,7 +245,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
 
             case BlisstributeOrder::EXPORT_STATUS_NONE:
                 $order = $blisstributeOrder->getOrder();
-                if ($order->getOrderStatus() == -1) {
+                if ($order->getOrderStatus()->getId() == -1) {
                     $blisstributeOrder->setStatus(BlisstributeOrder::EXPORT_STATUS_ABORTED);
 
                     $modelManager = Shopware()->Models();
