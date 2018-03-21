@@ -179,9 +179,11 @@ class Btarticle extends BtArticleResource implements BatchInterface
             $params['attribute']['blisstributeEstimatedDeliveryDate'] = trim($params['attribute']['blisstributeEstimatedDeliveryDate']);
         }
 
+        $syncActive = false;
         if ($config['blisstribute-article-sync-sync-active-flag']) {
             $this->logDebug(sprintf('%s - set detail active %s', $detailId, (int)$params['active']));
             $detail->setActive($params['active']);
+            $syncActive = true;
         }
 
         if ($config['blisstribute-article-sync-sync-ean']) {
@@ -231,6 +233,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
         }
 
         if ($article->getConfiguratorSet() != null) {
+            $anythingActive = false;
             if ($detail->getKind() == 1 && $detail->getActive() == 0) {
                 /** @var Detail $currentNewDetail */
                 foreach ($article->getDetails() as $currentNewDetail) {
@@ -247,14 +250,28 @@ class Btarticle extends BtArticleResource implements BatchInterface
                     $currentNewDetail->setKind(1);
                     $this->getManager()->persist($currentNewDetail);
                     $article->setMainDetail($currentNewDetail);
+                    $anythingActive = true;
                     break;
                 }
             }
 
-            $this->getManager()->persist($detail);
-            $this->getManager()->persist($attributes);
-            $this->getManager()->persist($article);
+            if ($syncActive) {
+                if (($anythingActive || $detail->getActive())) {
+                    $article->setActive(true);
+                } else {
+                    $article->setActive(false);
+                }
+            }
+
+        } else {
+            if ($syncActive) {
+                $article->setActive($detail->getActive());
+            }
         }
+
+        $this->getManager()->persist($detail);
+        $this->getManager()->persist($attributes);
+        $this->getManager()->persist($article);
 
         $this->flush();
         $this->logDebug(sprintf('%s - update done', $detailId));
