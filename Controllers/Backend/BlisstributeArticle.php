@@ -64,18 +64,18 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
     protected function getListQuery()
     {
         $builder = parent::getListQuery();
-        $builder->innerJoin('blisstribute_article.article', 'article');
-        $builder->innerJoin('article.mainDetail', 'mainDetail');
-        $builder->innerJoin('mainDetail.attribute', 'attribute');
+        $builder->join('blisstribute_article.article', 'article');
+        $builder->join('article.mainDetail', 'mainDetail');
+        $builder->join('mainDetail.attribute', 'attribute');
         $builder->addSelect(array('article', 'mainDetail', 'attribute'));
         $builder->addOrderBy('blisstribute_article.id', 'DESC');
-
 
         // searching
         $filters = $this->Request()->getParam('filter');
 
         if (!is_null($filters)) {
             foreach ($filters as $filter) {
+                \Shopware()->PluginLogger()->log(Monolog\Logger::INFO, var_export($filter, true));
                 if ($filter['property'] == 'search') {
                     $value = $filter['value'];
 
@@ -86,6 +86,10 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
 
                         $builder->setParameter('search', $search);
                     }
+                }
+                if ($filter['property'] == 'triggerSync') {
+                    $value = $filter['value'] === true;
+                    $builder->andWhere('blisstribute_article.triggerSync = ' . (int)$value);
                 }
             }
         }

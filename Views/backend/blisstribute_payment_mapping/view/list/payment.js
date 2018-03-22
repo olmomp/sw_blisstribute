@@ -33,6 +33,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameSelfcollectorCash: '{s name=blisstribute/paymentSelfcollectorCash}Bar (Selbstabholer){/s}',
         classNameSelfcollectorCashEc: '{s name=blisstribute/paymentSelfcollectorCashEc}EC (Selbstabholer){/s}',
         classNameSelfcollectorCashCreditCard: '{s name=blisstribute/paymentSelfcollectorCashCreditCard}Kreditkarte (Selbstabholer){/s}',
+        classNameWirecardCP: '{s name=blisstribute/paymentWirecardCP}Wirecard CC{/s}',
         classNameVrPayCC: '{s name=blisstribute/paymentVrPayCC}vrPayCC{/s}',
         classNamePayOneCC: '{s name=blisstribute/paymentPayOneCC}PayOneCC{/s}',
         classNamePayOneELV: '{s name=blisstribute/paymentPayOneELV}PayOneELV{/s}',
@@ -139,6 +140,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                             case 'VrPayCC':
                                 return me.snippets.classNameVrPayCC;
 
+                            case 'WirecardCP':
+                                return me.snippets.classNameWirecardCP;
+
                             case 'PayOneCC':
                                 return me.snippets.classNamePayOneCC;
 
@@ -185,6 +189,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['SelfcollectorCashEc', me.snippets.classNameSelfcollectorCashEc],
                                 ['SelfcollectorCashCreditCard', me.snippets.classNameSelfcollectorCashCreditCard],
                                 ['VrPayCC', me.snippets.classNameVrPayCC],
+                                ['WirecardCP', me.snippets.classNameWirecardCP],
                                 ['Klarna', me.snippets.classNameKlarna],
                                 ['KlarnaSofort', me.snippets.classNameKlarnaSofort],
                                 ['PayOneCC', me.snippets.classNamePayOneCC],
