@@ -8,10 +8,11 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.10.7",
+    "currentVersion": "0.10.8",
 
     "changelog": {
         "de": {
+            "0.10.8": "ignores root category in article sync",
             "0.10.7": "add wirecard checkout page payment mapping, add article filter",
             "0.10.6": "article active status sync (if configured) depends on variant activate state (if variant article)",
             "0.10.5": "Shopware promotion suite 5.3.X fix, debit advice used bank data from customer",
