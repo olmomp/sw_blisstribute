@@ -176,7 +176,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     private function _getMainDetail($article)
     {
         if ($article->getConfiguratorSet() != null) {
-
             /** @var Detail $currentDetail */
             foreach ($article->getDetails() as $currentDetail) {
                 if ($currentDetail->getKind() == 1) {
@@ -297,17 +296,15 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         $categoryLimit = 0;
         $categoryNameCollection = array($baseCategory->getName());
-        while ($baseCategory->getParent() != null
-            && strtolower($baseCategory->getParent()->getName()) != 'root'
-            && strtolower($baseCategory->getParent()->getName()) != 'deutsch'
-            && strtolower($baseCategory->getParent()->getName()) != 'englisch'
-            && !preg_match('/\-de/i', $baseCategory->getParent()->getName())
-            && !preg_match('/\-en/i', $baseCategory->getParent()->getName())
-            && $categoryLimit < 10
-        ) {
+        $this->logDebug('articleSyncMapping::getCategoryCollection::baseCategory::' . $baseCategory->getName());
+        while ($baseCategory->getParent() != null && $categoryLimit < 10) {
             $baseCategory = $baseCategory->getParent();
-            $categoryNameCollection[] = trim($baseCategory->getName());
+            $this->logDebug('articleSyncMapping::getCategoryCollection::new baseCategory::' . $baseCategory->getName());
+            if ($baseCategory->getParent() == null || preg_match('/root/i', $baseCategory->getParent()->getName())) {
+                break;
+            }
 
+            $categoryNameCollection[] = trim($baseCategory->getName());
             $categoryLimit++;
         }
 
