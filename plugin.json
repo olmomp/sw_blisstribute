@@ -8,10 +8,11 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.10.8",
+    "currentVersion": "0.11.0",
 
     "changelog": {
         "de": {
+            "0.11.0": "improved article sync, improved article stock update",
             "0.10.8": "ignores root category in article sync",
             "0.10.7": "add wirecard checkout page payment mapping, add article filter",
             "0.10.6": "article active status sync (if configured) depends on variant activate state (if variant article)",

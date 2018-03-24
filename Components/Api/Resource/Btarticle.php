@@ -234,7 +234,10 @@ class Btarticle extends BtArticleResource implements BatchInterface
 
         if ($article->getConfiguratorSet() != null) {
             $anythingActive = false;
+            $this->logDebug('configurator set is not null - scanning for active variant');
+
             if ($detail->getKind() == 1 && $detail->getActive() == 0) {
+                $this->logDebug(sprintf('%s - detail inactive - searching for new kind 1', $detail->getId()));
                 /** @var Detail $currentNewDetail */
                 foreach ($article->getDetails() as $currentNewDetail) {
                     if (!$currentNewDetail->getActive()) {
@@ -245,7 +248,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
                         continue;
                     }
 
-                    $this->logDebug(sprintf('%s - set new main detail %s', $detailId, $currentNewDetail->getId()));
+                    $this->logDebug(sprintf('%s - detail inactive - set new main detail %s', $detail->getId(), $currentNewDetail->getId()));
                     $detail->setKind(2);
                     $currentNewDetail->setKind(1);
                     $this->getManager()->persist($currentNewDetail);
@@ -253,19 +256,33 @@ class Btarticle extends BtArticleResource implements BatchInterface
                     $anythingActive = true;
                     break;
                 }
+            } else {
+                $this->logDebug('search for any active variant');
+                /** @var Detail $currentNewDetail */
+                foreach ($article->getDetails() as $currentNewDetail) {
+                    if ($currentNewDetail->getActive()) {
+                        $anythingActive = true;
+                        break;
+                    }
+                }
             }
 
             if ($syncActive) {
                 if (($anythingActive || $detail->getActive())) {
+                    $this->logDebug(sprintf('%s - found anything active - set article active', $article->getId()));
                     $article->setActive(true);
                 } else {
+                    $this->logDebug(sprintf('%s - did\'nt found anything active - set article inactive', $article->getId()));
                     $article->setActive(false);
                 }
             }
 
         } else {
             if ($syncActive) {
+                $this->logDebug('configurator set is null');
                 $article->setActive($detail->getActive());
+                $this->logDebug(sprintf('%s - set single article active = %s', $article->getId(), (int)$detail->getActive()));
+                $this->logDebug('set article to ' . (int)$detail->getActive());
             }
         }
 
