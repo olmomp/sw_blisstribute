@@ -286,12 +286,18 @@ class Btarticle extends BtArticleResource implements BatchInterface
             }
         }
 
-        $this->getManager()->persist($detail);
-        $this->getManager()->persist($attributes);
-        $this->getManager()->persist($article);
+        try {
+            $this->logDebug(sprintf('%s - persist detail', $detail->getId()));
+            $this->getManager()->persist($detail);
+            $this->logDebug(sprintf('%s - persist article', $article->getId()));
+            $this->getManager()->persist($article);
 
-        $this->flush();
-        $this->logDebug(sprintf('%s - update done', $detailId));
+            $this->logDebug('flushing');
+            $this->flush();
+            $this->logDebug(sprintf('%s - update done', $detailId));
+        } catch (\Exception $ex) {
+            $this->logWarn('save failed - ' . $ex);
+        }
 
         return $detail;
     }
