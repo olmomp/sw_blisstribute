@@ -758,6 +758,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return $articleData;
     }
 
+    protected $_newPromotionSuite = false;
+
     public function applyPromoDiscounts($articleDataCollection, $promotions, $orderNumbers, $shopwareDiscountsAmount, $orderId)
     {
         // check if plugin SwagPromotion is installed
@@ -771,8 +773,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         if ($plugin) {
             /** @var Detail $promotionItem */
             foreach ($promotions as $promotionItem) {
-                /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-                $promotion = $this->container->get('models')->getRepository('Shopware\CustomModels\SwagPromotion\Promotion')->findOneBy(['number' => $promotionItem->getArticleNumber()]);
+                if (class_exists('\Shopware\CustomModels\SwagPromotion\Promotion')) {
+                    /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
+                    $promotion = $this->container->get('models')->getRepository('\Shopware\CustomModels\SwagPromotion\Promotion')->findOneBy(['number' => $promotionItem->getArticleNumber()]);
+                } else {
+                    $this->_newPromotionSuite = true;
+                    $promotion = $this->container->get('models')->getRepository('\SwagPromotion\Models\Promotion')->findOneBy(['number' => $promotionItem->getArticleNumber()]);
+                }
 
                 if (is_null($promotion)) {
                     continue;
@@ -825,10 +832,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     public function getPromotionStackedProducts($promotion, $products)
     {
         /** @var \Shopware\SwagPromotion\Components\ProductMatcher $productMatcher */
-        $productMatcher = $this->container->get('promotion.product_matcher');
+        $productMatcher = $this->_newPromotionSuite ? $this->container->get('swag_promotion.product_matcher') : $this->container->get('promotion.product_matcher');
         
         /** @var \Shopware\SwagPromotion\Components\Promotion\ProductStacker\ProductStacker $productStackRegistry */
-        $productStackRegistry = $this->container->get('promotion.stacker.registry');
+        $productStackRegistry = $this->_newPromotionSuite ? $this->container->get('swag_promotion.stacker.product_stacker_registry') : $this->container->get('promotion.stacker.registry');
         
         $promotionProducts = $productMatcher->getMatchingProducts($products, json_decode($promotion->getApplyRules(), true));
             
