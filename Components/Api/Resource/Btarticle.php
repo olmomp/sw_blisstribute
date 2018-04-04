@@ -224,12 +224,20 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $this->getManager()->persist($attributes);
 
         $article = $detail->getArticle();
-        if ($syncLastStock) {
-            $this->logDebug(sprintf('%s - set article lastStock %s', $article->getId(), (int)$params['lastStock']));
-            $article->setLastStock($params['lastStock']);
+        if ($syncLastStock) {			
+            if (version_compare(Shopware()->Config()->version, '5.4.0', '<')) {
+                $this->logDebug(sprintf('%s - set article lastStock %s', $article->getId(), (int)$params['lastStock']));
+                $article->setLastStock($params['lastStock']);
 
-            $this->getManager()->persist($article);
-            $this->logDebug(sprintf('%s - article saved', $article->getId()));
+                $this->getManager()->persist($article);
+                $this->logDebug(sprintf('%s - article saved', $article->getId()));
+            } else {
+                $this->logDebug(sprintf('%s - set detail lastStock %s', $detailId, (int)$params['lastStock']));
+                $detail->setLastStock($params['lastStock']);
+
+                $this->getManager()->persist($detail);
+                $this->logDebug(sprintf('%s - detail saved', $detailId));
+            }
         }
 
         if ($article->getConfiguratorSet() != null) {
