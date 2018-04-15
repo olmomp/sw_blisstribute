@@ -63,16 +63,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     
     protected function getConfig()
     {
-        $shop = false;
-        if ($this->container->has('shop')) {
-            $shop = $this->container->get('shop');
-        }
-
-        if (!$shop) {
-            $shop = $this->container->get('models')->getRepository(\Shopware\Models\Shop\Shop::class)->getActiveDefault();
-        }
-
-        return Shopware()->Container()->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
         return $this->container->get('config');
     }
 
