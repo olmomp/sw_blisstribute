@@ -41,27 +41,19 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
         $this->lockTask();
 
         $startDate = new DateTime();
-
         $this->logMessage('start batch sync', __FUNCTION__);
 
         // load orders
         $orderRepository = Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $orderCollection = $orderRepository->findTransferableOrders($startDate);
-
-        while (count($orderCollection) > 0) {
-            foreach ($orderCollection as $currentOrder) {
-                try {
-
-                    $this->checkStatus($currentOrder);
-                    $this->processOrderSync($currentOrder);
-
-                } catch (Exception $ex) {
-                    $this->logMessage('export status check failed::' . $ex->getMessage(), __FUNCTION__, Logger::ERROR);
-                    continue;
-                }
+        foreach ($orderCollection as $currentOrder) {
+            try {
+                $this->checkStatus($currentOrder);
+                $this->processOrderSync($currentOrder);
+            } catch (Exception $ex) {
+                $this->logMessage('export status check failed::' . $ex->getMessage(), __FUNCTION__, Logger::ERROR);
+                continue;
             }
-
-            $orderCollection = $orderRepository->findTransferableOrders($startDate);
         }
 
         $this->modelManager->flush();
