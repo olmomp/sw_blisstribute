@@ -63,7 +63,20 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     
     protected function getConfig()
     {
-        return $this->container->get('config');
+        $shop = $this->getModelEntity()->getOrder()->getShop();
+        if (!$shop || $shop == null) {
+            $shop = $this->container->get('shop');
+        }
+
+        if (!$shop || $shop == null) {
+            $shop = $this->container->get('models')->getRepository(\Shopware\Models\Shop\Shop::class)->getActiveDefault();
+        }
+
+        if (!$shop || $shop == null) {
+            return $this->container->get('config');
+        }
+
+        return $this->container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
     }
 
     /**
@@ -176,13 +189,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $orderShipLock = true;
         }
 
-        if ($this->getConfig()->get('blisstribute-auto-hold-order')) {
+        if ($this->getConfig()['blisstribute-auto-hold-order']) {
             $this->logDebug('orderSyncMapping::buildBasicOrderData::blisstribute auto hold order enabled.');
             $orderHold = true;
             $orderRemark[] = 'SWP - Bestellung angehalten.';
         }
 
-        if ($this->getConfig()->get('blisstribute-auto-lock-order')) {
+        if ($this->getConfig()['blisstribute-auto-lock-order']) {
             $this->logDebug('orderSyncMapping::buildBasicOrderData::blisstribute auto lock order enabled.');
             $orderShipLock = true;
             $orderRemark[] = 'SWP - Bestellung gesperrt.';
