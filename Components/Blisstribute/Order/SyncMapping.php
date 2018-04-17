@@ -388,16 +388,16 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'addressType' => 'BILL',
             'salutation' => $salutation,
             'title' => '',
-            'firstName' => base64_encode($billing->getFirstName()),
-            'addName' => base64_encode($billing->getDepartment()),
-            'lastName' => base64_encode($billing->getLastName()),
-            'company' => base64_encode($billing->getCompany()),
+            'firstName' => base64_encode($this->_processAddressDataMatching($billing->getFirstName())),
+            'addName' => base64_encode($this->_processAddressDataMatching($billing->getDepartment())),
+            'lastName' => base64_encode($this->_processAddressDataMatching($billing->getLastName())),
+            'company' => base64_encode($this->_processAddressDataMatching($billing->getCompany())),
             'gender' => $gender,
-            'street' => base64_encode($street),
-            'houseNumber' => base64_encode($houseNumber),
-            'addressAddition' => base64_encode($billing->getAdditionalAddressLine1()),
-            'zipCode' => base64_encode($billing->getZipCode()),
-            'city' => base64_encode($billing->getCity()),
+            'street' => base64_encode($this->_processAddressDataMatching($street)),
+            'houseNumber' => base64_encode($this->_processAddressDataMatching($houseNumber)),
+            'addressAddition' => base64_encode($this->_processAddressDataMatching($billing->getAdditionalAddressLine1())),
+            'zipCode' => base64_encode($this->_processAddressDataMatching($billing->getZipCode())),
+            'city' => base64_encode($this->_processAddressDataMatching($billing->getCity())),
             'countryCode' => $country->getIso(),
             'isTaxFree' => (((bool)$this->getModelEntity()->getOrder()->getTaxFree()) ? true : false),
             'taxIdNumber' => trim($billing->getVatId()),
@@ -406,6 +406,23 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         ];
 
         return $invoiceAddressData;
+    }
+
+    private function _processAddressDataMatching($addressString)
+    {
+        $blackListPattern = $this->getConfig()['blisstribute-hold-order-address-pattern'];
+        if (trim($blackListPattern) == '') {
+            return $addressString;
+        }
+
+        if (preg_match('/' . $blackListPattern . '/i', $addressString)) {
+            $this->orderData['orderHold'] = true;
+            if (!preg_match('/Bestellung prüfen/i', $this->orderData['orderRemark'])) {
+                $this->orderData['orderRemark'] = 'Bestellung prüfen (SW Blacklist) - ' . $this->orderData['orderRemark'];
+            }
+        }
+
+        return $addressString;
     }
 
     /**
@@ -450,16 +467,16 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'addressType' => 'DELIVERY',
             'salutation' => $salutation,
             'title' => '',
-            'firstName' => base64_encode($shipping->getFirstName()),
-            'addName' => base64_encode($shipping->getDepartment()),
-            'lastName' => base64_encode($shipping->getLastName()),
-            'company' => base64_encode($shipping->getCompany()),
+            'firstName' => base64_encode($this->_processAddressDataMatching($shipping->getFirstName())),
+            'addName' => base64_encode($this->_processAddressDataMatching($shipping->getDepartment())),
+            'lastName' => base64_encode($this->_processAddressDataMatching($shipping->getLastName())),
+            'company' => base64_encode($this->_processAddressDataMatching($shipping->getCompany())),
             'gender' => $gender,
-            'street' => base64_encode($street),
-            'houseNumber' => base64_encode($houseNumber),
-            'addressAddition' => base64_encode($shipping->getAdditionalAddressLine1()),
-            'zipCode' => base64_encode($shipping->getZipCode()),
-            'city' => base64_encode($shipping->getCity()),
+            'street' => base64_encode($this->_processAddressDataMatching($street)),
+            'houseNumber' => base64_encode($this->_processAddressDataMatching($houseNumber)),
+            'addressAddition' => base64_encode($this->_processAddressDataMatching($shipping->getAdditionalAddressLine1())),
+            'zipCode' => base64_encode($this->_processAddressDataMatching($shipping->getZipCode())),
+            'city' => base64_encode($this->_processAddressDataMatching($shipping->getCity())),
             'countryCode' => $country->getIso(),
             'isTaxFree' => (((bool)$this->getModelEntity()->getOrder()->getTaxFree()) ? true : false),
             'taxIdNumber' => '',
