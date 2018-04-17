@@ -226,6 +226,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+        if (version_compare($version, '0.11.2', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'text',
+                'blisstribute-hold-order-address-pattern',
+                [
+                    'label' => 'Sperrbegriffe für Adresse',
+                    'description' => 'Wenn gesetzt, werden Bestellungen deren Adresse auf dieses Pattern zutrifft, mit Kommentar und angehalten übertragen.',
+                    'value' => '',
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
@@ -1046,6 +1059,17 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => 1
             ]
         );
+
+        $form->setElement(
+            'text',
+            'blisstribute-hold-order-address-pattern',
+            [
+                'label' => 'Sperrbegriffe für Adresse',
+                'description' => 'Wenn gesetzt, werden Bestellungen deren Adresse auf dieses Pattern zutrifft, mit Kommentar und angehalten übertragen.',
+                'value' => '',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
         $form->setElement(
             'checkbox',
             'blisstribute-transfer-shop-article-prices',
@@ -1073,7 +1097,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => ''
             )
         );
-
 
         $form->setElement(
             'checkbox',
