@@ -144,22 +144,26 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         $value = '';
-        $mainDetail = $this->_getMainDetail($article);
-        $this->logDebug('articleSyncMapping::getClassification::got mainDetail ' . $mainDetail->getId());
-        $attribute = $mainDetail->getAttribute();
-        $this->logDebug('articleSyncMapping::getClassification::got attribute ' . $attribute->getId());
         $method = 'get' . ucfirst($fieldName);
-        if ($mainDetail) {
-            $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute ' . $method);
-            if (method_exists($mainDetail->getAttribute(), $method)) {
-                $value = $mainDetail->getAttribute()->$method();
+        $mainDetail = $this->_getMainDetail($article);
+        if ($mainDetail != null) {
+            $this->logDebug('articleSyncMapping::getClassification::got mainDetail ' . $mainDetail->getId());
+            $attribute = $mainDetail->getAttribute();
+            $this->logDebug('articleSyncMapping::getClassification::got attribute ' . $attribute->getId());
+            if ($mainDetail) {
+                $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute ' . $method);
+                if (method_exists($mainDetail->getAttribute(), $method)) {
+                    $value = $mainDetail->getAttribute()->$method();
+                }
+                $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute value ' . $value);
             }
-            $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute value ' . $value);
+        } else {
+            $this->logDebug('articleSyncMapping::getClassification::main detail not found.');
         }
 
         if (trim($value) == '') {
             $this->logDebug('articleSyncMapping::getClassification::switch to article attribute');
-            if (method_exists($article, $method)) {
+            if (method_exists($article->getAttribute(), $method)) {
                 $value = $article->getAttribute()->$method();
             }
             $this->logDebug('articleSyncMapping::getClassification::article attribute value ' . $value);
