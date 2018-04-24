@@ -65,18 +65,24 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     {
         $shop = $this->getModelEntity()->getOrder()->getShop();
         if (!$shop || $shop == null) {
+            $this->logWarn('orderSyncMapping::getConfig::could not get shop from order');
             $shop = $this->container->get('shop');
         }
 
         if (!$shop || $shop == null) {
+            $this->logWarn('orderSyncMapping::getConfig::could not get shop from container');
             $shop = $this->container->get('models')->getRepository(\Shopware\Models\Shop\Shop::class)->getActiveDefault();
         }
 
         if (!$shop || $shop == null) {
+            $this->logWarn('orderSyncMapping::getConfig::could not get active shop; using fallback default config');
             return $this->container->get('config');
         }
 
-        return $this->container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
+        $this->logInfo('orderSyncMapping::getConfig::using shop ' . $shop->getId() . ' / ' . $shop->getName());
+        $config = $this->container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
+        $this->logDebug('orderSyncMapping::getConfig::using config::' . json_encode($config));
+        return $config;
     }
 
     /**
