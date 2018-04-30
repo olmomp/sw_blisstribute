@@ -1409,7 +1409,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $voucher = null;
             $voucherCollection = $voucherRepository->getValidateOrderCodeQuery($currentOrderLine->getArticleNumber())->getResult();
-            if (count($voucherCollection) >= 1) {
+            if (count($voucherCollection) > 1) {
                 /** @var Voucher $currentVoucher */
                 foreach ($voucherCollection as $currentVoucher) {
                     if (abs(round($currentVoucher->getValue(), 2, PHP_ROUND_HALF_UP)) != abs(round($currentOrderLine->getPrice(), 2, PHP_ROUND_HALF_UP))) {
@@ -1420,9 +1420,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     break;
                 }
 
-            }
-
-            if ($voucher == null) {
+            } elseif (count($voucherCollection) == 1) {
+                $voucher = $voucherCollection[0];
+            } else {
                 throw new Exception('could not load voucher by code ' . $currentOrderLine->getArticleNumber());
             }
 
