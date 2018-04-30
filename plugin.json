@@ -8,10 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.11.3",
+    "currentVersion": "0.11.5",
 
     "changelog": {
         "de": {
+            "0.11.5": "neteasy coupon individual coupon bugfix",
+            "0.11.4": "order cart amount hold",
             "0.11.3": "better order sync logging",
             "0.11.2": "address blacklist pattern added",
             "0.11.1": "bugfix for shopware internal (absolute) vouchers",

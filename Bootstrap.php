@@ -239,6 +239,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+        if (version_compare($version, '0.11.4', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'number',
+                'blisstribute-hold-order-cart-amount',
+                [
+                    'label' => 'Warenwert für Bestell-Halt',
+                    'description' => 'Wenn gesetzt, werden Bestellungen deren Warenwert den angegebenen Wertes überschreiten oder gleichen, mit Kommentar und angehalten übertragen. Zum deaktivieren "0" angeben.',
+                    'value' => 0.00,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
@@ -1059,7 +1072,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => 1
             ]
         );
-
         $form->setElement(
             'text',
             'blisstribute-hold-order-address-pattern',
@@ -1067,6 +1079,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'label' => 'Sperrbegriffe für Adresse',
                 'description' => 'Wenn gesetzt, werden Bestellungen deren Adresse auf dieses Pattern zutrifft, mit Kommentar und angehalten übertragen.',
                 'value' => '',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+        $form->setElement(
+            'number',
+            'blisstribute-hold-order-cart-amount',
+            [
+                'label' => 'Warenwert für Bestell-Halt',
+                'description' => 'Wenn gesetzt, werden Bestellungen deren Warenwert den angegebenen Wertes überschreiten oder gleichen, mit Kommentar und angehalten übertragen. Zum deaktivieren "0" angeben.',
+                'value' => 0.00,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );

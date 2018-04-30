@@ -60,7 +60,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     protected $voucherCollection = [];
 
     private $container = null;
-    
+
     protected function getConfig()
     {
         $shop = $this->getModelEntity()->getOrder()->getShop();
@@ -81,7 +81,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $this->logInfo('orderSyncMapping::getConfig::using shop ' . $shop->getId() . ' / ' . $shop->getName());
         $config = $this->container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
-        $this->logDebug('orderSyncMapping::getConfig::using config::' . json_encode($config));
         return $config;
     }
 
@@ -224,6 +223,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         
         if (!is_null($customerBirthday)) {
             $customerBirthday = $customerBirthday->format('Y-m-d');
+        }
+
+        $holdOrderCartAmount = $this->getConfig()['blisstribute-hold-order-cart-amount'];
+        if ($holdOrderCartAmount > 0 && $holdOrderCartAmount <= $order->getInvoiceAmount()) {
+            $this->logDebug('orderSyncMapping::buildBasicOrderData::blisstribute hold order cart amount enabled.');
+            $orderHold = true;
+            $orderRemark[] = 'BUHA - Bestellung angehalten.';
         }
 
         return [
@@ -1387,26 +1393,55 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $voucherRepository = Shopware()->Models()->getRepository('Shopware\Models\Voucher\Voucher');
         $couponMappingRepository = $this->getCouponMappingRepository();
 
-        /** @var Detail $currentDetail */
-        foreach ($this->getModelEntity()->getOrder()->getDetails() as $currentDetail) {
+        /** @var Detail $currentOrderLine */
+        foreach ($this->getModelEntity()->getOrder()->getDetails() as $currentOrderLine) {
+            $this->logDebug(sprintf(
+                'process order line id %s / article number %s / price %s',
+                $currentOrderLine->getId(),
+                $currentOrderLine->getArticleNumber(),
+                $currentOrderLine->getPrice()
+            ));
+
             // no coupon
-            if ($currentDetail->getMode() != 2) {
+            if ($currentOrderLine->getMode() != 2) {
                 continue;
             }
 
-            $voucher = $voucherRepository->getValidateOrderCodeQuery($currentDetail->getArticleNumber())
-                ->getOneOrNullResult();
+            $voucher = null;
+            $voucherCollection = $voucherRepository->getValidateOrderCodeQuery($currentOrderLine->getArticleNumber())->getResult();
+            if (count($voucherCollection) >= 1) {
+                /** @var Voucher $currentVoucher */
+                foreach ($voucherCollection as $currentVoucher) {
+                    if (abs(round($currentVoucher->getValue(), 2, PHP_ROUND_HALF_UP)) != abs(round($currentOrderLine->getPrice(), 2, PHP_ROUND_HALF_UP))) {
+                        continue;
+                    }
+
+                    $voucher = $currentVoucher;
+                    break;
+                }
+
+            }
+
+            if ($voucher == null) {
+                throw new Exception('could not load voucher by code ' . $currentOrderLine->getArticleNumber());
+            }
 
             if ($voucher != null) {
                 $this->voucherCollection[] = $voucher;
 
                 $couponMapping = $couponMappingRepository->findByCoupon($voucher);
                 if ($couponMapping != null && $couponMapping->getIsMoneyVoucher()) {
+                    $this->logDebug(sprintf(
+                        'order line id %s / is money voucher! %s',
+                        $currentOrderLine->getId(),
+                        $couponMapping->getId()
+                    ));
+
                     continue;
                 }
             }
 
-            $this->voucherDiscountValue += abs(round($currentDetail->getPrice(), 2, PHP_ROUND_HALF_DOWN));
+            $this->voucherDiscountValue += abs(round($currentOrderLine->getPrice(), 2, PHP_ROUND_HALF_UP));
         }
 
         $this->logDebug('voucherDiscountValue: ' . $this->voucherDiscountValue);
