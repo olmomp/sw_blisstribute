@@ -1422,8 +1422,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             } elseif (count($voucherCollection) == 1) {
                 $voucher = $voucherCollection[0];
-            } else {
-                throw new Exception('could not load voucher by code ' . $currentOrderLine->getArticleNumber());
             }
 
             if ($voucher != null) {
