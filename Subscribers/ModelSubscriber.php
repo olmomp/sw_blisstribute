@@ -78,6 +78,9 @@ class ModelSubscriber implements SubscriberInterface
 
         /** @var \Shopware\Models\Order\Order $order */
         $order = $eventArgs->get('entity');
+        if ($order == null || !($order instanceof \Shopware\Models\Order\Order)) {
+            return;
+        }
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $repository->findByOrder($order);
@@ -100,6 +103,9 @@ class ModelSubscriber implements SubscriberInterface
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $eventArgs->get('entity');
+        if ($article == null || !($article instanceof \Shopware\Models\Article\Article)) {
+            return;
+        }
 
         $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
         $blisstributeArticle->setLastCronAt(new \DateTime())
@@ -123,10 +129,13 @@ class ModelSubscriber implements SubscriberInterface
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $eventArgs->get('entity');
+        if ($article == null || !($article instanceof \Shopware\Models\Article\Article)) {
+            return;
+        }
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
         $blisstributeArticle = $repository->findOneBy(['article' => $article]);
-        if ($blisstributeArticle === null) {
+        if ($blisstributeArticle == null) {
             $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($article);
         }
@@ -155,6 +164,9 @@ class ModelSubscriber implements SubscriberInterface
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $eventArgs->get('entity');
+        if ($article == null || !($article instanceof \Shopware\Models\Article\Article)) {
+            return;
+        }
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
         $blisstributeArticle = $repository->findOneBy(['article' => $article]);
@@ -177,6 +189,9 @@ class ModelSubscriber implements SubscriberInterface
         
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $eventArgs->get('entity');
+        if ($detail == null || !($detail instanceof \Shopware\Models\Article\Detail)) {
+            return;
+        }
 
         // load article
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
@@ -210,6 +225,9 @@ class ModelSubscriber implements SubscriberInterface
 
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $eventArgs->get('entity');
+        if ($detail == null || !($detail instanceof \Shopware\Models\Article\Detail)) {
+            return;
+        }
 
         $articleRepository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
 
@@ -245,6 +263,9 @@ class ModelSubscriber implements SubscriberInterface
 
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $eventArgs->get('entity');
+        if ($detail == null || !($detail instanceof \Shopware\Models\Article\Detail)) {
+            return;
+        }
 
         $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
 
