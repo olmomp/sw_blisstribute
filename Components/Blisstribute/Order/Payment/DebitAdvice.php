@@ -32,11 +32,16 @@ class Shopware_Components_Blisstribute_Order_Payment_DebitAdvice
             throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('no bank data found');
         }
 
+        $bankOwner = $paymentData->getAccountHolder();
+        if (trim($bankOwner) == '') {
+            $bankOwner = $customer->getFirstname() . ' ' . $customer->getLastname();
+        }
+
         return array(
-            'bankOwner' => $paymentData->getAccountHolder(),
+            'bankOwner' => $bankOwner,
             'bankName' => $paymentData->getBankName(),
-            'iban' => $paymentData->getIban(),
-            'bic' => $paymentData->getBic()
+            'iban' => strtoupper($paymentData->getIban()),
+            'bic' => strtoupper($paymentData->getBic())
         );
     }
 }
