@@ -161,9 +161,9 @@ class Btarticle extends BtArticleResource implements BatchInterface
                         $params['lastStock'] = true;
                     }
                 } else {
-                    $params['active'] = true;
+                    $params['active'] = false;
                     if ($syncLastStock) {
-                        $params['lastStock'] = false;
+                        $params['lastStock'] = true;
                     }
                 }
 
