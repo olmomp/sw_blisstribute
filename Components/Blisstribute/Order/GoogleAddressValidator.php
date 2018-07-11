@@ -90,7 +90,14 @@ class Shopware_Components_Blisstribute_Order_GoogleAddressValidator
         ];
 
         $billing = $order->getBilling();
+        if ($billing == null) {
+            return false;
+        }
         $shipping = $order->getShipping();
+        if ($shipping == null) {
+            return false;
+        }
+
 
         if ($this->_isPackingStation($billing, $shipping)) {
             return true;

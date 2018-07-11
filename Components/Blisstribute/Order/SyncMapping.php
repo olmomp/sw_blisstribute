@@ -174,6 +174,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $order = $this->getModelEntity()->getOrder();
         $customer = $order->getCustomer();
         $billingAddress = $order->getBilling();
+        if ($billingAddress == null) {
+            throw new Exception('invalid billing address data');
+        }
+        if ($order->getShipping() == null) {
+            throw new Exception('invalid shipping address data');
+        }
 
         $orderShipLock = false;
         $orderHold = false;
