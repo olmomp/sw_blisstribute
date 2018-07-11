@@ -921,7 +921,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
                     $product['promoQuantity'] -= 1;
                     $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-                    $product['price'] -= $countedAmountToDiscount;
+                    $product['price'] -= round($countedAmountToDiscount, 2);
                     $product['discountTotal'] += $countedAmountToDiscountPerQty;
                     
                     break;
@@ -966,8 +966,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                             $qty = $amount;
                         }
                         
-                        $countedAmountToDiscount = $qty * $product['originalPriceAmount'];
-                        $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
+                        $countedAmountToDiscount = round($qty * $product['originalPriceAmount'], 2);
+                        $countedAmountToDiscountPerQty = round($countedAmountToDiscount / $product['quantity'], 2);
 
                         $product['promoQuantity'] -= 1;
                         $product['priceAmount'] -= $countedAmountToDiscountPerQty;
@@ -1175,7 +1175,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $totalProductAmount += $product['price'];
+            $totalProductAmount += round($product['price'], 2);
         }
 
         foreach ($articleDataCollection as &$product) {
@@ -1187,9 +1187,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $countedAmountToDiscountPerQuantity = (abs($shopwareDiscountsAmount) * $weight) / $product['promoQuantity'];
 
-            $product['discountTotal'] += $countedAmountToDiscountPerQuantity;
-            $product['price'] -= $countedAmountToDiscountPerQuantity * $product['promoQuantity'];
-            $product['priceAmount'] -= $countedAmountToDiscountPerQuantity;
+            $product['discountTotal'] += round($countedAmountToDiscountPerQuantity, 2);
+            $product['price'] -= round($countedAmountToDiscountPerQuantity * $product['promoQuantity'], 2);
+            $product['priceAmount'] -= round($countedAmountToDiscountPerQuantity, 2);
         }
 
         return $articleDataCollection;
@@ -1256,8 +1256,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     continue;
                 }
 
-                $basketAmount += $product['originalPrice'];
-                $productBasket += $product['price'];
+                $basketAmount += round($product['originalPrice'], 2);
+                $productBasket += round($product['price'], 2);
             }
         }
 
@@ -1274,7 +1274,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     $product, $currentVoucher, $vouchersData, $price, $articleDataCollection, $basketAmount, $productBasket
                 ), 2);
                 
-                $voucherDiscountPerQuantity = $voucherDiscount / $product['promoQuantity'];
+                $voucherDiscountPerQuantity = round($voucherDiscount / $product['promoQuantity'], 2);
 
                 $product['priceAmount'] -= $voucherDiscountPerQuantity;
                 $product['price'] -= $voucherDiscountPerQuantity * $product['promoQuantity'];
