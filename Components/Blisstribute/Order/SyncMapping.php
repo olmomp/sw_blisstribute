@@ -307,14 +307,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected function buildAdvertisingMediumData()
     {
-        $advertisingMediumCode = strtoupper(trim(Shopware()->Config()->get('blisstribute-default-advertising-medium')));
-
-        $shopMappingRepository = $this->getShopMappingRepository();
-        $shopMapping = $shopMappingRepository->findOneByShop($this->getModelEntity()->getOrder()->getShop()->getId());
-        if ($shopMapping != null && trim($shopMapping->getAdvertisingMediumCode())) {
-            $advertisingMediumCode = strtoupper(trim($shopMapping->getAdvertisingMediumCode()));
-        }
-
+        $advertisingMediumCode = $this->getConfig()->get('blisstribute-default-advertising-medium');
         $advertisingMediumData = [
             'origin' => 'O',
             'medium' => 'O',
