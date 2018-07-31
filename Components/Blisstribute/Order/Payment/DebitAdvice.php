@@ -23,9 +23,8 @@ class Shopware_Components_Blisstribute_Order_Payment_DebitAdvice
      */
     protected function getAdditionalPaymentInformation()
     {
-        $customer = $this->order->getCustomer();
         $paymentData = Shopware()->Models()->getRepository('Shopware\Models\Payment\PaymentInstance')->findOneBy(array(
-            'customer' => $customer->getId()
+            'orderId' => $this->order->getId()
         ));
 
         if ($paymentData == null) {
@@ -34,7 +33,7 @@ class Shopware_Components_Blisstribute_Order_Payment_DebitAdvice
 
         $bankOwner = $paymentData->getAccountHolder();
         if (trim($bankOwner) == '') {
-            $bankOwner = $customer->getFirstname() . ' ' . $customer->getLastname();
+            $bankOwner = $paymentData->getFirstname() . ' ' . $paymentData->getLastname();
         }
 
         return array(
