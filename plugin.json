@@ -8,10 +8,11 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.11.8",
+    "currentVersion": "0.11.9",
 
     "changelog": {
         "de": {
+            "0.11.9": "B2B Order from customer group",
             "0.11.8": "debit advice fix",
             "0.11.7": "invalid shipping/billing address check; apply roundings to voucher/discount",
             "0.11.6": "debit advice fix",
