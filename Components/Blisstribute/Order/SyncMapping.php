@@ -217,8 +217,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $customerNumber = $customer->getEmail();
 
         $isB2BOrder = false;
-        if ($customer->getGroup() != null && $customer->getGroup()->getKey() == 'H') {
-            $this->logDebug('orderSyncMapping::buildBasicOrderData::customer is in merchant group. switch over to b2b order.');
+        $company = trim($billingAddress->getCompany());
+        if ($company != '' && $company != 'x' && $company != '*' && $company != '/' && $company != '-') {
             $isB2BOrder = true;
         }
         
