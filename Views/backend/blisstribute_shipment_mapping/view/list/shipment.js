@@ -25,8 +25,8 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
         classNamePatexpress: '{s name=blisstribute/combo_shipment_patexpress}Post AT Express{/s}',
         classNameSelfcollector: '{s name=blisstribute/combo_shipment_selfcollector}Selbstabholer{/s}',
         classNameLettershipment: '{s name=blisstribute/combo_shipment_lettershipment}Briefversand{/s}',
-        classNameSchenker: '{s name=blisstribute/combo_shipment_lettershipment}Schenker{/s}',
-        classNameWeiss: '{s name=blisstribute/combo_shipment_lettershipment}Gebr. Weiss{/s}'
+        classNameSchenker: '{s name=blisstribute/combo_shipment_schenker}Schenker{/s}',
+        classNameWeiss: '{s name=blisstribute/combo_shipment_weiss}Gebr. Weiss{/s}'
     },
 
     configure: function() {
