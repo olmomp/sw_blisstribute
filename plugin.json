@@ -12,6 +12,7 @@
 
     "changelog": {
         "de": {
+            "0.12.1": "SKR/GWW shipment types added",
             "0.12.0": "B2B Order from customer group reverted",
             "0.11.9": "B2B Order from customer group",
             "0.11.8": "debit advice fix",
