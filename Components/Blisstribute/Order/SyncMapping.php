@@ -563,9 +563,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'originalPrice' => $price * $product->getQuantity(),
                 'promoQuantity' => $quantity,
                 'quantity' => $quantity,
-                'priceAmount' => round($price, 2), // single article price
-                'price' => round(($price * $quantity), 2), //round($price * $quantity, 6), // article price with consideration of the quantities
-                'vatRate' => round($product->getTaxRate(), 2),
+                'priceAmount' => round($price, 4), // single article price
+                'price' => round(($price * $quantity), 4), //round($price * $quantity, 6), // article price with consideration of the quantities
+                'vatRate' => round($product->getTaxRate(), 4),
                 'title' => $product->getArticleName(),
                 'discountTotal' => 0,
                 'configuration' => '',
@@ -764,8 +764,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     
                 $articleData['originalPriceAmount'] += $price;
                 $articleData['originalPrice'] += $price * $quantity;
-                $articleData['priceAmount'] += round($price, 6);
-                $articleData['price'] += round(($price * $quantity), 6);
+                $articleData['priceAmount'] += round($price, 4);
+                $articleData['price'] += round(($price * $quantity), 4);
 
                 // todo ultra dirty, but should work for gusti
                 if ($configurationArticle->getAttribute()->getSwagCustomProductsMode() == 2) {
@@ -915,7 +915,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
                     $product['promoQuantity'] -= 1;
                     $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-                    $product['price'] -= round($countedAmountToDiscount, 2);
+                    $product['price'] -= round($countedAmountToDiscount, 4);
                     $product['discountTotal'] += $countedAmountToDiscountPerQty;
                     
                     break;
@@ -960,8 +960,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                             $qty = $amount;
                         }
                         
-                        $countedAmountToDiscount = round($qty * $product['originalPriceAmount'], 2);
-                        $countedAmountToDiscountPerQty = round($countedAmountToDiscount / $product['quantity'], 2);
+                        $countedAmountToDiscount = round($qty * $product['originalPriceAmount'], 4);
+                        $countedAmountToDiscountPerQty = round($countedAmountToDiscount / $product['quantity'], 4);
 
                         $product['promoQuantity'] -= 1;
                         $product['priceAmount'] -= $countedAmountToDiscountPerQty;
@@ -1169,7 +1169,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $totalProductAmount += round($product['price'], 2);
+            $totalProductAmount += round($product['price'], 4);
         }
 
         foreach ($articleDataCollection as &$product) {
@@ -1181,9 +1181,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $countedAmountToDiscountPerQuantity = (abs($shopwareDiscountsAmount) * $weight) / $product['promoQuantity'];
 
-            $product['discountTotal'] += round($countedAmountToDiscountPerQuantity, 2);
-            $product['price'] -= round($countedAmountToDiscountPerQuantity * $product['promoQuantity'], 2);
-            $product['priceAmount'] -= round($countedAmountToDiscountPerQuantity, 2);
+            $product['discountTotal'] += round($countedAmountToDiscountPerQuantity, 4);
+            $product['price'] -= round($countedAmountToDiscountPerQuantity * $product['promoQuantity'], 4);
+            $product['priceAmount'] -= round($countedAmountToDiscountPerQuantity, 4);
         }
 
         return $articleDataCollection;
@@ -1250,8 +1250,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     continue;
                 }
 
-                $basketAmount += round($product['originalPrice'], 2);
-                $productBasket += round($product['price'], 2);
+                $basketAmount += round($product['originalPrice'], 4);
+                $productBasket += round($product['price'], 4);
             }
         }
 
@@ -1266,9 +1266,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
                 $voucherDiscount = round($this->calculateArticleDiscountForVoucher(
                     $product, $currentVoucher, $vouchersData, $price, $articleDataCollection, $basketAmount, $productBasket
-                ), 2);
+                ), 4);
                 
-                $voucherDiscountPerQuantity = round($voucherDiscount / $product['promoQuantity'], 2);
+                $voucherDiscountPerQuantity = round($voucherDiscount / $product['promoQuantity'], 4);
 
                 $product['priceAmount'] -= $voucherDiscountPerQuantity;
                 $product['price'] -= $voucherDiscountPerQuantity * $product['promoQuantity'];
@@ -1412,7 +1412,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             if (count($voucherCollection) > 1) {
                 /** @var Voucher $currentVoucher */
                 foreach ($voucherCollection as $currentVoucher) {
-                    if (abs(round($currentVoucher->getValue(), 2, PHP_ROUND_HALF_UP)) != abs(round($currentOrderLine->getPrice(), 2, PHP_ROUND_HALF_UP))) {
+                    if (abs(round($currentVoucher->getValue(), 4, PHP_ROUND_HALF_UP)) != abs(round($currentOrderLine->getPrice(), 4, PHP_ROUND_HALF_UP))) {
                         continue;
                     }
 
@@ -1439,7 +1439,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 }
             }
 
-            $this->voucherDiscountValue += abs(round($currentOrderLine->getPrice(), 2, PHP_ROUND_HALF_UP));
+            $this->voucherDiscountValue += abs(round($currentOrderLine->getPrice(), 4, PHP_ROUND_HALF_UP));
         }
 
         $this->logDebug('voucherDiscountValue: ' . $this->voucherDiscountValue);
@@ -1458,7 +1458,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected function checkVoucherDiscountUsed(array $articleDataCollection)
     {
-        $diff = round(($this->voucherDiscountValue - $this->voucherDiscountUsed) / count($articleDataCollection), 2);
+        $diff = round(($this->voucherDiscountValue - $this->voucherDiscountUsed) / count($articleDataCollection), 4);
 
         if (abs($diff) > 0.01) {
             $orderRemark = $this->orderData['orderRemark'];
@@ -1486,7 +1486,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            if (round($articleData['quantity'] * 0.01, 2) > abs($diff)) {
+            if (round($articleData['quantity'] * 0.01, 4) > abs($diff)) {
                 continue;
             }
 
@@ -1649,7 +1649,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $orderLineDiscount = $discount / 100 * ($evaluateOrderLine * 100);
         $this->logDebug('orderSyncMapping::calculateDiscountForAbsoluteVoucher::orderLineDiscount ' . $orderLineDiscount);
 
-        return round($orderLineDiscount, 2, PHP_ROUND_HALF_UP);
+        return round($orderLineDiscount, 4, PHP_ROUND_HALF_UP);
     }
 
     /**
@@ -1664,7 +1664,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected function calculateDiscountForPercentVoucher($price, $discount)
     {
-        return round(($price / 100 * $discount), 2, PHP_ROUND_HALF_UP);
+        return round(($price / 100 * $discount), 4, PHP_ROUND_HALF_UP);
     }
 
     /**
@@ -1680,7 +1680,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             if (($currentDetail->getMode() == 4 || $currentDetail->getMode() == 3) && $currentDetail->getPrice() < 0) {
                 $voucherData[] = array(
                     'couponCode' => $currentDetail->getArticleName(),
-                    'couponDiscount' => abs(round($currentDetail->getPrice(), 6)),
+                    'couponDiscount' => abs(round($currentDetail->getPrice(), 4)),
                     'couponDiscountPercentage' => false,
                     'isMoneyVoucher' => false,
                 );
@@ -1692,7 +1692,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $voucherDiscount = $currentVoucher->getValue();
 
             if ((bool)$currentVoucher->getPercental()) {
-                $voucherPercentage = round($currentVoucher->getValue(), 6);
+                $voucherPercentage = round($currentVoucher->getValue(), 4);
 
                 foreach ($this->getModelEntity()->getOrder()->getDetails() as $currentDetail) {
                     if ($currentDetail->getMode() == 2 && $currentDetail->getArticleNumber() == $currentVoucher->getOrderCode()) {
@@ -1718,7 +1718,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $voucherData[] = array(
                 'couponCode' => $voucherCode,
-                'couponDiscount' => round($voucherDiscount, 6),
+                'couponDiscount' => round($voucherDiscount, 4),
                 'couponDiscountPercentage' => $voucherPercentage,
                 'isMoneyVoucher' => $isMoneyVoucher,
             );
