@@ -8,10 +8,11 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.12.3",
+    "currentVersion": "0.12.4",
 
     "changelog": {
         "de": {
+            "0.12.4": "custom products logging",
             "0.12.3": "change rounding to 4",
             "0.12.2": "SKR/GWW fixes",
             "0.12.1": "SKR/GWW shipment types added",

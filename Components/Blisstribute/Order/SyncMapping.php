@@ -756,8 +756,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 }
             }
 
-            $this->logDebug('got configuration articles ' . count($configurationArticles));
-
+            $this->logDebug('customProduct::got configuration articles ' . count($configurationArticles));
             foreach ($configurationArticles as $configurationArticle) {
                 $price = $configurationArticle->getPrice();
                 $quantity = $configurationArticle->getQuantity();
@@ -771,17 +770,18 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 if ($configurationArticle->getAttribute()->getSwagCustomProductsMode() == 2) {
                     $categoryType = $configurationArticle->getArticleName();
 
-                    $this->logDebug('load configuration by hash ' . $hash);
-
+                    $this->logDebug('customProduct::load configuration by hash ' . $hash);
                     $configurationData = $this->container->get('db')->fetchAll(
                         "SELECT configuration
                           FROM s_plugin_custom_products_configuration_hash
-
                           WHERE hash = :hash", array('hash' => $hash)
                     );
 
                     foreach ($configurationData as $currentConfiguration) {
                         $currentConfigurationData = json_decode($currentConfiguration['configuration'], true);
+                        $this->logDebug('customProduct::categoryType ' . $categoryType);
+                        $this->logDebug('customProduct::category json ' . json_encode($currentConfigurationData));
+
                         $configuration[] = array(
                             'category_type' => $categoryType, 'category' => trim(implode(',', array_shift($currentConfigurationData)))
                         );
