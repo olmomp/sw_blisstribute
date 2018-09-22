@@ -732,7 +732,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             WHERE articleID IN (" . implode(', ', $articleIds) . ")"
         );
     }
-    
+
     public function applyCustomProducts($articleData, $product, $basketItems)
     {
         // check if plugin SwagCustomProducts is installed
@@ -740,16 +740,16 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'name' => 'SwagCustomProducts',
             'active' => true
         ]);
-        
+
         if (!$plugin) {
             return $articleData;
         }
-        
+
         if ($product->getAttribute()->getSwagCustomProductsMode() == 1) {
             $hash = $product->getAttribute()->getSwagCustomProductsConfigurationHash();
-            $configuration = [];
+            $orderLineConfiguration = [];
             $configurationArticles = [];
-            
+
             foreach ($basketItems as $product) {
                 if ($product->getAttribute()->getSwagCustomProductsConfigurationHash() == $hash && in_array($product->getAttribute()->getSwagCustomProductsMode(), [2,3])) {
                     $configurationArticles[] = $product;
@@ -760,43 +760,51 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             foreach ($configurationArticles as $configurationArticle) {
                 $price = $configurationArticle->getPrice();
                 $quantity = $configurationArticle->getQuantity();
-                    
+
                 $articleData['originalPriceAmount'] += $price;
                 $articleData['originalPrice'] += $price * $quantity;
-                $articleData['priceAmount'] += round($price, 4);
-                $articleData['price'] += round(($price * $quantity), 4);
+                $articleData['priceAmount'] += round($price, 6);
+                $articleData['price'] += round(($price * $quantity), 6);
 
-                // todo ultra dirty, but should work for gusti
                 if ($configurationArticle->getAttribute()->getSwagCustomProductsMode() == 2) {
                     $categoryType = $configurationArticle->getArticleName();
 
                     $this->logDebug('customProduct::load configuration by hash ' . $hash);
-                    $configurationData = $this->container->get('db')->fetchAll(
+                    $configuration = $this->container->get('db')->fetchOne(
                         "SELECT configuration
                           FROM s_plugin_custom_products_configuration_hash
                           WHERE hash = :hash", array('hash' => $hash)
                     );
+                    $templates = $this->container->get('db')->fetchOne(
+                        "SELECT template
+                          FROM s_plugin_custom_products_configuration_hash
+                          WHERE hash = :hash", array('hash' => $hash)
+                    );
 
-                    foreach ($configurationData as $currentConfiguration) {
-                        $currentConfigurationData = json_decode($currentConfiguration['configuration'], true);
-                        $this->logDebug('customProduct::categoryType ' . $categoryType);
-                        $this->logDebug('customProduct::category json ' . json_encode($currentConfigurationData));
+                    $currentConfigurationData = json_decode($configuration, true);
+                    $templates = json_decode($templates, true);
 
-                        $configuration[] = array(
-                            'category_type' => $categoryType, 'category' => trim(implode(',', array_shift($currentConfigurationData)))
-                        );
+                    $value = '';
+                    foreach ($templates as $currentTemplate) {
+                        if ($currentTemplate['name'] == $categoryType) {
+                            $this->logDebug('template found ' . $currentTemplate['id']);
+                            $value = trim($currentConfigurationData[$currentTemplate['id']][0]);
+
+                            break;
+                        }
                     }
 
+                    $orderLineConfiguration[] = array('category_type' => $categoryType, 'category' => $value);
                 }
             }
-            
-            if (!empty($configuration)) {
-                $articleData['configuration'] = json_encode($configuration);
+
+            if (!empty($orderLineConfiguration)) {
+                $articleData['configuration'] = json_encode($orderLineConfiguration);
             }
-            
+
             return $articleData;
         }
-        
+
         return $articleData;
     }
 
