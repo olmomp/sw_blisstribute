@@ -767,9 +767,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $articleData['price'] += round(($price * $quantity), 6);
 
                 if ($configurationArticle->getAttribute()->getSwagCustomProductsMode() == 2) {
-                    $categoryType = $configurationArticle->getArticleName();
-
-                    $this->logDebug('customProduct::load configuration by hash ' . $hash);
+                    $this->logDebug('customProduct::load configuration by hash %s', $hash);
                     $configuration = $this->container->get('db')->fetchOne(
                         "SELECT configuration
                           FROM s_plugin_custom_products_configuration_hash
@@ -781,20 +779,19 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                           WHERE hash = :hash", array('hash' => $hash)
                     );
 
+                    $this->logDebug('got configuration ' . $configuration);
                     $currentConfigurationData = json_decode($configuration, true);
-                    $templates = json_decode($templates, true);
 
-                    $value = '';
-                    foreach ($templates as $currentTemplate) {
-                        if ($currentTemplate['name'] == $categoryType) {
-                            $this->logDebug('template found ' . $currentTemplate['id']);
-                            $value = trim($currentConfigurationData[$currentTemplate['id']][0]);
+                    $this->logDebug('got template ' . $templates);
+                    $templateCollection = json_decode($templates, true);
 
-                            break;
+                    foreach ($templateCollection as $currentTemplate) {
+                        $value = trim($currentConfigurationData[$currentTemplate['id']][0]);
+                        if ($value != '') {
+                            $orderLineConfiguration[] = array('category_type' => $currentTemplate['name'], 'category' => $value);
                         }
                     }
 
-                    $orderLineConfiguration[] = array('category_type' => $categoryType, 'category' => $value);
                 }
             }
 
