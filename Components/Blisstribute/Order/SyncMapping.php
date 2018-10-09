@@ -212,9 +212,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $orderRemark[] = 'SWP - Bestellung gesperrt.';
         }
 
-        // todo change to config decision
-        // $customerNumber = $customer->getBilling()->getNumber();
-        $customerNumber = $customer->getEmail();
+        $customerNumber = '';
+        switch ($this->getConfig()['blisstribute-order-sync-external-customer-number']) {
+            case 2:
+                $customerNumber = $customer->getNumber();
+                break;
+            case 1:
+            default:
+                $customerNumber = $customer->getEmail();
+        }
 
         $isB2BOrder = false;
         $company = trim($billingAddress->getCompany());
