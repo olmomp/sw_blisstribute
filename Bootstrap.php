@@ -1215,8 +1215,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 $elementModel->addTranslation($translationModel);
             }
         }
-        
-        $form->save();    
     }
 
     /**
