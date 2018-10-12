@@ -252,6 +252,22 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+        if (version_compare($version, '0.12.7', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'select',
+                'blisstribute-order-sync-external-customer-number',
+                [
+                    'label' => 'Externe Kundennummer',
+                    'description' => 'Definiert, welches Feld für die externe Kundennummer im VHS verwendet werden soll.',
+                    'store' => [
+                        [1, 'E-Mail'],
+                        [2, 'Kundennummer']
+                    ],
+                    'value' => 1
+                ]
+            );
+        }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
@@ -1156,6 +1172,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => 1
             ]
         );
+        $form->setElement(
+            'select',
+            'blisstribute-order-sync-external-customer-number',
+            [
+                'label' => 'Externe Kundennummer',
+                'description' => 'Definiert, welches Feld für die externe Kundennummer im VHS verwendet werden soll.',
+                'store' => [
+                    [1, 'E-Mail'],
+                    [2, 'Kundennummer']
+                ],
+                'value' => 1
+            ]
+        );
     }
     
     /**
@@ -1174,7 +1203,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'blisstribute-soap-protocol' => 'protocol',
                 'blisstribute-soap-host' => 'host',
                 'blisstribute-soap-port' => 'port',
-                        'blisstribute-soap-client' => 'soap-client',
+                'blisstribute-soap-client' => 'soap-client',
                 'blisstribute-soap-username' => 'soap-username',
                 'blisstribute-soap-password' => 'soap-password',
                 'blisstribute-http-login' => 'http-username',
