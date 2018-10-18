@@ -792,10 +792,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     $templateCollection = json_decode($templates, true);
 
                     foreach ($templateCollection as $currentTemplate) {
+                        if ($currentTemplate['name'] != $configurationArticle->getArticleName()) {
+                            continue;
+                        }
+
                         $value = trim($currentConfigurationData[$currentTemplate['id']][0]);
                         if ($value != '') {
                             $orderLineConfiguration[] = array('category_type' => $currentTemplate['name'], 'category' => $value);
                         }
+
                     }
 
                 }
