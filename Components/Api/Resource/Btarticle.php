@@ -294,6 +294,12 @@ class Btarticle extends BtArticleResource implements BatchInterface
             }
         }
 
+        // maybe a doctrine fix
+        // always create a changeset
+        $name = $article->getName();
+        $article->setName('dummy');
+        $article->setName($name);
+
         try {
             $this->logDebug(sprintf('%s - persist detail', $detail->getId()));
             $this->getManager()->persist($detail);
