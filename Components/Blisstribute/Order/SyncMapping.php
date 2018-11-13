@@ -762,6 +762,23 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 }
             }
 
+            $this->logDebug('customProduct::load configuration by hash %s', $hash);
+            $row = $this->container->get('db')->fetchRow(
+                "SELECT configuration, template
+                          FROM s_plugin_custom_products_configuration_hash
+                          WHERE hash = :hash", array('hash' => $hash)
+            );
+
+            if (empty($configurationArticles) || !$row) {
+                return $articleData;
+            }
+
+            $this->logDebug('got configuration ' . $row['configuration']);
+            $currentConfigurationData = json_decode($row['configuration'], true);
+
+            $this->logDebug('got template ' . $row['template']);
+            $templateCollection = json_decode($row['template'], true);
+
             $this->logDebug('customProduct::got configuration articles ' . count($configurationArticles));
             foreach ($configurationArticles as $configurationArticle) {
                 $price = $configurationArticle->getPrice();
@@ -773,26 +790,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $articleData['price'] += round(($price * $quantity), 6);
 
                 if ($configurationArticle->getAttribute()->getSwagCustomProductsMode() == 2) {
-                    $this->logDebug('customProduct::load configuration by hash %s', $hash);
-                    $configuration = $this->container->get('db')->fetchOne(
-                        "SELECT configuration
-                          FROM s_plugin_custom_products_configuration_hash
-                          WHERE hash = :hash", array('hash' => $hash)
-                    );
-                    $templates = $this->container->get('db')->fetchOne(
-                        "SELECT template
-                          FROM s_plugin_custom_products_configuration_hash
-                          WHERE hash = :hash", array('hash' => $hash)
-                    );
-
-                    $this->logDebug('got configuration ' . $configuration);
-                    $currentConfigurationData = json_decode($configuration, true);
-
-                    $this->logDebug('got template ' . $templates);
-                    $templateCollection = json_decode($templates, true);
-
                     foreach ($templateCollection as $currentTemplate) {
-                        if ($currentTemplate['name'] != $configurationArticle->getArticleName()) {
+                        if ($currentTemplate['id'] != $configurationArticle->getArticleId()) {
                             continue;
                         }
 
@@ -800,9 +799,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                         if ($value != '') {
                             $orderLineConfiguration[] = array('category_type' => $currentTemplate['name'], 'category' => $value);
                         }
-
                     }
-
                 }
             }
 
