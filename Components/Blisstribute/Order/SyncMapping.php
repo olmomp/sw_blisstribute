@@ -518,6 +518,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $basketItems = $swOrder->getDetails();
         $orderId = $swOrder->getId();
 
+        $isB2BOrder = false;
+        $company = trim($swOrder->getBilling()->getCompany());
+        if ($company != '' && $company != 'x' && $company != '*' && $company != '/' && $company != '-') {
+            $isB2BOrder = true;
+        }
+
         $promotions = [];
         $orderNumbers = [];
         $shopwareDiscountsAmount = 0;
@@ -528,8 +534,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $customerGroupId = $swOrder->getCustomer()->getGroup()->getId();
         $shopId =  $swOrder->getShop()->getId();
 
+        /** @var Detail $product */
         foreach ($basketItems as $product) {
-            $price = $product->getPrice();
+            $priceNet = $price = 0;
+            if ($isB2BOrder) {
+                $priceNet = ($product->getPrice() / (100 + $product->getTaxRate())) * 100;
+            } else {
+                $price = $product->getPrice();
+            }
+
             $quantity = $product->getQuantity();
             $mode = $product->getMode();
             $articleNumber = $product->getArticleNumber();
@@ -570,7 +583,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'promoQuantity' => $quantity,
                 'quantity' => $quantity,
                 'priceAmount' => round($price, 4), // single article price
-                'price' => round(($price * $quantity), 4), //round($price * $quantity, 6), // article price with consideration of the quantities
+                'priceAmountNet' => round($priceNet, 4), // single article price
+                'price' => round(($price * $quantity), 4),
+                'priceNet' => round(($priceNet * $quantity), 4),
                 'vatRate' => round($product->getTaxRate(), 4),
                 'title' => $product->getArticleName(),
                 'discountTotal' => 0,
