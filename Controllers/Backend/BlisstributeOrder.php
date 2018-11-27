@@ -140,24 +140,37 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
 
         $this->View()->assign(array(
             'success' => true,
-            'message' => 'foobar'
+            'message' => 'Transfer-Sperren wurden zurückgesetzt.'
         ));
     }
 
     /**
-     * resets the order sync locks
-     *
      * @return void
      */
     public function resetOrderSyncAction()
     {
         $blisstributeOrderId = $this->Request()->getParam('id');
-        $sql = 'UPDATE s_plugin_blisstribute_orders set transfer_status = 1 WHERE s_order_id = :orderId';
-        Shopware()->Db()->query($sql, array('orderId' => $blisstributeOrderId));
+        $sql = 'UPDATE s_plugin_blisstribute_orders set transfer_status = 1 WHERE id = :btOrderId';
+        Shopware()->Db()->query($sql, array('btOrderId' => $blisstributeOrderId));
 
         $this->View()->assign(array(
             'success' => true,
-            'order_id' => $blisstributeOrderId
+            'btOrderId' => $blisstributeOrderId
+        ));
+    }
+
+    /**
+     * @return void
+     */
+    public function updateOrderSyncAction()
+    {
+        $blisstributeOrderId = $this->Request()->getParam('id');
+        $sql = 'UPDATE s_plugin_blisstribute_orders set transfer_status = 3 WHERE id = :btOrderId';
+        Shopware()->Db()->query($sql, array('btOrderId' => $blisstributeOrderId));
+
+        $this->View()->assign(array(
+            'success' => true,
+            'btOrderId' => $blisstributeOrderId
         ));
     }
 

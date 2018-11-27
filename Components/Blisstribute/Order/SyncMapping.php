@@ -139,7 +139,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected function buildBaseData()
     {
-        $this->logDebug('buildBaseData start');
+        $this->logDebug('orderSyncMapping::buildBaseData::start');
         // determine used vouchers
         $this->determineVoucherDiscount();
 
@@ -151,10 +151,33 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $this->orderData['orderLines'] = $this->buildArticleData();
         $this->orderData['orderCoupons'] = $this->buildCouponData();
 
-        $this->logDebug('buildBaseData done');
-        $this->logDebug('result::' . json_encode($this->orderData));
+        $this->logDebug('orderSyncMapping::buildBaseData::done');
+        $this->logDebug('orderSyncMapping::buildBaseData::result:' . json_encode($this->orderData));
+
+        $order = $this->getModelEntity()->getOrder();
+        $originalTotal = round($order->getInvoiceAmount(), 2);
+        $newOrderTotal = round($this->_getOrderTotal(), 2);
+        if ($originalTotal != $newOrderTotal) {
+            $this->logDebug(sprintf('orderSyncMapping::buildBaseData::amount differs %s to %s', $originalTotal, $newOrderTotal));
+            $this->orderData['orderRemark'] .= 'RABATT PRÜFEN! (ORIG ' . $originalTotal .')';
+        }
 
         return $this->orderData;
+    }
+
+    protected function _getOrderTotal()
+    {
+        $orderTotal = round($this->orderData['payment']['total'], 4);
+        $orderTotal += round($this->orderData['shipmentTotal'], 4);
+        foreach ($this->orderData['orderLines'] as $currentOrderLine) {
+            if ($currentOrderLine['isB2BOrder']) {
+                $orderTotal += round((($currentOrderLine['priceNet'] / $currentOrderLine['quantity']) / 100) * (100 + $currentOrderLine['vatRate']), 4);
+            } else {
+                $orderTotal += round($currentOrderLine['price'], 4);
+            }
+        }
+
+        return $orderTotal;
     }
 
     public function __construct()
@@ -518,6 +541,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $basketItems = $swOrder->getDetails();
         $orderId = $swOrder->getId();
 
+        $isB2BOrder = false;
+        $company = trim($swOrder->getBilling()->getCompany());
+        if ($company != '' && $company != 'x' && $company != '*' && $company != '/' && $company != '-') {
+            $isB2BOrder = true;
+        }
+
         $promotions = [];
         $orderNumbers = [];
         $shopwareDiscountsAmount = 0;
@@ -528,8 +557,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $customerGroupId = $swOrder->getCustomer()->getGroup()->getId();
         $shopId =  $swOrder->getShop()->getId();
 
+        /** @var Detail $product */
         foreach ($basketItems as $product) {
-            $price = $product->getPrice();
+            $priceNet = $price = 0;
+            if ($isB2BOrder) {
+                $priceNet = ($product->getPrice() / (100 + $product->getTaxRate())) * 100;
+            } else {
+                $price = $product->getPrice();
+            }
+
             $quantity = $product->getQuantity();
             $mode = $product->getMode();
             $articleNumber = $product->getArticleNumber();
@@ -570,7 +606,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'promoQuantity' => $quantity,
                 'quantity' => $quantity,
                 'priceAmount' => round($price, 4), // single article price
-                'price' => round(($price * $quantity), 4), //round($price * $quantity, 6), // article price with consideration of the quantities
+                'priceAmountNet' => round($priceNet, 4), // single article price
+                'price' => round(($price * $quantity), 4),
+                'priceNet' => round(($priceNet * $quantity), 4),
                 'vatRate' => round($product->getTaxRate(), 4),
                 'title' => $product->getArticleName(),
                 'discountTotal' => 0,
@@ -833,6 +871,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     $promotion = $this->container->get('models')->getRepository('\Shopware\CustomModels\SwagPromotion\Promotion')->findOneBy(['number' => $promotionItem->getArticleNumber()]);
                 } else {
                     $this->_newPromotionSuite = true;
+                    /** @var \SwagPromotion\Models\Promotion $promotion */
                     $promotion = $this->container->get('models')->getRepository('\SwagPromotion\Models\Promotion')->findOneBy(['number' => $promotionItem->getArticleNumber()]);
                 }
 

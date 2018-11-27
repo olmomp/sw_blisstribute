@@ -113,7 +113,12 @@ Ext.define('Shopware.apps.BlisstributeArticle.view.list.Article', {
         items = Ext.Array.insert(
             items,
             0,
-            [ me.createResetLockButton(), me.createTriggerSyncButton(), me.createSyncButton() ]
+            [
+                me.createTriggerSyncButton(),
+                me.createSyncButton(),
+                { xtype: 'tbseparator' },
+                me.createResetLockButton()
+            ]
         );
 
         return items;
@@ -149,7 +154,7 @@ Ext.define('Shopware.apps.BlisstributeArticle.view.list.Article', {
             text: 'Jetzt übertragen',
             scope: this,
             handler: function() {
-                me.fireEvent('sync', me);
+                me.fireEvent('btarticle-sync', me);
             }
         });
     }

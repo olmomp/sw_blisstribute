@@ -4,6 +4,7 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
     region: 'center',
     syncButton: null,
     resetSyncButton: null,
+    updateSyncButton: null,
     resetLockButton: null,
 
     /**
@@ -145,7 +146,14 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
         items = Ext.Array.insert(
             items,
             0,
-            [ me.createResetLockButton(), me.createSyncButton(),me.createResetSyncButton() ]
+            [
+                me.createSyncButton(),
+                { xtype: 'tbseparator' },
+                me.createResetSyncButton(),
+                me.createUpdateSyncButton(),
+                { xtype: 'tbseparator' },
+                me.createResetLockButton()
+            ]
         );
 
         return items;
@@ -169,7 +177,7 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
             text: 'Jetzt übertragen',
             scope: this,
             handler: function() {
-                me.fireEvent('sync', me);
+                me.fireEvent('btorder-sync', me);
             }
         });
     },
@@ -178,10 +186,22 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
         var me = this;
         return this.resetSyncButton = Ext.create('Ext.button.Button', {
             disabled: true,
-            text: 'Übertragung zurücksetzen',
+            text: 'Als "Nicht übertragen" markieren',
             scope: this,
             handler: function() {
-                me.fireEvent('reset-sync', me);
+                me.fireEvent('reset-btorder-sync', me);
+            }
+        });
+    },
+
+    createUpdateSyncButton: function() {
+        var me = this;
+        return this.updateSyncButton = Ext.create('Ext.button.Button', {
+            disabled: true,
+            text: 'Als "übertragen" markieren',
+            scope: this,
+            handler: function() {
+                me.fireEvent('update-btorder-sync', me);
             }
         });
     }
