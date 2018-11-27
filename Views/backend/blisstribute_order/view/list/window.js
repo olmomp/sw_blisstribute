@@ -2,6 +2,7 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Window', {
     extend: 'Shopware.window.Listing',
     alias: 'widget.blisstribute-order-list-window',
     height: 450,
+    width: 1280,
     title : '{s name=window_title}Blisstribute Bestellexport Übersicht{/s}',
 
     configure: function() {

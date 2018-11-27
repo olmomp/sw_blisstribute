@@ -8,14 +8,19 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.13.2",
+    "currentVersion": "0.14.0",
 
     "changelog": {
         "de": {
+            "0.14.0": "add action to manually set order transferred / mark as not transferred",
+            "0.14.0": "fixing article / order sync window behavior",
+            "0.14.0": "fixing blisstribute article sync status filter",
+            "0.14.0": "check for sw 5.5.3",
+            "0.13.3": "custom products fix (by https://github.com/pahanium)",
             "0.13.2": "hunting the doctrine bug",
             "0.13.1": "multiple customizations for one product",
             "0.13.0": "check for sw 5.5.1",
-            "0.12.7": "config for external customer number",
+            "0.12.7": "config for external customer number (by SM)",
             "0.12.6": "another custom products fix",
             "0.12.5": "custom products fixes",
             "0.12.4": "custom products logging",
@@ -68,7 +73,7 @@
 
     "compatibility": {
         "minimumVersion": "5.2.0",
-        "maximumVersion": "5.5.1",
+        "maximumVersion": "5.5.3",
         "blacklist": [
         ]
     }

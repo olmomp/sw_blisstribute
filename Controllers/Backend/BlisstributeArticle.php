@@ -75,7 +75,6 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
 
         if (!is_null($filters)) {
             foreach ($filters as $filter) {
-                \Shopware()->PluginLogger()->log(Monolog\Logger::INFO, var_export($filter, true));
                 if ($filter['property'] == 'search') {
                     $value = $filter['value'];
 
@@ -87,6 +86,7 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
                         $builder->setParameter('search', $search);
                     }
                 }
+
                 if ($filter['property'] == 'triggerSync') {
                     $value = $filter['value'] === true;
                     $builder->andWhere('blisstribute_article.triggerSync = ' . (int)$value);
@@ -105,34 +105,47 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
      */
     protected function getFilterConditions($filters, $model, $alias, $whiteList = array())
     {
+        \Shopware()->PluginLogger()->log(Monolog\Logger::INFO, json_encode($filters));
+
         if (count($filters) == 0) {
             return array();
         }
 
         $conditionCollection = array();
-        $conditionCollection[] = array(
-            'property' => 'attribute.blisstributeVhsNumber',
-            'operator' => 'OR',
-            'value' => '%' . $filters[0]['value'] . '%'
-        );
+        foreach ($filters as $currentFilter) {
+            if ($currentFilter['property'] === 'triggerSync') {
+                $conditionCollection[] = array(
+                    'property' => 'blisstribute_article.triggerSync',
+                    'operator' => 'AND',
+                    'expression' => '=',
+                    'value' => (int)$currentFilter['value']
+                );
+            } else {
+                $conditionCollection[] = array(
+                    'property' => 'attribute.blisstributeVhsNumber',
+                    'operator' => 'OR',
+                    'value' => '%' . $filters[0]['value'] . '%'
+                );
 
-        $conditionCollection[] = array(
-            'property' => 'mainDetail.number',
-            'operator' => 'OR',
-            'value' => '%' . $filters[0]['value'] . '%'
-        );
+                $conditionCollection[] = array(
+                    'property' => 'mainDetail.number',
+                    'operator' => 'OR',
+                    'value' => '%' . $filters[0]['value'] . '%'
+                );
 
-        $conditionCollection[] = array(
-            'property' => 'mainDetail.ean',
-            'operator' => 'OR',
-            'value' => '%' . $filters[0]['value'] . '%'
-        );
+                $conditionCollection[] = array(
+                    'property' => 'mainDetail.ean',
+                    'operator' => 'OR',
+                    'value' => '%' . $filters[0]['value'] . '%'
+                );
 
-        $conditionCollection[] = array(
-            'property' => 'article.name',
-            'operator' => 'OR',
-            'value' => '%' . $filters[0]['value'] . '%'
-        );
+                $conditionCollection[] = array(
+                    'property' => 'article.name',
+                    'operator' => 'OR',
+                    'value' => '%' . $filters[0]['value'] . '%'
+                );
+            }
+        }
 
         return $conditionCollection;
     }

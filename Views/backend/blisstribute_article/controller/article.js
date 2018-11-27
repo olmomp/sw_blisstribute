@@ -7,7 +7,7 @@ Ext.define('Shopware.apps.BlisstributeArticle.controller.Article', {
             'blisstribute-article-listing-grid': {
                 'blisstribute-article-selection-changed': me.onSelectionChange,
                 'trigger-sync': me.displayTriggerProgress,
-                'sync': me.displaySyncProgress,
+                'btarticle-sync': me.displaySyncProgress,
                 'edit': me.onEdit,
                 'openArticle': me.onOpenArticle,
                 'reset-btarticle-lock': me.onResetBtArticleLock
@@ -15,7 +15,7 @@ Ext.define('Shopware.apps.BlisstributeArticle.controller.Article', {
         });
 
         Shopware.app.Application.on('blisstribute-trigger-sync-process', me.onTriggerSync);
-        Shopware.app.Application.on('blisstribute-sync-process', me.onSync);
+        Shopware.app.Application.on('blisstribute-article-sync-process', me.onSync);
 
         me.mainWindow = me.getView('list.Window').create({ }).show();
     },
@@ -134,10 +134,29 @@ Ext.define('Shopware.apps.BlisstributeArticle.controller.Article', {
     },
 
     /**
+     * display progress window for batch actions
+     *
+     * @param grid
+     * @param task
+     * @param config
+     */
+    displayProgressWindow: function(grid, task, config) {
+        Ext.create('Shopware.window.Progress', {
+            title: config.title,
+            configure: function() {
+                return {
+                    tasks: [task],
+                    infoText: config.info
+                }
+            }
+        }).show();
+    },
+
+    /**
      * display progress window for trigger sync action
      * @param grid
      */
-    displayTriggerProgress: function(grid) {
+    displayTriggerProgress: function(grid, task, config) {
         var selection = grid.getSelectionModel().getSelection();
 
         if (selection.length <= 0) return;
@@ -146,7 +165,11 @@ Ext.define('Shopware.apps.BlisstributeArticle.controller.Article', {
             event: 'blisstribute-trigger-sync-process',
             data: selection,
             text: 'Trigger sync [0] von [1]'
-        }, 'Blisstribute trigger sync');
+        }, {
+            title: 'Markierung der ausgew. Artikel',
+            info: 'Du kannst über den <b><i>`Abbrechen`</i></b> Button die Markierung abbrechen.<br /><br />' +
+                'Abhängig von den zu übermittelnden Daten, kann dieser Prozess ein bisschen länger dauern.'
+        });
     },
 
     /**
@@ -155,32 +178,20 @@ Ext.define('Shopware.apps.BlisstributeArticle.controller.Article', {
      */
     displaySyncProgress: function(grid) {
         var selection = grid.getSelectionModel().getSelection();
-
-        if (selection.length <= 0) return;
+        if (selection.length <= 0) {
+            return;
+        }
 
         this.displayProgressWindow(grid, {
-            event: 'blisstribute-sync-process',
+            event: 'blisstribute-article-sync-process',
             data: selection,
             text: 'Sync [0] von [1]'
-        }, 'Blisstribute sync');
+        }, {
+            title: 'Übermittlung der ausgew. Artikel zu Blisstribute',
+            info: 'Du kannst über den <b><i>`Abbrechen`</i></b> Button die Übermittlung abbrechen.<br /><br />' +
+                'Abhängig von den zu übermittelnden Daten, kann dieser Prozess ein bisschen länger dauern.'
+        });
     },
 
-    /**
-     * display progress window for batch actions
-     * @param grid
-     * @param task
-     */
-    displayProgressWindow: function(grid, task, info) {
-        Ext.create('Shopware.window.Progress', {
-            title: 'Batch processing',
-            configure: function() {
-                return {
-                    tasks: [task],
-                    infoText: '<h2>' + info + '</h2>' +
-                    'You can use the <b><i>`Cancel process`</i></b> button the cancel the process. ' +
-                    'Depending on the amount of the data set, this process might take a while.'
-                }
-            }
-        }).show();
-    }
+
 });

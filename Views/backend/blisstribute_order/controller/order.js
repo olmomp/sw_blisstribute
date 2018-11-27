@@ -6,15 +6,23 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
         me.control({
             'blisstribute-order-listing-grid': {
                 'blisstribute-order-selection-changed': me.onSelectionChange,
-                'sync': me.displaySyncProgress,
                 'reset-btorder-lock': me.onResetBtOrderLock,
-                'reset-sync': me.onResetOrderSync,
                 'edit': me.onEdit,
-                'openOrder': me.onOpenOrder
+                'openOrder': me.onOpenOrder,
+
+                'btorder-sync': me.displaySyncProgress, //triggers blisstribute-order-sync-process
+
+                'reset-btorder-sync': me.displayResetSyncProgress, //triggers blisstribute-order-reset-sync-process
+                'update-btorder-sync': me.displayUpdateSyncProgress, //triggers blisstribute-order-update-sync-process
+
             }
         });
 
-        Shopware.app.Application.on('blisstribute-sync-process', me.onSync);
+        Shopware.app.Application.on('blisstribute-order-sync-process', me.onSync);
+        Shopware.app.Application.on('blisstribute-order-reset-sync-process', me.onResetOrderSync);
+        Shopware.app.Application.on('blisstribute-order-update-sync-process', me.onUpdateOrderSync);
+
+
         me.mainWindow = me.getView('list.Window').create({ }).show();
     },
 
@@ -67,31 +75,12 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
         if (selModel.hasSelection()) {
             grid.syncButton.enable();
             grid.resetSyncButton.enable();
+            grid.updateSyncButton.enable();
         } else {
             grid.syncButton.disable();
             grid.resetSyncButton.disable();
+            grid.updateSyncButton.disable();
         }
-    },
-
-    /**
-     * event listener for sync batch action
-     *
-     * @param task
-     * @param record
-     * @param callback
-     */
-    onSync: function(task, record, callback) {
-        console.log(task, record, callback);
-        Ext.Ajax.request({
-            url: '{url controller=BlisstributeOrder action=sync}',
-            method: 'POST',
-            params: {
-                id: record.get('id')
-            },
-            success: function(response, operation) {
-                callback(response, operation);
-            }
-        });
     },
 
     /**
@@ -114,24 +103,22 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
     },
 
     /**
-     * event listener for trigger sync batch action
+     * display progress window for batch actions
      *
+     * @param grid
      * @param task
-     * @param record
-     * @param callback
+     * @param config
      */
-    onResetOrderSync: function(task, record, callback) {
-        console.log(task, record, callback);
-        Ext.Ajax.request({
-            url: '{url controller=BlisstributeOrder action=resetOrderSync}',
-            method: 'POST',
-            params: {
-                id: record.get('id')
-            },
-            success: function(response, operation) {
-                Shopware.Notification.createGrowlMessage('Erfolg','Der Bestell-Sync-Status wurde erfolgreich zurückgesetzt');
+    displayProgressWindow: function(grid, task, config) {
+        Ext.create('Shopware.window.Progress', {
+            title: config.title,
+            configure: function() {
+                return {
+                    tasks: [task],
+                    infoText: config.info
+                }
             }
-        });
+        }).show();
     },
 
     /**
@@ -141,32 +128,121 @@ Ext.define('Shopware.apps.BlisstributeOrder.controller.Order', {
      */
     displaySyncProgress: function(grid) {
         var selection = grid.getSelectionModel().getSelection();
-        if (selection.length <= 0) return;
+        if (selection.length <= 0) {
+            return;
+        }
 
         this.displayProgressWindow(grid, {
-            event: 'blisstribute-sync-process',
+            event: 'blisstribute-order-sync-process',
             data: selection,
             text: 'Sync [0] von [1]'
-        }, 'Übermittlung zu Blisstribute');
+        }, {
+            title: 'Übermittlung der ausgew. Bestellungen zu Blisstribute',
+            info: 'Du kannst über den <b><i>`Abbrechen`</i></b> Button die Übermittlung abbrechen.<br /><br />' +
+                'Abhängig von den zu übermittelnden Daten, kann dieser Prozess ein bisschen länger dauern.'
+        });
     },
 
     /**
-     * display progress window for batch actions
+     * event listener for sync batch action
+     *
+     * @param task
+     * @param record
+     * @param callback
+     */
+    onSync: function(task, record, callback) {
+        Ext.Ajax.request({
+            url: '{url controller=BlisstributeOrder action=sync}',
+            method: 'POST',
+            params: {
+                id: record.get('id')
+            },
+            success: function(response, operation) {
+                callback(response, operation);
+            }
+        });
+    },
+
+
+    /**
+     * display progress window for sync action
      *
      * @param grid
-     * @param task
      */
-    displayProgressWindow: function(grid, task, info) {
-        Ext.create('Shopware.window.Progress', {
-            title: 'In Übermittlung',
-            configure: function() {
-                return {
-                    tasks: [task],
-                    infoText: '<h2>' + info + '</h2>' +
-                    'Du kannst über den <b><i>`Abbrechen`</i></b> Button die Übermittlung abbrechen.' +
-                    'Abhängig von den zu übermittelnden Daten, kann dieser Prozess ein bisschen länger dauern.'
-                }
+    displayResetSyncProgress: function(grid) {
+        var selection = grid.getSelectionModel().getSelection();
+        if (selection.length <= 0) {
+            return;
+        }
+
+        this.displayProgressWindow(grid, {
+            event: 'blisstribute-order-reset-sync-process',
+            data: selection,
+            text: 'Markierung [0] von [1]'
+        }, {
+            title: 'Die ausgew. Bestellungen werden als "nicht übertragen" markiert',
+            info: 'Du kannst über den <b><i>`Abbrechen`</i></b> Button die Markierung abbrechen.<br /><br />' +
+                'Abhängig von den zu übermittelnden Daten, kann dieser Prozess ein bisschen länger dauern.'
+        });
+    },
+
+    /**
+     * @param task
+     * @param record
+     * @param callback
+     */
+    onResetOrderSync: function(task, record, callback) {
+        Ext.Ajax.request({
+            url: '{url controller=BlisstributeOrder action=resetOrderSync}',
+            method: 'POST',
+            params: {
+                id: record.get('id')
+            },
+            success: function(response, operation) {
+                callback(response, operation);
             }
-        }).show();
-    }
+        });
+    },
+
+    /**
+     * display progress window for sync action
+     *
+     * @param grid
+     */
+    displayUpdateSyncProgress: function(grid) {
+        var selection = grid.getSelectionModel().getSelection();
+        if (selection.length <= 0) {
+            return;
+        }
+
+        this.displayProgressWindow(grid, {
+            event: 'blisstribute-order-update-sync-process',
+            data: selection,
+            text: 'Markierung [0] von [1]'
+        }, {
+            title: 'Die ausgew. Bestellungen werden als "übertragen" markiert',
+            info: 'Du kannst über den <b><i>`Abbrechen`</i></b> Button die Markierung abbrechen.<br /><br />' +
+                'Abhängig von den zu übermittelnden Daten, kann dieser Prozess ein bisschen länger dauern.'
+        });
+    },
+
+    /**
+     * @param task
+     * @param record
+     * @param callback
+     */
+    onUpdateOrderSync: function(task, record, callback) {
+        Ext.Ajax.request({
+            url: '{url controller=BlisstributeOrder action=updateOrderSync}',
+            method: 'POST',
+            params: {
+                id: record.get('id')
+            },
+            success: function(response, operation) {
+                callback(response, operation);
+            }
+        });
+    },
+
+
 });
