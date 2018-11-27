@@ -170,11 +170,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $orderTotal = round($this->orderData['payment']['total'], 4);
         $orderTotal += round($this->orderData['shipmentTotal'], 4);
         foreach ($this->orderData['orderLines'] as $currentOrderLine) {
-            if ($currentOrderLine['isB2BOrder']) {
-                $orderTotal += round((($currentOrderLine['priceNet'] / $currentOrderLine['quantity']) / 100) * (100 + $currentOrderLine['vatRate']), 4);
-            } else {
+            //enable after bliss release
+            //if ($currentOrderLine['isB2BOrder']) {
+            //    $orderTotal += round((($currentOrderLine['priceNet'] / $currentOrderLine['quantity']) / 100) * (100 + $currentOrderLine['vatRate']), 4);
+            //} else {
                 $orderTotal += round($currentOrderLine['price'], 4);
-            }
+            //}
         }
 
         return $orderTotal;
@@ -561,7 +562,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         foreach ($basketItems as $product) {
             $priceNet = $price = 0;
             if ($isB2BOrder) {
-                $priceNet = ($product->getPrice() / (100 + $product->getTaxRate())) * 100;
+                //enable after bliss release
+                //$priceNet = ($product->getPrice() / (100 + $product->getTaxRate())) * 100;
+                $price = $product->getPrice();
             } else {
                 $price = $product->getPrice();
             }
