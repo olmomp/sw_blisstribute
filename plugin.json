@@ -8,10 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.14.0",
+    "currentVersion": "0.14.1",
 
     "changelog": {
         "de": {
+            "0.14.1": "add a new field to order order payment proxy - amountPayed, this will fix the wrong customer account actions if discount does not match",
+            "0.14.1": "test new order total against shopware order invoice total - add remark if not match - this will hold the order",
             "0.14.0": "add action to manually set order transferred / mark as not transferred",
             "0.14.0": "fixing article / order sync window behavior",
             "0.14.0": "fixing blisstribute article sync status filter",
