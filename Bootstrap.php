@@ -268,6 +268,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+        if (version_compare($version, '0.14.2', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'checkbox',
+                'blisstribute-show-sync-widget',
+                [
+                    'label' => 'Nicht synchr. Bestellungen Widget anzeigen',
+                    'description' => 'Wenn aktiviert, wird auf der Backend-Startseite ein Widget angezeigt, welches die nicht synchronisierten Bestellungen auflistet.',
+                    'value' => 1
+                ]
+            );
+        }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
@@ -1169,6 +1181,15 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Abverkauf synchronisieren',
                 'description' => 'Wenn aktiviert, wird das Abverkaufs-Flag (LastStock) am Artikel synchronisiert.',
+                'value' => 1
+            ]
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-show-sync-widget',
+            [
+                'label' => 'Nicht synchr. Bestellungen Widget anzeigen',
+                'description' => 'Wenn aktiviert, wird auf der Backend-Startseite ein Widget angezeigt, welches die nicht synchronisierten Bestellungen auflistet.',
                 'value' => 1
             ]
         );

@@ -7,6 +7,7 @@ Ext.define('Shopware.apps.Index.view.ExitbBlisstribute.Menu', {
 
         me.callParent(arguments);
         me.getInvalidOrderTransfers();
+        me.checkPluginUpToDate();
     },
 
     getInvalidOrderTransfers: function() {
@@ -30,20 +31,34 @@ Ext.define('Shopware.apps.Index.view.ExitbBlisstribute.Menu', {
     },
 
     displayInvalidOrderTransferNotice: function(invalidTransfers) {
-        var me = this;
-        var text = 'Folgende Bestellungen sind fehlerhaft:' + '<br/>';
-
-        Ext.each(invalidTransfers, function(transfer){
-            var orderNumberText = transfer.ordernumber;
-            orderNumberText += '<br />';
-            text += orderNumberText;
+        var text = '';
+        Ext.each(invalidTransfers, function(transfer) {
+            text += transfer.ordernumber + '<br />';
         });
 
         Shopware.Notification.createStickyGrowlMessage({
-            title : '{s name=invalid_orders_warning_title}Ungültige Bestellungen in ExitB{/s}',
+            title : 'Folgende Bestellungen wurden nicht mit Blisstribute synchronisiert',
             text  : text,
             width : 440,
             height: 300
+        });
+    },
+
+    checkPluginUpToDate: function() {
+        Ext.Ajax.request({
+            url: '{url controller="BlisstributeOrder" action="checkPluginUpToDate"}',
+            async: false,
+            success: function (response) {
+                var responseData = Ext.decode(response.responseText);
+                if (responseData.success == true && responseData.outdated === -1) {
+                    Shopware.Notification.createStickyGrowlMessage({
+                        title : 'Das Blisstribute Plugin ist nicht aktuell!',
+                        text  : 'Ihre Version: ' + responseData.currentVersion + ' | Aktuellste Version: ' + responseData.latestVersion,
+                        width : 440,
+                        height: 300
+                    });
+                }
+            }
         });
     },
 });
