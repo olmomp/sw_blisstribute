@@ -50,10 +50,13 @@ Ext.define('Shopware.apps.Index.view.ExitbBlisstribute.Menu', {
             async: false,
             success: function (response) {
                 var responseData = Ext.decode(response.responseText);
-                if (responseData.success == true && responseData.outdated === -1) {
+                if (responseData.success == true && responseData.outdated) {
+                    var text = 'Ihre Version: ' + responseData.currentVersion + ' | Aktuellste Version: ' + responseData.latestVersion +
+                        '<br /><br />Laden Sie die neuste Version <a target="_blank" href="'+responseData.downloadLink+'">HIER</a> herunter';
+
                     Shopware.Notification.createStickyGrowlMessage({
                         title : 'Das Blisstribute Plugin ist nicht aktuell!',
-                        text  : 'Ihre Version: ' + responseData.currentVersion + ' | Aktuellste Version: ' + responseData.latestVersion,
+                        text  : text,
                         width : 440,
                         height: 300
                     });

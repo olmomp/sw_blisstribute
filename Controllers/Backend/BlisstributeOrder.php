@@ -188,7 +188,8 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
             'success' => true,
             'currentVersion' => $currentVersion,
             'latestVersion' => $latestVersion,
-            'outdated' => version_compare($currentVersion, $latestVersion) === -1
+            'outdated' => version_compare($currentVersion, $latestVersion) === -1,
+            'downloadLink' => 'https://github.com/ccarnivore/sw_blisstribute/releases'
         ));
     }
 
