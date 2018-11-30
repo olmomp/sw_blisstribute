@@ -41,6 +41,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameKlarnaSofort: '{s name=blisstribute/paymentKlarnaSofort}Klarna Sofort{/s}',
         classNameAmazonPayments: '{s name=blisstribute/paymentAmazonPayments}Amazon Payments{/s}',
         classNameBillsafe: '{s name=blisstribute/paymentBillsafe}Billsafe{/s}',
+        classNameAfterPay: '{s name=blisstribute/paymentAfterPay}AfterPay{/s}',
     },
 
     configure: function() {
@@ -161,6 +162,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                             case 'Billsafe':
                                 return me.snippets.classNameBillsafe;
 
+                            case 'AfterPay':
+                                return me.snippets.classNameAfterPay;
+
                             default:
                                 return me.snippets.classNameNone;
                         }
@@ -195,7 +199,8 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['PayOneCC', me.snippets.classNamePayOneCC],
                                 ['PayOneELV', me.snippets.classNamePayOneELV],
                                 ['AmazonPayments', me.snippets.classNameAmazonPayments],
-                                ['Billsafe', me.snippets.classNameBillsafe]
+                                ['Billsafe', me.snippets.classNameBillsafe],
+                                ['AfterPay', me.snippets.classNameAfterPay]
                             ]
                         }),
                         allowBlank: false,
