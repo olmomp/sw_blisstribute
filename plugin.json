@@ -8,10 +8,14 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.14.1",
+    "currentVersion": "0.14.4",
 
     "changelog": {
         "de": {
+            "0.14.4": "add option to send b2b orders with net prices",
+            "0.14.3": "add afterpay payment class",
+            "0.14.2": "add plugin version check against github sw_blisstribute master",
+            "0.14.2": "failed sync order widget is now optional",
             "0.14.1": "add a new field to order order payment proxy - amountPayed, this will fix the wrong customer account actions if discount does not match",
             "0.14.1": "test new order total against shopware order invoice total - add remark if not match - this will hold the order",
             "0.14.0": "add action to manually set order transferred / mark as not transferred",
@@ -39,35 +43,7 @@
             "0.11.3": "better order sync logging",
             "0.11.2": "address blacklist pattern added",
             "0.11.1": "bugfix for shopware internal (absolute) vouchers",
-            "0.11.0": "improved article sync, improved article stock update",
-            "0.10.8": "ignores root category in article sync",
-            "0.10.7": "add wirecard checkout page payment mapping, add article filter",
-            "0.10.6": "article active status sync (if configured) depends on variant activate state (if variant article)",
-            "0.10.5": "Shopware promotion suite 5.3.X fix, debit advice used bank data from customer",
-            "0.10.4": "letter shipment",
-            "0.10.3": "price sync from blisstribute",
-            "0.10.2": "last stock sync config",
-            "0.10.1": "fix article mapping cron",
-            "0.10.0": "Remove cron subscriber",
-            "0.9.5": "Stock / kind update for variant articles only",
-            "0.9.4": "Adding PaymentTypes Klarna / Klarna Sofort",
-            "0.9.3": "Adding Drop Shipment Article Fields",
-            "0.9.2": "Article listing fix",
-            "0.9.1": "PayOne and Hermes added",
-            "0.9.0": "Advanced Promotion Suite fixes",
-            "0.8.0": "Rework the event subscriber",
-            "0.7.0": "Add supplier code attribute for articles",
-            "0.6.3": "Update article price logic, only default price and recommended retail price is available",
-            "0.6.2": "Add article prices for each shop",
-            "0.6.1": "Disable packing station google address validation",
-            "0.6.0": "Single Article Export CLI Command added",
-            "0.5.9": "Single Order Export CLI Command improved",
-            "0.5.8": "Single Order Export CLI Command improved",
-            "0.5.7": "Single Order Export CLI Command added",
-            "0.5.6": "Blisstribute article sync fix, main detail update if head variant goes offline",
-            "0.5.5": "Blisstribute article listing search fixed",
-            "0.5.4": "Configurable Order Ship-Lock / Order Hold",
-            "0.5.3": "Payolution ELV"
+            "0.11.0": "improved article sync, improved article stock update"
         },
         "en": {
         }

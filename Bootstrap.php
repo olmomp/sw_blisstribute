@@ -24,7 +24,7 @@ use Shopware\ExitBBlisstribute\Subscribers\ServiceSubscriber;
 class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
     use Shopware_Components_Blisstribute_Domain_LoggerTrait;
-    
+
     /**
      * @return string
      *
@@ -265,6 +265,30 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                         [2, 'Kundennummer']
                     ],
                     'value' => 1
+                ]
+            );
+        }
+        if (version_compare($version, '0.14.2', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'checkbox',
+                'blisstribute-show-sync-widget',
+                [
+                    'label' => 'Nicht synchr. Bestellungen Widget anzeigen',
+                    'description' => 'Wenn aktiviert, wird auf der Backend-Startseite ein Widget angezeigt, welches die nicht synchronisierten Bestellungen auflistet.',
+                    'value' => 1
+                ]
+            );
+        }
+        if (version_compare($version, '0.14.4', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'checkbox',
+                'blisstribute-transfer-b2b-net',
+                [
+                    'label' => 'B2B-Bestellungen Netto übertragen',
+                    'description' => 'Wenn aktiviert, werden B2B Bestellungen (Bestellzeilen) Netto an Blisstribute übertragen.',
+                    'value' => 0
                 ]
             );
         }
@@ -1183,6 +1207,15 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     [2, 'Kundennummer']
                 ],
                 'value' => 1
+            ]
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-transfer-b2b-net',
+            [
+                'label' => 'B2B-Bestellungen Netto übertragen',
+                'description' => 'Wenn aktiviert, werden B2B Bestellungen (Bestellzeilen) Netto an Blisstribute übertragen.',
+                'value' => 0
             ]
         );
     }
