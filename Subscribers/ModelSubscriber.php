@@ -34,10 +34,10 @@ class ModelSubscriber implements SubscriberInterface
             // shopware models
             'Shopware\Models\Order\Order::preRemove' => 'preRemoveOrder',
             'Shopware\Models\Article\Article::postPersist' => 'postPersistArticle',
-            'Shopware\Models\Article\Article::preUpdate' => 'preUpdateArticle',
+            'Shopware\Models\Article\Article::postUpdate' => 'postUpdateArticle',
             'Shopware\Models\Article\Article::preRemove' => 'preRemoveArticle',
             'Shopware\Models\Article\Detail::postPersist' => 'postPersistDetail',
-            'Shopware\Models\Article\Detail::preUpdate' => 'preUpdateDetail',
+            'Shopware\Models\Article\Detail::postUpdate' => 'postUpdateDetail',
             'Shopware\Models\Article\Detail::preRemove' => 'preRemoveDetail',
             'Shopware\Models\Property\Group::postPersist' => 'postPersistProperty',
             'Shopware\Models\Property\Group::preRemove' => 'preRemoveProperty',
@@ -57,8 +57,8 @@ class ModelSubscriber implements SubscriberInterface
             'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest::preUpdate' => 'preUpdateBlisstributeShippingRequest',
             'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems::prePersist' => 'prePersistBlisstributeShippingRequestItem',
             'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems::preUpdate' => 'preUpdateBlisstributeShippingRequestItem',
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticle::prePersist' => 'prePersistBlisstributeArticle',
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticle::preUpdate' => 'preUpdateBlisstributeArticle',
+            'Shopware\CustomModels\Blisstribute\BlisstributeArticle::postPersist' => 'postPersistBlisstributeArticle',
+            'Shopware\CustomModels\Blisstribute\BlisstributeArticle::postUpdate' => 'postUpdateBlisstributeArticle',
             'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::prePersist' => 'prePersistBlisstributeArticleType',
             'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::preUpdate' => 'preUpdateBlisstributeArticleType',
             
@@ -99,11 +99,13 @@ class ModelSubscriber implements SubscriberInterface
      */
     public function postPersistArticle(\Enlight_Event_EventArgs $eventArgs)
     {
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postPersistArticle start');
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $eventArgs->get('entity');
         if ($article == null || !($article instanceof \Shopware\Models\Article\Article)) {
+            \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postPersistArticle done - no article');
             return;
         }
 
@@ -115,7 +117,9 @@ class ModelSubscriber implements SubscriberInterface
             ->setComment(null);
 
         $modelManager->persist($blisstributeArticle);
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postPersistArticle done - trigger flush');
         $modelManager->flush();
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postPersistArticle flush done');
     }
 
     /**
@@ -123,13 +127,15 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function preUpdateArticle(\Enlight_Event_EventArgs $eventArgs)
+    public function postUpdateArticle(\Enlight_Event_EventArgs $eventArgs)
     {
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateArticle start');
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Article $article */
         $article = $eventArgs->get('entity');
         if ($article == null || !($article instanceof \Shopware\Models\Article\Article)) {
+            \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateArticle done - no article');
             return;
         }
 
@@ -141,6 +147,7 @@ class ModelSubscriber implements SubscriberInterface
         }
         
         if ($blisstributeArticle->isTriggerSync()) {
+            \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateArticle done - trigger sync already set');
             return;
         }
 
@@ -150,7 +157,9 @@ class ModelSubscriber implements SubscriberInterface
             ->setComment(null);
 
         $modelManager->persist($blisstributeArticle);
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateArticle done - trigger flush');
         $modelManager->flush();
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateArticle flush done');
     }
 
     /**
@@ -219,13 +228,15 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function preUpdateDetail(\Enlight_Event_EventArgs $eventArgs)
+    public function postUpdateDetail(\Enlight_Event_EventArgs $eventArgs)
     {
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateDetail start');
         $modelManager = $this->container->get('models');
 
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $eventArgs->get('entity');
         if ($detail == null || !($detail instanceof \Shopware\Models\Article\Detail)) {
+            \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateDetail done - no detail');
             return;
         }
 
@@ -240,6 +251,7 @@ class ModelSubscriber implements SubscriberInterface
         }
         
         if ($blisstributeArticle->isTriggerSync()) {
+            \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateDetail done - trigger sync already set');
             return;
         }
 
@@ -249,7 +261,9 @@ class ModelSubscriber implements SubscriberInterface
             ->setComment(null);
 
         $modelManager->persist($blisstributeArticle);
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateDetail done - trigger flush');
         $modelManager->flush();
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateDetail flush done');
     }
 
     /**
@@ -588,14 +602,16 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function prePersistBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
+    public function postPersistBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
     {
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postPersistBlisstributeArticle start');
         $currentTime = new \DateTime();
 
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
         $entity = $eventArgs->get('entity');
         $entity->setCreatedAt($currentTime)
             ->setModifiedAt($currentTime);
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postPersistBlisstributeArticle done');
     }
 
     /**
@@ -605,11 +621,13 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function preUpdateBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
+    public function postUpdateBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
     {
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateBlisstributeArticle start');
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticle $entity */
         $entity = $eventArgs->get('entity');
         $entity->setModifiedAt(new \DateTime());
+        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateBlisstributeArticle done');
     }   
 
     /**
