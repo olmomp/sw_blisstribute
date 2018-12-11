@@ -21,6 +21,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameCashOnDelivery: '{s name=blisstribute/paymentCashOnDelivery}Nachnahme{/s}',
         classNameSofort: '{s name=blisstribute/paymentSofort}Sofortueberweisung{/s}',
         classNamePayPal: '{s name=blisstribute/paymentPayPal}PayPal{/s}',
+        classNamePayPalPlus: '{s name=blisstribute/paymentPayPalPlus}PayPalPlus{/s}',
         classNameBill: '{s name=blisstribute/paymentBill}Rechnung (Eigene Abwicklung){/s}',
         classNamePayolution: '{s name=blisstribute/paymentPayolution}Rechnung (Payolution){/s}',
         classNamePayolutionInstallment: '{s name=blisstribute/paymentPayolutionInstallment}Ratenkauf (Payolution){/s}',
@@ -98,6 +99,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
 
                             case 'PayPal':
                                 return me.snippets.classNamePayPal;
+
+                            case 'PayPalPlus':
+                                return me.snippets.classNamePayPalPlus;
 
                             case 'Bill':
                                 return me.snippets.classNameBill;
@@ -179,6 +183,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['DebitAdvice', me.snippets.classNamedebitAdvice],
                                 ['CashOnDelivery', me.snippets.classNameCashOnDelivery],
                                 ['PayPal', me.snippets.classNamePayPal],
+                                ['PayPalPlus', me.snippets.classNamePayPalPlus],
                                 ['Bill', me.snippets.classNameBill],
                                 ['Payolution', me.snippets.classNamePayolution],
                                 ['PayolutionELV', me.snippets.classNamePayolutionELV],
