@@ -11,7 +11,7 @@ require_once __DIR__ . '/../Components/Blisstribute/Order/Sync.php';
 class ModelSubscriber implements SubscriberInterface
 {
     use \Shopware_Components_Blisstribute_Domain_LoggerTrait;
-    
+
     /**
      * @var Container
      */
@@ -44,12 +44,12 @@ class ModelSubscriber implements SubscriberInterface
             'Shopware\Models\Shop\Shop::postPersist' => 'postPersistShop',
             'Shopware\Models\Shop\Shop::preRemove' => 'preRemoveShop',
             'Shopware\Models\Voucher\Voucher::postPersist' => 'postPersistVoucher',
-            'Shopware\Models\Voucher\Voucher::preRemove' => 'preRemoveVoucher',            
+            'Shopware\Models\Voucher\Voucher::preRemove' => 'preRemoveVoucher',
             'Shopware\Models\Payment\Payment::postPersist' => 'postPersistPayment',
             'Shopware\Models\Payment\Payment::preRemove' => 'preRemovePayment',
             'Shopware\Models\Dispatch\Dispatch::postPersist' => 'postPersistDispatch',
             'Shopware\Models\Dispatch\Dispatch::preRemove' => 'preRemoveDispatch',
-            
+
             // blisstribute models
             'Shopware\CustomModels\Blisstribute\BlisstributeOrder::prePersist' => 'prePersistBlisstributeOrder',
             'Shopware\CustomModels\Blisstribute\BlisstributeOrder::preUpdate' => 'preUpdateBlisstributeOrder',
@@ -57,16 +57,15 @@ class ModelSubscriber implements SubscriberInterface
             'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest::preUpdate' => 'preUpdateBlisstributeShippingRequest',
             'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems::prePersist' => 'prePersistBlisstributeShippingRequestItem',
             'Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems::preUpdate' => 'preUpdateBlisstributeShippingRequestItem',
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticle::postPersist' => 'postPersistBlisstributeArticle',
-            'Shopware\CustomModels\Blisstribute\BlisstributeArticle::postUpdate' => 'postUpdateBlisstributeArticle',
+            'Shopware\CustomModels\Blisstribute\BlisstributeArticle::preUpdate' => 'preUpdateBlisstributeArticle',
             'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::prePersist' => 'prePersistBlisstributeArticleType',
             'Shopware\CustomModels\Blisstribute\BlisstributeArticleType::preUpdate' => 'preUpdateBlisstributeArticleType',
-            
+
             // other events
             'Shopware_Modules_Order_SendMail_BeforeSend' => 'onOrderSendMailBeforeSend'
         ];
     }
-    
+
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
@@ -91,7 +90,7 @@ class ModelSubscriber implements SubscriberInterface
         $modelManager->remove($blisstributeOrder);
         $modelManager->flush();
     }
-    
+
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
@@ -145,7 +144,7 @@ class ModelSubscriber implements SubscriberInterface
             $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($article);
         }
-        
+
         if ($blisstributeArticle->isTriggerSync()) {
             \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateArticle done - trigger sync already set');
             return;
@@ -195,7 +194,7 @@ class ModelSubscriber implements SubscriberInterface
     public function postPersistDetail(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
-        
+
         /** @var \Shopware\Models\Article\Detail $detail */
         $detail = $eventArgs->get('entity');
         if ($detail == null || !($detail instanceof \Shopware\Models\Article\Detail)) {
@@ -209,7 +208,7 @@ class ModelSubscriber implements SubscriberInterface
             $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($detail->getArticle());
         }
-        
+
         if ($blisstributeArticle->isTriggerSync()) {
             return;
         }
@@ -249,7 +248,7 @@ class ModelSubscriber implements SubscriberInterface
             $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
             $blisstributeArticle->setArticle($detail->getArticle());
         }
-        
+
         if ($blisstributeArticle->isTriggerSync()) {
             \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateDetail done - trigger sync already set');
             return;
@@ -298,7 +297,7 @@ class ModelSubscriber implements SubscriberInterface
         $modelManager->persist($blisstributeArticle);
         $modelManager->flush();
     }
-    
+
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
@@ -307,7 +306,7 @@ class ModelSubscriber implements SubscriberInterface
     public function postPersistProperty(\Enlight_Event_EventArgs $eventArgs)
     {
         $modelManager = $this->container->get('models');
-            
+
         /** @var \Shopware\Models\Property\Group $entry */
         $entity = $eventArgs->get('entity');
 
@@ -338,7 +337,7 @@ class ModelSubscriber implements SubscriberInterface
         $modelManager->remove($articleType);
         $modelManager->flush();
     }
-    
+
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
@@ -420,7 +419,7 @@ class ModelSubscriber implements SubscriberInterface
         $modelManager->remove($blisstributeCoupon);
         $modelManager->flush();
     }
-    
+
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
@@ -439,7 +438,7 @@ class ModelSubscriber implements SubscriberInterface
         $modelManager->persist($blisstributePayment);
         $modelManager->flush();
     }
-    
+
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
@@ -461,7 +460,7 @@ class ModelSubscriber implements SubscriberInterface
         $modelManager->remove($blisstributePayment);
         $modelManager->flush();
     }
-    
+
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
@@ -480,7 +479,7 @@ class ModelSubscriber implements SubscriberInterface
         $modelManager->persist($blisstributeShipment);
         $modelManager->flush();
     }
-    
+
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
@@ -502,7 +501,7 @@ class ModelSubscriber implements SubscriberInterface
         $modelManager->remove($blisstributeShipment);
         $modelManager->flush();
     }
-    
+
     /**
      * blisstribute order event fired before db insert
      *
@@ -532,7 +531,7 @@ class ModelSubscriber implements SubscriberInterface
         $entity = $eventArgs->get('entity');
         $entity->setModifiedAt(new \DateTime());
     }
-    
+
     /**
      * blisstribute order event fired before db insert
      *
@@ -594,25 +593,6 @@ class ModelSubscriber implements SubscriberInterface
         $entity = $eventArgs->get('entity');
         $entity->setModifiedAt(new \DateTime());
     }
-    
-    /**
-     * article type event fired before create entity
-     *
-     * @param \Enlight_Event_EventArgs $eventArgs
-     *
-     * @return void
-     */
-    public function postPersistBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
-    {
-        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postPersistBlisstributeArticle start');
-        $currentTime = new \DateTime();
-
-        /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
-        $entity = $eventArgs->get('entity');
-        $entity->setCreatedAt($currentTime)
-            ->setModifiedAt($currentTime);
-        \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postPersistBlisstributeArticle done');
-    }
 
     /**
      * article type event fired before db update
@@ -621,14 +601,14 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function postUpdateBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
+    public function preUpdateBlisstributeArticle(\Enlight_Event_EventArgs $eventArgs)
     {
         \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateBlisstributeArticle start');
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeArticle $entity */
         $entity = $eventArgs->get('entity');
         $entity->setModifiedAt(new \DateTime());
         \Shopware()->PluginLogger()->log(\Monolog\Logger::DEBUG, 'modelSubscriber::postUpdateBlisstributeArticle done');
-    }   
+    }
 
     /**
      * article type event fired before create entity
@@ -663,19 +643,19 @@ class ModelSubscriber implements SubscriberInterface
         /* @var Shopware\CustomModels\Blisstribute\BlisstributeArticleType $entity */
         $entity = $eventArgs->get('entity');
         $entity->setModifiedAt(new \DateTime());
-        
+
         $articles = Shopware()->Db()->query('UPDATE s_plugin_blisstribute_articles SET trigger_sync = 1, modified_at = NOW(), tries = 0 WHERE s_article_id IN (SELECT articleID FROM s_filter_articles WHERE valueID = ?)', [$entity->getFilter()->getId()]);
     }
-    
+
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return bool
      */
     public function onOrderSendMailBeforeSend(\Enlight_Event_EventArgs $eventArgs)
-    {        
+    {
         $orderProxy = $eventArgs->get('subject');
-        
+
         $pluginConfig = $this->container->get('plugins')->Backend()->ExitBBlisstribute()->Config();
 
         $modelManager = $this->container->get('models');
@@ -684,20 +664,20 @@ class ModelSubscriber implements SubscriberInterface
         /** @var \Shopware\Models\Order\Order $order */
         $order = $orderRepository->findOneBy(['number' => $orderProxy->sOrderNumber]);
         if ($order === null) {
-            $this->logDebug('order not found');            
+            $this->logDebug('order not found');
             return null;
         }
 
         /** @var \Shopware\CustomModels\Blisstribute\BlisstributeOrderRepository $blisstributeOrderRepository */
         $blisstributeOrderRepository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $blisstributeOrder = $blisstributeOrderRepository->findByOrder($order);
-        if ($blisstributeOrder === null) {        
+        if ($blisstributeOrder === null) {
             $status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_CREATION_PENDING;
 
             if (!$pluginConfig->get('blisstribute-auto-sync-order')) {
                 $status = \Shopware\CustomModels\Blisstribute\BlisstributeOrder::EXPORT_STATUS_NONE;
             }
-        
+
             $blisstributeOrder = new \Shopware\CustomModels\Blisstribute\BlisstributeOrder();
             $blisstributeOrder->setLastCronAt(new \DateTime())
                 ->setOrder($order)
@@ -713,10 +693,10 @@ class ModelSubscriber implements SubscriberInterface
             $this->transferOrder($blisstributeOrder);
             return true;
         }
-        
+
         $this->logDebug('order sync cancelled due to disabled automatic sync');
     }
-    
+
     /**
      * export order to blisstribute
      *
@@ -727,7 +707,7 @@ class ModelSubscriber implements SubscriberInterface
     private function transferOrder(\Shopware\CustomModels\Blisstribute\BlisstributeOrder $blisstributeOrder)
     {
         $pluginConfig = $this->container->get('plugins')->Backend()->ExitBBlisstribute()->Config();
-        
+
         if ($blisstributeOrder === null || !$blisstributeOrder) {
             $this->logInfo('blisstributeOrder is null! onOrderFinished failed!');
             return false;
