@@ -34,7 +34,7 @@ class Shopware_Components_Blisstribute_Order_Payment_PayPal
         }
 
         if (strpos($this->order->getTransactionId(), 'PAYID-') !== false) {
-            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('the transaction id is for paypal plus');
+            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('the transaction id is temporary, wait for completed transaction');
         }
 
         return $status;

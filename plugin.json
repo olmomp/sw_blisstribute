@@ -8,10 +8,11 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.14.5",
+    "currentVersion": "0.14.6",
 
     "changelog": {
         "de": {
+            "0.14.6": "fix for blisstributeArticle event hooks (by https://github.com/sheitmeier)",
             "0.14.5": "switch preUpdate/prePersist to postUpdate/postPersist events",
             "0.14.4": "add paypal plus payment class",
             "0.14.3": "add afterpay payment class",
@@ -27,7 +28,7 @@
             "0.13.2": "hunting the doctrine bug",
             "0.13.1": "multiple customizations for one product",
             "0.13.0": "check for sw 5.5.1",
-            "0.12.7": "config for external customer number (by SM)",
+            "0.12.7": "config for external customer number (by https://github.com/sheitmeier)",
             "0.12.6": "another custom products fix",
             "0.12.5": "custom products fixes",
             "0.12.4": "custom products logging",
