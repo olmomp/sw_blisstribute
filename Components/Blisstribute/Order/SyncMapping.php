@@ -612,7 +612,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'priceAmountNet' => round($priceNet, 4), // single article price
                 'price' => round(($price * $quantity), 4),
                 'priceNet' => round(($priceNet * $quantity), 4),
-                'vatRate' => round($product->getTaxRate(), 4),
+                'vatRate' => $this->getModelEntity()->getOrder()->getTaxFree() ? 0.0 : round($product->getTaxRate(), 2),
                 'title' => $product->getArticleName(),
                 'discountTotal' => 0,
                 'configuration' => '',
