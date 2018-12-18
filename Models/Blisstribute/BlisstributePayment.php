@@ -19,29 +19,6 @@ use Shopware\Components\Model\ModelEntity;
  */
 class BlisstributePayment extends ModelEntity
 {
-    /**@+
-     * payment mapping constants
-     *
-     * @var string
-     */
-    const PAYMENT_NAME_PRE_PAYMENT = 'pre_payment';
-    const PAYMENT_NAME_DEBIT_ADVICE = 'debit_advice';
-    const PAYMENT_NAME_CASH_ON_DELIVERY = 'cash_on_delivery';
-    const PAYMENT_NAME_PAYPAL = 'paypal';
-    const PAYMENT_BILL = 'bill';
-    const PAYMENT_NAME_PAYOLUTION = 'payolution';
-    const PAYMENT_NAME_PAYOLUTION_INSTALLMENT = 'payolution_installment';
-    const PAYMENT_NAME_SOFORT = 'sofort';
-    const PAYMENT_NAME_HEIDELPAY_CREDIT_CARD = 'heidelpay_credit_card';
-    const PAYMENT_NAME_MARKETPLACE = 'marketplace';
-    const PAYMENT_NAME_SELFCOLLECTOR_CASH = 'selfcollector_cash';
-    const PAYMENT_NAME_SELFCOLLECTOR_CASH_EC = 'selfcollector_cash_ec';
-    const PAYMENT_NAME_SELFCOLLECTOR_CASH_CREDIT_CARD = 'selfcollector_cash_credit_card';
-    const PAYMENT_NAME_VR_PAY_CC = 'vrPayCC';
-    const PAYMENT_NAME_AMAZON_PAYMENTS = 'AmazonPayments';
-    const PAYMENT_NAME_BILLSAFE = 'billsafe';
-    /**@-*/
-
     /**
      * entity identifier
      *

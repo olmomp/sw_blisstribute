@@ -140,24 +140,56 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
 
         $this->View()->assign(array(
             'success' => true,
-            'message' => 'foobar'
+            'message' => 'Transfer-Sperren wurden zurückgesetzt.'
         ));
     }
 
     /**
-     * resets the order sync locks
-     *
      * @return void
      */
     public function resetOrderSyncAction()
     {
         $blisstributeOrderId = $this->Request()->getParam('id');
-        $sql = 'UPDATE s_plugin_blisstribute_orders set transfer_status = 1 WHERE s_order_id = :orderId';
-        Shopware()->Db()->query($sql, array('orderId' => $blisstributeOrderId));
+        $sql = 'UPDATE s_plugin_blisstribute_orders set transfer_status = 1 WHERE id = :btOrderId';
+        Shopware()->Db()->query($sql, array('btOrderId' => $blisstributeOrderId));
 
         $this->View()->assign(array(
             'success' => true,
-            'order_id' => $blisstributeOrderId
+            'btOrderId' => $blisstributeOrderId
+        ));
+    }
+
+    /**
+     * @return void
+     */
+    public function updateOrderSyncAction()
+    {
+        $blisstributeOrderId = $this->Request()->getParam('id');
+        $sql = 'UPDATE s_plugin_blisstribute_orders set transfer_status = 3 WHERE id = :btOrderId';
+        Shopware()->Db()->query($sql, array('btOrderId' => $blisstributeOrderId));
+
+        $this->View()->assign(array(
+            'success' => true,
+            'btOrderId' => $blisstributeOrderId
+        ));
+    }
+
+    /**
+     * checks if the blisstribute plugin is up to date
+     *
+     * @return void
+     */
+    public function checkPluginUpToDateAction()
+    {
+        $currentVersion = $this->plugin->getVersion();
+        $latestVersion = json_decode(file_get_contents('https://raw.githubusercontent.com/ccarnivore/sw_blisstribute/master/plugin.json'), true)['currentVersion'];
+
+        $this->View()->assign(array(
+            'success' => true,
+            'currentVersion' => $currentVersion,
+            'latestVersion' => $latestVersion,
+            'outdated' => version_compare($currentVersion, $latestVersion) === -1,
+            'downloadLink' => 'https://github.com/ccarnivore/sw_blisstribute/releases'
         ));
     }
 
@@ -166,12 +198,16 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
      */
     public function getInvalidOrderTransfersAction()
     {
-        $sqlSelectInvalidOrderTransfers = "SELECT s_order.ordernumber AS ordernumber FROM s_plugin_blisstribute_orders 
-                                           LEFT JOIN s_order ON s_order.id = s_order_id
-                                           WHERE transfer_status = 10 OR transfer_status = 11 
-                                           OR transfer_status = 20 OR transfer_status = 21";
+        $config = $this->plugin->Config();
+        $invalidTransfers = [];
 
-        $invalidTransfers = Shopware()->Db()->fetchAll($sqlSelectInvalidOrderTransfers);
+        if ($config->get('blisstribute-show-sync-widget')) {
+            $sqlSelectInvalidOrderTransfers = "SELECT s_order.ordernumber AS ordernumber FROM s_plugin_blisstribute_orders 
+                                           LEFT JOIN s_order ON s_order.id = s_order_id
+                                           WHERE transfer_status in (10,11,20,21)";
+
+            $invalidTransfers = Shopware()->Db()->fetchAll($sqlSelectInvalidOrderTransfers);
+        }
 
         $this->View()->assign(array(
             'success' => true,

@@ -31,7 +31,7 @@ class BlisstributeOrderRepository extends ModelRepository
      *
      * @var int
      */
-    const PAGE_LIMIT = 50;
+    const PAGE_LIMIT = 150;
 
 
     /**

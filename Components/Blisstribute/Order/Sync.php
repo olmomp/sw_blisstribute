@@ -41,27 +41,19 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
         $this->lockTask();
 
         $startDate = new DateTime();
-
         $this->logMessage('start batch sync', __FUNCTION__);
 
         // load orders
         $orderRepository = Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeOrder');
         $orderCollection = $orderRepository->findTransferableOrders($startDate);
-
-        while (count($orderCollection) > 0) {
-            foreach ($orderCollection as $currentOrder) {
-                try {
-
-                    $this->checkStatus($currentOrder);
-                    $this->processOrderSync($currentOrder);
-
-                } catch (Exception $ex) {
-                    $this->logMessage('export status check failed::' . $ex->getMessage(), __FUNCTION__, Logger::ERROR);
-                    continue;
-                }
+        foreach ($orderCollection as $currentOrder) {
+            try {
+                $this->checkStatus($currentOrder);
+                $this->processOrderSync($currentOrder);
+            } catch (Exception $ex) {
+                $this->logMessage('export status check failed::' . $ex->getMessage(), __FUNCTION__, Logger::ERROR);
+                continue;
             }
-
-            $orderCollection = $orderRepository->findTransferableOrders($startDate);
         }
 
         $this->modelManager->flush();
@@ -129,7 +121,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
      */
     protected function processOrderSync(BlisstributeOrder $blisstributeOrder)
     {
-        $result = true;
+        $result = false;
 
         $this->logMessage('start sync::blisstribute order id' . $blisstributeOrder->getId(), __FUNCTION__);
         $this->logMessage('start sync::sw order number' . $blisstributeOrder->getOrder()->getNumber(), __FUNCTION__);
@@ -150,6 +142,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
             $soapClient = new Shopware_Components_Blisstribute_Order_SoapClient($this->config);
             $orderResponse = $soapClient->syncOrder($orderData);
             if ($orderResponse === true) {
+                $result = true;
                 $this->logMessage('order transferred::' . $blisstributeOrder->getOrder()->getNumber(), __FUNCTION__);
 
                 $blisstributeOrder->setStatus(BlisstributeOrder::EXPORT_STATUS_TRANSFERRED)
@@ -182,7 +175,6 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                 ->setTries($blisstributeOrder->getTries() + 1)
                 ->setLastCronAt(new DateTime());
 
-            $result = false;
             $this->setLastError(
                 'Bestellung kann nicht übermittelt werden, da nicht alle notwendigen Felder gefüllt oder die ' .
                 'Zahlungs/Versandart nicht einer Blisstribute zugeordnet ist.'
@@ -200,7 +192,6 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                 ->setTries($blisstributeOrder->getTries() + 1)
                 ->setLastCronAt(new DateTime());
 
-            $result = false;
             $this->setLastError('Fehler bei der Übermittlung der Bestellung zu Blisstribute.');
 
         } catch (Exception $ex) {
@@ -215,7 +206,6 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                 ->setTries($blisstributeOrder->getTries() + 1)
                 ->setLastCronAt(new DateTime());
 
-            $result = false;
             $this->setLastError('Fehler bei der Übermittlung der Bestellung zu Blisstribute.');
         }
 
@@ -245,7 +235,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
 
             case BlisstributeOrder::EXPORT_STATUS_NONE:
                 $order = $blisstributeOrder->getOrder();
-                if ($order->getOrderStatus() == -1) {
+                if ($order->getOrderStatus()->getId() == -1) {
                     $blisstributeOrder->setStatus(BlisstributeOrder::EXPORT_STATUS_ABORTED);
 
                     $modelManager = Shopware()->Models();

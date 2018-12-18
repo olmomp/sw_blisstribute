@@ -10,13 +10,13 @@ require_once __DIR__ . '/AbstractExternalPayment.php';
  * @copyright Copyright (c) 2016
  * @since     1.0.0
  */
-class Shopware_Components_Blisstribute_Order_Payment_PayPal
+class Shopware_Components_Blisstribute_Order_Payment_PayPalPlus
     extends Shopware_Components_Blisstribute_Order_Payment_AbstractExternalPayment
 {
     /**
      * @inheritdoc
      */
-    protected $code = 'paypal';
+    protected $code = 'paypalPlus';
 
     /**
      * @inheritdoc
@@ -29,12 +29,8 @@ class Shopware_Components_Blisstribute_Order_Payment_PayPal
             throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('no transaction id given');
         }
 
-        if (strpos($this->order->getTransactionId(), 'EC-') !== false) {
-            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('the transaction id is temporary, wait for completed transaction');
-        }
-
-        if (strpos($this->order->getTransactionId(), 'PAYID-') !== false) {
-            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('the transaction id is temporary, wait for completed transaction');
+        if (strpos($this->order->getTransactionId(), 'PAYID-') === false) {
+            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('the transaction id is not for paypal plus');
         }
 
         return $status;

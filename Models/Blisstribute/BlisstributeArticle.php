@@ -93,6 +93,15 @@ class BlisstributeArticle extends ModelEntity
     private $syncHash = '';
 
     /**
+     * BlisstributeArticle constructor.
+     */
+    public function __construct()
+    {
+        $this->createdAt  = new \DateTime();
+        $this->modifiedAt = new \DateTime();
+    }
+
+    /**
      * @param int $id
      *
      * @return BlisstributeArticle

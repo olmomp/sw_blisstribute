@@ -91,6 +91,10 @@ class Shopware_Components_Blisstribute_Order_Payment_Abstract
             'isPayed' => (bool)$this->payment->getIsPayed(),
         );
 
+        if ($payment['isPayed']) {
+            $payment['amountPayed'] = $this->order->getInvoiceAmount();
+        }
+
         $payment = array_merge($payment, $this->getAdditionalPaymentInformation());
         return $payment;
     }

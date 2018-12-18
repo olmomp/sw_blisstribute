@@ -370,56 +370,25 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
         $this->logDebug('start updating confirmation data ' . json_encode($confirmationDataCollection));
 
         foreach ($confirmationDataCollection as $currentConfirmationData) {
-            $this->logDebug('start processing confirmation data set ' . json_encode($currentConfirmationData));
+            try {
+                $this->logDebug('start processing confirmation data set ' . json_encode($currentConfirmationData));
+                if ($currentConfirmationData == null || empty($currentConfirmationData)) {
+                    continue;
+                }
 
-            $sql = 'UPDATE s_articles_attributes SET blisstribute_vhs_number = :vhsArticleNumber WHERE articledetailsID = (
-              SELECT id from s_articles_details WHERE ordernumber = :articleNumber
-            )';
-            Shopware()->Db()->query($sql, array(
-                'vhsArticleNumber' => trim($currentConfirmationData['erpArticleNumber']),
-                'articleNumber' => trim($currentConfirmationData['articleNumber'])
-            ));
+                $sql = 'UPDATE s_articles_attributes SET blisstribute_vhs_number = :vhsArticleNumber WHERE articledetailsID = (
+                  SELECT id from s_articles_details WHERE ordernumber = :articleNumber
+                )';
+                Shopware()->Db()->query($sql, array(
+                    'vhsArticleNumber' => trim($currentConfirmationData['erpArticleNumber']),
+                    'articleNumber' => trim($currentConfirmationData['articleNumber'])
+                ));
 
-            $this->logDebug('processing done for vhs article number ' . trim($currentConfirmationData['erpArticleNumber']));
-
-            /*$detailRepository = $this->modelManager->getRepository('Shopware\Models\Article\Detail');
-            /** @var \Shopware\Models\Article\Detail $detail *
-            $detail = $detailRepository->createQueryBuilder('article_detail')
-                ->select('ad')
-                ->from('Shopware\Models\Article\Detail', 'ad')
-                ->where('ad.number = :articleNumber')
-                ->orWhere('ad.ean = :ean')
-                ->setParameters(array(
-                    'articleNumber' => $currentConfirmationData['articleNumber'],
-                    'ean' => $currentConfirmationData['ean13'],
-                ))
-                ->getQuery()
-                ->getOneOrNullResult();
-
-            if ($detail == null) {
-                $this->logMessage(
-                    'detail not found::data ' . json_encode($currentConfirmationData),
-                    __FUNCTION__,
-                    Logger::ERROR
-                );
-
-                continue;
+                $this->logDebug('processing done for vhs article number ' . trim($currentConfirmationData['erpArticleNumber']));
+            } catch (Exception $ex) {
+                $this->logDebug('failed for ' . trim($currentConfirmationData['erpArticleNumber']));
+                $this->logWarn($ex->getMessage());
             }
-
-            $this->logDebug('got detail for vhs number update');
-            $attributes = $detail->getAttribute();
-            $this->logDebug('got attribute for vhs number update');
-            $attributes->setBlisstributeVhsNumber($currentConfirmationData['erpArticleNumber']);
-
-            $this->logDebug('start persisting');
-            $this->modelManager->persist($attributes);
-            $this->logDebug('persisting done');*/
-
-            /*$this->logMessage(sprintf(
-                'vhs number set for article::article %s::vhs number %s',
-                $detail->getNumber(),
-                $detail->getAttribute()->getBlisstributeVhsNumber()
-            ), __FUNCTION__);*/
         }
 
         $this->logMessage('end vhs article number', __FUNCTION__);

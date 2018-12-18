@@ -226,6 +226,60 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+        if (version_compare($version, '0.11.2', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'text',
+                'blisstribute-hold-order-address-pattern',
+                [
+                    'label' => 'Sperrbegriffe für Adresse',
+                    'description' => 'Wenn gesetzt, werden Bestellungen deren Adresse auf dieses Pattern zutrifft, mit Kommentar und angehalten übertragen.',
+                    'value' => '',
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
+        if (version_compare($version, '0.11.4', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'number',
+                'blisstribute-hold-order-cart-amount',
+                [
+                    'label' => 'Warenwert für Bestell-Halt',
+                    'description' => 'Wenn gesetzt, werden Bestellungen deren Warenwert den angegebenen Wertes überschreiten oder gleichen, mit Kommentar und angehalten übertragen. Zum deaktivieren "0" angeben.',
+                    'value' => 0.00,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
+        if (version_compare($version, '0.12.7', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'select',
+                'blisstribute-order-sync-external-customer-number',
+                [
+                    'label' => 'Externe Kundennummer',
+                    'description' => 'Definiert, welches Feld für die externe Kundennummer im VHS verwendet werden soll.',
+                    'store' => [
+                        [1, 'E-Mail'],
+                        [2, 'Kundennummer']
+                    ],
+                    'value' => 1
+                ]
+            );
+        }
+        if (version_compare($version, '0.14.2', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'checkbox',
+                'blisstribute-show-sync-widget',
+                [
+                    'label' => 'Nicht synchr. Bestellungen Widget anzeigen',
+                    'description' => 'Wenn aktiviert, wird auf der Backend-Startseite ein Widget angezeigt, welches die nicht synchronisierten Bestellungen auflistet.',
+                    'value' => 1
+                ]
+            );
+        }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
@@ -1047,6 +1101,26 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             ]
         );
         $form->setElement(
+            'text',
+            'blisstribute-hold-order-address-pattern',
+            [
+                'label' => 'Sperrbegriffe für Adresse',
+                'description' => 'Wenn gesetzt, werden Bestellungen deren Adresse auf dieses Pattern zutrifft, mit Kommentar und angehalten übertragen.',
+                'value' => '',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+        $form->setElement(
+            'number',
+            'blisstribute-hold-order-cart-amount',
+            [
+                'label' => 'Warenwert für Bestell-Halt',
+                'description' => 'Wenn gesetzt, werden Bestellungen deren Warenwert den angegebenen Wertes überschreiten oder gleichen, mit Kommentar und angehalten übertragen. Zum deaktivieren "0" angeben.',
+                'value' => 0.00,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+        $form->setElement(
             'checkbox',
             'blisstribute-transfer-shop-article-prices',
             [
@@ -1073,7 +1147,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => ''
             )
         );
-
 
         $form->setElement(
             'checkbox',
@@ -1111,6 +1184,28 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'value' => 1
             ]
         );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-show-sync-widget',
+            [
+                'label' => 'Nicht synchr. Bestellungen Widget anzeigen',
+                'description' => 'Wenn aktiviert, wird auf der Backend-Startseite ein Widget angezeigt, welches die nicht synchronisierten Bestellungen auflistet.',
+                'value' => 1
+            ]
+        );
+        $form->setElement(
+            'select',
+            'blisstribute-order-sync-external-customer-number',
+            [
+                'label' => 'Externe Kundennummer',
+                'description' => 'Definiert, welches Feld für die externe Kundennummer im VHS verwendet werden soll.',
+                'store' => [
+                    [1, 'E-Mail'],
+                    [2, 'Kundennummer']
+                ],
+                'value' => 1
+            ]
+        );
     }
     
     /**
@@ -1129,7 +1224,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'blisstribute-soap-protocol' => 'protocol',
                 'blisstribute-soap-host' => 'host',
                 'blisstribute-soap-port' => 'port',
-                        'blisstribute-soap-client' => 'soap-client',
+                'blisstribute-soap-client' => 'soap-client',
                 'blisstribute-soap-username' => 'soap-username',
                 'blisstribute-soap-password' => 'soap-password',
                 'blisstribute-http-login' => 'http-username',
@@ -1170,8 +1265,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 $elementModel->addTranslation($translationModel);
             }
         }
-        
-        $form->save();    
     }
 
     /**

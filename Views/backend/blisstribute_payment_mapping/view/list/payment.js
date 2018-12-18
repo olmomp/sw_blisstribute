@@ -21,6 +21,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameCashOnDelivery: '{s name=blisstribute/paymentCashOnDelivery}Nachnahme{/s}',
         classNameSofort: '{s name=blisstribute/paymentSofort}Sofortueberweisung{/s}',
         classNamePayPal: '{s name=blisstribute/paymentPayPal}PayPal{/s}',
+        classNamePayPalPlus: '{s name=blisstribute/paymentPayPalPlus}PayPalPlus{/s}',
         classNameBill: '{s name=blisstribute/paymentBill}Rechnung (Eigene Abwicklung){/s}',
         classNamePayolution: '{s name=blisstribute/paymentPayolution}Rechnung (Payolution){/s}',
         classNamePayolutionInstallment: '{s name=blisstribute/paymentPayolutionInstallment}Ratenkauf (Payolution){/s}',
@@ -33,6 +34,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameSelfcollectorCash: '{s name=blisstribute/paymentSelfcollectorCash}Bar (Selbstabholer){/s}',
         classNameSelfcollectorCashEc: '{s name=blisstribute/paymentSelfcollectorCashEc}EC (Selbstabholer){/s}',
         classNameSelfcollectorCashCreditCard: '{s name=blisstribute/paymentSelfcollectorCashCreditCard}Kreditkarte (Selbstabholer){/s}',
+        classNameWirecardCP: '{s name=blisstribute/paymentWirecardCP}Wirecard CC{/s}',
         classNameVrPayCC: '{s name=blisstribute/paymentVrPayCC}vrPayCC{/s}',
         classNamePayOneCC: '{s name=blisstribute/paymentPayOneCC}PayOneCC{/s}',
         classNamePayOneELV: '{s name=blisstribute/paymentPayOneELV}PayOneELV{/s}',
@@ -40,6 +42,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameKlarnaSofort: '{s name=blisstribute/paymentKlarnaSofort}Klarna Sofort{/s}',
         classNameAmazonPayments: '{s name=blisstribute/paymentAmazonPayments}Amazon Payments{/s}',
         classNameBillsafe: '{s name=blisstribute/paymentBillsafe}Billsafe{/s}',
+        classNameAfterPay: '{s name=blisstribute/paymentAfterPay}AfterPay{/s}',
     },
 
     configure: function() {
@@ -97,6 +100,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                             case 'PayPal':
                                 return me.snippets.classNamePayPal;
 
+                            case 'PayPalPlus':
+                                return me.snippets.classNamePayPalPlus;
+
                             case 'Bill':
                                 return me.snippets.classNameBill;
 
@@ -139,6 +145,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                             case 'VrPayCC':
                                 return me.snippets.classNameVrPayCC;
 
+                            case 'WirecardCP':
+                                return me.snippets.classNameWirecardCP;
+
                             case 'PayOneCC':
                                 return me.snippets.classNamePayOneCC;
 
@@ -157,6 +166,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                             case 'Billsafe':
                                 return me.snippets.classNameBillsafe;
 
+                            case 'AfterPay':
+                                return me.snippets.classNameAfterPay;
+
                             default:
                                 return me.snippets.classNameNone;
                         }
@@ -171,6 +183,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['DebitAdvice', me.snippets.classNamedebitAdvice],
                                 ['CashOnDelivery', me.snippets.classNameCashOnDelivery],
                                 ['PayPal', me.snippets.classNamePayPal],
+                                ['PayPalPlus', me.snippets.classNamePayPalPlus],
                                 ['Bill', me.snippets.classNameBill],
                                 ['Payolution', me.snippets.classNamePayolution],
                                 ['PayolutionELV', me.snippets.classNamePayolutionELV],
@@ -185,12 +198,14 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['SelfcollectorCashEc', me.snippets.classNameSelfcollectorCashEc],
                                 ['SelfcollectorCashCreditCard', me.snippets.classNameSelfcollectorCashCreditCard],
                                 ['VrPayCC', me.snippets.classNameVrPayCC],
+                                ['WirecardCP', me.snippets.classNameWirecardCP],
                                 ['Klarna', me.snippets.classNameKlarna],
                                 ['KlarnaSofort', me.snippets.classNameKlarnaSofort],
                                 ['PayOneCC', me.snippets.classNamePayOneCC],
                                 ['PayOneELV', me.snippets.classNamePayOneELV],
                                 ['AmazonPayments', me.snippets.classNameAmazonPayments],
-                                ['Billsafe', me.snippets.classNameBillsafe]
+                                ['Billsafe', me.snippets.classNameBillsafe],
+                                ['AfterPay', me.snippets.classNameAfterPay]
                             ]
                         }),
                         allowBlank: false,

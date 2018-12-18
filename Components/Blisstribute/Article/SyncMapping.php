@@ -144,22 +144,26 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         $value = '';
-        $mainDetail = $this->_getMainDetail($article);
-        $this->logDebug('articleSyncMapping::getClassification::got mainDetail ' . $mainDetail->getId());
-        $attribute = $mainDetail->getAttribute();
-        $this->logDebug('articleSyncMapping::getClassification::got attribute ' . $attribute->getId());
         $method = 'get' . ucfirst($fieldName);
-        if ($mainDetail) {
-            $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute ' . $method);
-            if (method_exists($mainDetail->getAttribute(), $method)) {
-                $value = $mainDetail->getAttribute()->$method();
+        $mainDetail = $this->_getMainDetail($article);
+        if ($mainDetail != null) {
+            $this->logDebug('articleSyncMapping::getClassification::got mainDetail ' . $mainDetail->getId());
+            $attribute = $mainDetail->getAttribute();
+            $this->logDebug('articleSyncMapping::getClassification::got attribute ' . $attribute->getId());
+            if ($mainDetail) {
+                $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute ' . $method);
+                if (method_exists($mainDetail->getAttribute(), $method)) {
+                    $value = $mainDetail->getAttribute()->$method();
+                }
+                $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute value ' . $value);
             }
-            $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute value ' . $value);
+        } else {
+            $this->logDebug('articleSyncMapping::getClassification::main detail not found.');
         }
 
         if (trim($value) == '') {
             $this->logDebug('articleSyncMapping::getClassification::switch to article attribute');
-            if (method_exists($article, $method)) {
+            if (method_exists($article->getAttribute(), $method)) {
                 $value = $article->getAttribute()->$method();
             }
             $this->logDebug('articleSyncMapping::getClassification::article attribute value ' . $value);
@@ -176,7 +180,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     private function _getMainDetail($article)
     {
         if ($article->getConfiguratorSet() != null) {
-
             /** @var Detail $currentDetail */
             foreach ($article->getDetails() as $currentDetail) {
                 if ($currentDetail->getKind() == 1) {
@@ -297,17 +300,15 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         $categoryLimit = 0;
         $categoryNameCollection = array($baseCategory->getName());
-        while ($baseCategory->getParent() != null
-            && strtolower($baseCategory->getParent()->getName()) != 'root'
-            && strtolower($baseCategory->getParent()->getName()) != 'deutsch'
-            && strtolower($baseCategory->getParent()->getName()) != 'englisch'
-            && !preg_match('/\-de/i', $baseCategory->getParent()->getName())
-            && !preg_match('/\-en/i', $baseCategory->getParent()->getName())
-            && $categoryLimit < 10
-        ) {
+        $this->logDebug('articleSyncMapping::getCategoryCollection::baseCategory::' . $baseCategory->getName());
+        while ($baseCategory->getParent() != null && $categoryLimit < 10) {
             $baseCategory = $baseCategory->getParent();
-            $categoryNameCollection[] = trim($baseCategory->getName());
+            $this->logDebug('articleSyncMapping::getCategoryCollection::new baseCategory::' . $baseCategory->getName());
+            if ($baseCategory->getParent() == null || preg_match('/root/i', $baseCategory->getParent()->getName())) {
+                break;
+            }
 
+            $categoryNameCollection[] = trim($baseCategory->getName());
             $categoryLimit++;
         }
 
@@ -637,7 +638,16 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     private function getArticleVhsNumber($articleDetail)
     {
-        $vhsArticleNumber = $articleDetail->getAttribute()->getBlisstributeVhsNumber();
+        $attribute = $articleDetail->getAttribute();
+        if ($attribute == null) {
+            $attribute = $articleDetail->getArticle()->getAttribute();
+        }
+
+        if ($attribute == null) {
+            throw new Exception('malformed article detail detected', $articleDetail->getId());
+        }
+
+        $vhsArticleNumber = $attribute->getBlisstributeVhsNumber();
         if (!$vhsArticleNumber) {
             return '';
         }
