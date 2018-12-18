@@ -280,6 +280,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+        if (version_compare($version, '0.14.7', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'checkbox',
+                'blisstribute-article-sync-manufacturer-article-number',
+                [
+                    'label' => 'Hersteller-Art.Nr als Identifikation synchronisieren',
+                    'description' => 'Wenn aktiviert, wird die Hersteller-Artikel-Nr als Produkt-Identifikation synchronisiert. Sollte nicht aktiviert werden, wenn Artikel mit Lieferanten synchronisiert werden.',
+                    'value' => 0
+                ]
+            );
+        }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
     }
@@ -1146,6 +1158,15 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'description' => '',
                 'value' => ''
             )
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-article-sync-manufacturer-article-number',
+            [
+                'label' => 'Hersteller-Art.Nr als Identifikation synchronisieren',
+                'description' => 'Wenn aktiviert, wird die Hersteller-Artikel-Nr als Produkt-Identifikation synchronisiert. Sollte nicht aktiviert werden, wenn Artikel mit Lieferanten synchronisiert werden.',
+                'value' => 0
+            ]
         );
 
         $form->setElement(

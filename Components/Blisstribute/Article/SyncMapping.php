@@ -574,6 +574,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'erpArticleNumber' => $this->getArticleVhsNumber($articleDetail),
             'articleNumber' => $articleDetail->getNumber(),
             'ean13' => $articleDetail->getEan(),
+            'manufacturerArticleNumber' => $this->_getManufacturerArticleNumber($articleDetail),
             'ean10' => '',
             'isrc' => '',
             'isbn' => '',
@@ -630,6 +631,20 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         return $supplierCode;
+    }
+
+    /**
+     * @param Detail $articleDetail
+     * @return mixed
+     */
+    private function _getManufacturerArticleNumber($articleDetail)
+    {
+        $manufacturerArticleNumber = '';
+        if ($articleDetail->getSupplierNumber() && $this->getConfig()['blisstribute-article-sync-manufacturer-article-number']) {
+            $manufacturerArticleNumber = $articleDetail->getSupplierNumber();
+        }
+
+        return $manufacturerArticleNumber;
     }
 
     /**
