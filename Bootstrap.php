@@ -280,7 +280,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
-        if (version_compare($version, '0.14.4', '<')) {
+        if (version_compare($version, '0.14.7', '<')) {
             $form = $this->Form();
             $form->setElement(
                 'checkbox',
@@ -291,9 +291,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     'value' => 0
                 ]
             );
-        }
-        if (version_compare($version, '0.14.7', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'checkbox',
                 'blisstribute-article-sync-manufacturer-article-number',
