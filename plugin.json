@@ -8,10 +8,11 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.14.7",
+    "currentVersion": "0.14.7.1",
 
     "changelog": {
         "de": {
+            "0.14.7.1": "fixing version compare",
             "0.14.7": "add attributes for customsTariffNumber and countryOfOrigin (by https://github.com/lacodimizer)",
             "0.14.7": "add option to send b2b orders with net prices",
             "0.14.7": "add possibility to sync manufacturer article number as product identification",
