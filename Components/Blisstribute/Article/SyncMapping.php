@@ -77,8 +77,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'releaseDate' => $releaseDate,
             'removeDate' => $removeDate,
             'reorder' => true,
-            'customsTariffNumber' => '',
-            'countryOfOriginCode' => '',
+            'customsTariffNumber' => $this->_getCustomsTariffNumber($this->getArticle()->getMainDetail()),
+            'countryOfOriginCode' => $this->_getCountryOfOrigin($this->getArticle()->getMainDetail()),
             'sex' => 0,
             'sale' => null,
             'priceCode' => '0000',
@@ -106,6 +106,26 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 'article' => $this->getArticle()
             )
         );
+    }
+
+    /**
+     * @param Detail $mainDetail
+     *
+     * @return string
+     */
+    protected function _getCustomsTariffNumber($mainDetail)
+    {
+        return $mainDetail->getAttribute()->getBlisstributeCustomsTariffNumber();
+    }
+
+    /**
+     * @param Detail $mainDetail
+     *
+     * @return string
+     */
+    protected function _getCountryOfOrigin($mainDetail)
+    {
+        return $mainDetail->getAttribute()->getBlisstributeCountryOfOrigin();
     }
 
     /**
