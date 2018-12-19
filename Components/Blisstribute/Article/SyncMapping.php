@@ -773,7 +773,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function getMainDetailBasePrice(Detail $articleDetail)
     {
-        if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
+        if (version_compare(\Shopware::VERSION, '5.2.0', '>=')) {
             return $articleDetail->getPurchasePrice();
         }
 
