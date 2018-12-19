@@ -12,6 +12,7 @@
 
     "changelog": {
         "de": {
+            "0.14.7": "add option to send b2b orders with net prices",
             "0.14.7": "add possibility to sync manufacturer article number as product identification",
             "0.14.6": "fix for blisstributeArticle event hooks (by https://github.com/sheitmeier)",
             "0.14.5": "switch preUpdate/prePersist to postUpdate/postPersist events",
