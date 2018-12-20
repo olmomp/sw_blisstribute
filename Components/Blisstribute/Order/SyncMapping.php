@@ -180,6 +180,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             }
         }
 
+        foreach ($this->orderData['orderCoupons'] as $currentCoupon) {
+            if (!$currentCoupon['isMoneyVoucher']) {
+                continue;
+            }
+
+            $orderTotal -= round($currentCoupon['couponDiscount'], 4);
+        }
+
         return $orderTotal;
     }
 
@@ -1463,22 +1471,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $voucher = null;
             $voucherCollection = $voucherRepository->getValidateOrderCodeQuery($currentOrderLine->getArticleNumber())->getResult();
-            if (count($voucherCollection) > 1) {
-                /** @var Voucher $currentVoucher */
-                foreach ($voucherCollection as $currentVoucher) {
-                    if (abs(round($currentVoucher->getValue(), 4, PHP_ROUND_HALF_UP)) != abs(round($currentOrderLine->getPrice(), 4, PHP_ROUND_HALF_UP))) {
-                        continue;
-                    }
-
-                    $voucher = $currentVoucher;
-                    break;
-                }
-
-            } elseif (count($voucherCollection) == 1) {
+            if (count($voucherCollection) > 0) {
                 $voucher = $voucherCollection[0];
             }
 
             if ($voucher != null) {
+                /** @var $voucher Voucher */
+                $voucher->setValue(abs(round($currentOrderLine->getPrice(), 4)));
                 $this->voucherCollection[] = $voucher;
 
                 $couponMapping = $couponMappingRepository->findByCoupon($voucher);
