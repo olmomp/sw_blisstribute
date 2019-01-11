@@ -12,6 +12,7 @@
 
     "changelog": {
         "de": {
+            "0.14.9": "reverting money voucher changes",
             "0.14.8": "fixing money voucher issue",
             "0.14.7.1": "fixing version compare",
             "0.14.7": "add attributes for customsTariffNumber and countryOfOrigin (by https://github.com/lacodimizer)",

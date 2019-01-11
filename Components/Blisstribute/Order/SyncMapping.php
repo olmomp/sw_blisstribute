@@ -1471,7 +1471,18 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $voucher = null;
             $voucherCollection = $voucherRepository->getValidateOrderCodeQuery($currentOrderLine->getArticleNumber())->getResult();
-            if (count($voucherCollection) > 0) {
+            if (count($voucherCollection) > 1) {
+                /** @var Voucher $currentVoucher */
+                foreach ($voucherCollection as $currentVoucher) {
+                    if (abs(round($currentVoucher->getValue(), 4, PHP_ROUND_HALF_UP)) != abs(round($currentOrderLine->getPrice(), 4, PHP_ROUND_HALF_UP))) {
+                        continue;
+                    }
+
+                    $voucher = $currentVoucher;
+                    break;
+                }
+
+            } elseif (count($voucherCollection) == 1) {
                 $voucher = $voucherCollection[0];
             }
 
