@@ -9,6 +9,7 @@
     "author": "exitB GmbH",
 
     "currentVersion": "0.14.10",
+    "isUpdateImportant": false,
 
     "changelog": {
         "de": {
