@@ -1488,7 +1488,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             if ($voucher != null) {
                 /** @var $voucher Voucher */
-                $voucher->setValue(abs(round($currentOrderLine->getPrice(), 4)));
                 $this->voucherCollection[] = $voucher;
 
                 $couponMapping = $couponMappingRepository->findByCoupon($voucher);
