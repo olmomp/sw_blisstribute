@@ -48,13 +48,14 @@ class Shopware_Controllers_Backend_BlisstributeCore
         $pluginData = json_decode(file_get_contents('https://raw.githubusercontent.com/ccarnivore/sw_blisstribute/master/plugin.json'), true);
         $latestVersion = trim($pluginData['currentVersion']);
         $isImportant = (bool)$pluginData['isUpdateImportant'];
+        $developerMode = getenv('SHOPWARE_ENV') === 'dev';
 
         $this->View()->assign([
             'success' => true,
             'currentVersion' => $currentVersion,
             'latestVersion' => $latestVersion,
             'importantUpdate' => $isImportant,
-            'outdated' => version_compare($currentVersion, $latestVersion) === -1,
+            'outdated' => $developerMode ? true : version_compare($currentVersion, $latestVersion) === -1,
             'downloadLink' => 'https://github.com/ccarnivore/sw_blisstribute/releases/latest'
         ]);
     }
