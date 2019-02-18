@@ -191,20 +191,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             ];
         }
 
-        return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
+        return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
     /**
      * @inheritdoc
      */
     public function update($version)
-    {        
-        if (version_compare($version, '0.8.0', '<')) {
-            return ['success' => false, 'message' => 'Bitte das Plugin neu installieren.'];
-        }
-        if (version_compare($version, '0.9.6', '<')) {
-            return ['success' => false, 'message' => 'Bitte das Plugin neu installieren.'];
-        }
+    {
+        $this->createAttributeCollection();
+
         if (version_compare($version, '0.10.3', '<')) {
             $form = $this->Form();
             $form->setElement(
@@ -226,6 +222,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+
         if (version_compare($version, '0.11.2', '<')) {
             $form = $this->Form();
             $form->setElement(
@@ -239,6 +236,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+
         if (version_compare($version, '0.11.4', '<')) {
             $form = $this->Form();
             $form->setElement(
@@ -252,6 +250,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+
         if (version_compare($version, '0.12.7', '<')) {
             $form = $this->Form();
             $form->setElement(
@@ -268,6 +267,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+
         if (version_compare($version, '0.14.2', '<')) {
             $form = $this->Form();
             $form->setElement(
@@ -280,6 +280,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 ]
             );
         }
+
         if (version_compare($version, '0.14.7', '<')) {
             $form = $this->Form();
             $form->setElement(
@@ -302,9 +303,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
         }
 
-        $this->createAttributeCollection();
-
-        return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
+        return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
     /**
@@ -312,7 +311,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
      */
     public function uninstall()
     {
-        return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config', 'frontend']];
+        return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
     /**
@@ -348,32 +347,47 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         $crud->update('s_articles_attributes', 'blisstribute_supplier_code', 'combobox', [
             'displayInBackend' => true,
-            'label' => 'blisstribute supplier code',
+            'label' => 'VHS - Lieferantencode',
+
             'custom' => 1
         ]);
 
         $crud->update('s_articles_attributes', 'blisstribute_vhs_number', 'string', [
             'displayInBackend' => true,
-            'label' => 'blisstribute vhs article number',
+            'label' => 'VHS - VHS-Artikel-Nummer',
             'custom' => 1
         ]);
 
         $crud->update('s_articles_attributes', 'blisstribute_supplier_stock', 'integer', [
             'displayInBackend' => true,
-            'label' => 'blisstribute supplier stock',
+            'label' => 'VHS - Lieferantenbestand',
             'custom' => 1
         ]);
 
         $crud->update('s_articles_attributes', 'blisstribute_customs_tariff_number', 'string', [
             'displayInBackend' => true,
-            'label' => 'blisstribute customs tariff number',
+            'label' => 'VHS - Zolltarifnummer',
             'custom' => 1
         ]);
 
         $crud->update('s_articles_attributes', 'blisstribute_country_of_origin', 'string', [
             'displayInBackend' => true,
-            'label' => 'blisstribute country of origin (iso2 code)',
+            'label' => 'VHS - Herkunftsland (ISO Alpha 2)',
             'custom' => 1
+        ]);
+
+        $crud->update('s_articles_attributes', 'blisstribute_article_shipment_code', 'string', [
+            'displayInBackend' => true,
+            'label' => 'VHS - Statische Versandart',
+            'supportText' => 'Wenn angegeben, wird dieser Code bei einer Bestellung für diese Bestellzeile übergeben.',
+            'custom' => 1
+        ]);
+
+        $crud->update('s_articles_attributes', 'blisstribute_article_advertising_medium_code', 'string', [
+            'displayInBackend' => true,
+            'label' => 'VHS - Statischer Werbemittelcode',
+            'custom' => 1,
+            'supportText' => 'Wenn angegeben, wird dieser Code bei einer Bestellung für diese Bestellzeile übergeben.',
         ]);
 
         $crud->update('s_order_details_attributes', 'blisstribute_quantity_canceled', 'integer');

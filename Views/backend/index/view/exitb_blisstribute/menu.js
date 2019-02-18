@@ -50,7 +50,7 @@ Ext.define('Shopware.apps.Index.view.ExitbBlisstribute.Menu', {
             async: false,
             success: function (response) {
                 var responseData = Ext.decode(response.responseText);
-                if (responseData.success == true && responseData.outdated) {
+                if (responseData.success == true && responseData.outdated && responseData.importantUpdate) {
                     var text = 'Ihre Version: ' + responseData.currentVersion + ' | Aktuellste Version: ' + responseData.latestVersion +
                         '<br /><br />Laden Sie die neuste Version <a target="_blank" href="'+responseData.downloadLink+'">HIER</a> herunter';
 
