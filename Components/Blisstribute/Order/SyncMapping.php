@@ -624,8 +624,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'discountTotal' => 0,
                 'configuration' => '',
             ];
-            
-            $articleDataCollection[] = $this->applyCustomProducts($articleData, $product, $basketItems);
+
+            $articleData = $this->applyCustomProducts($articleData, $product, $basketItems);
+            $articleData = $this->applyStaticAttributeData($articleData, $product);
+
+            $articleDataCollection[] = $articleData;
         }
 
         $articleDataCollection = $this->applyPromoDiscounts($articleDataCollection, $promotions, $orderNumbers, $shopwareDiscountsAmount, $orderId);
@@ -787,6 +790,42 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         );
     }
 
+    /**
+     * @param array $articleData
+     * @param \Shopware\Models\Order\Detail $orderLine
+     *
+     * @return array
+     */
+    public function applyStaticAttributeData($articleData, $orderLine)
+    {
+        $this->logDebug('orderSyncMapping::applyStaticAttributeData::start');
+        $product = $orderLine->getArticleDetail();
+
+        $configuration = array();
+        if (trim($articleData['configuration']) != '') {
+            $configuration = json_decode($articleData['configuration'], true);
+        }
+
+        if (trim($product->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
+            $configuration[] = array('category_type' => 'shipmentType', 'category' => trim($product->getAttribute()->getBlisstributeArticleShipmentCode()));
+        }
+
+        if (trim($product->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
+            $configuration[] = array('category_type' => 'advertisingMedium', 'category' => trim($product->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()));
+        }
+
+        $articleData['configuration'] = json_encode($configuration);
+        $this->logDebug('orderSyncMapping::applyStaticAttributeData::done ' . json_encode($configuration));
+
+        return $articleData;
+    }
+
+    /**
+     * @param array $articleData
+     * @param Shopware\Models\Order\Detail $product
+     * @param Shopware\Models\Order\Detail[] $basketItems
+     * @return mixed
+     */
     public function applyCustomProducts($articleData, $product, $basketItems)
     {
         // check if plugin SwagCustomProducts is installed

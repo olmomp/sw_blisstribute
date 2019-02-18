@@ -182,14 +182,17 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
     public function checkPluginUpToDateAction()
     {
         $currentVersion = $this->plugin->getVersion();
-        $latestVersion = json_decode(file_get_contents('https://raw.githubusercontent.com/ccarnivore/sw_blisstribute/master/plugin.json'), true)['currentVersion'];
+        $pluginData = json_decode(file_get_contents('https://raw.githubusercontent.com/ccarnivore/sw_blisstribute/master/plugin.json'), true);
+        $latestVersion = trim($pluginData['currentVersion']);
+        $isImportant = (bool)$pluginData['isUpdateImportant'];
 
         $this->View()->assign(array(
             'success' => true,
             'currentVersion' => $currentVersion,
             'latestVersion' => $latestVersion,
+            'importantUpdate' => $isImportant,
             'outdated' => version_compare($currentVersion, $latestVersion) === -1,
-            'downloadLink' => 'https://github.com/ccarnivore/sw_blisstribute/releases'
+            'downloadLink' => 'https://github.com/ccarnivore/sw_blisstribute/releases/latest'
         ));
     }
 
