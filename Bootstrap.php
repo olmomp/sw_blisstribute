@@ -376,6 +376,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'custom' => 1
         ]);
 
+        $crud->update('s_articles_attributes', 'blisstribute_article_shipment_code', 'string', [
+            'displayInBackend' => true,
+            'label' => 'blisstribute article shipment code',
+            'custom' => 1
+        ]);
+
+        $crud->update('s_articles_attributes', 'blisstribute_article_advertising_medium_code', 'string', [
+            'displayInBackend' => true,
+            'label' => 'blisstribute article advertising medium code',
+            'custom' => 1
+        ]);
+
         $crud->update('s_order_details_attributes', 'blisstribute_quantity_canceled', 'integer');
         $crud->update('s_order_details_attributes', 'blisstribute_quantity_returned', 'integer');
         $crud->update('s_order_details_attributes', 'blisstribute_quantity_shipped', 'integer');

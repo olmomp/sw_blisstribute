@@ -9,10 +9,12 @@
     "author": "exitB GmbH",
 
     "currentVersion": "0.14.10",
-    "isUpdateImportant": false,
+    "isUpdateImportant": true,
 
     "changelog": {
         "de": {
+            "0.14.11": "adding article attributes for shipment type and advertising medim",
+            "0.14.11": "change article vat handling for material sync",
             "0.14.10": "reverting money voucher changes",
             "0.14.9": "reverting money voucher changes",
             "0.14.8": "fixing money voucher issue",

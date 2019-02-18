@@ -337,32 +337,24 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
-     * @todo implement tax rules ??
-     * @todo better mapping of vat types??
-     *
      * @return array
      */
     protected function buildVatCollection()
     {
         $vatCollection = array();
-        $articleTax = $this->getArticle()->getTax()->getTax();
-        if ($articleTax > 10) {
-            $vatType = 'HIGH';
-        } elseif ($articleTax > 5) {
-            $vatType = 'LOW';
-        } elseif ($articleTax > 0) {
-            $vatType = 'VERY-LOW';
-        } else {
-            $vatType = 'ZERO';
+        $tax = $this->getArticle()->getTax();
+
+        $vatPercentage = $tax->getTax();
+        if ($vatPercentage > 10 || preg_match('/HIGH/i', $tax->getName())) {
+            $vatType = 'H';
+        } elseif ($vatPercentage > 5 || preg_match('/LOW/i', $tax->getName())) {
+            $vatType = 'L';
+        }  else {
+            $vatType = 'Z';
         }
 
-        $countryRepository = Shopware()->Models()->getRepository('Shopware\Models\Country\Country');
-        $germany = $countryRepository->findOneBy(array(
-            'iso' => 'DE'
-        ));
-
         $vatCollection[] = array(
-            'countryIsoCode' => $germany->getIso(),
+            'countryIsoCode' => 'DE',
             'vatType' => $vatType
         );
 
@@ -780,6 +772,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 'deliverer' => 'foreign'
             );
         }
+
+
 
         return $tagCollection;
     }
