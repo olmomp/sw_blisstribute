@@ -30,12 +30,13 @@ class ControllerSubscriber implements SubscriberInterface
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeArticleSyncCron' => 'getArticleSyncCronController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeArticleType' => 'getArticleTypeController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeOrder' => 'getOrderController',
+            'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeCore' => 'getCoreController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeOrderSyncCron' => 'getOrderSyncCronController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeShipmentMapping' => 'getShipmentMappingController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributePaymentMapping' => 'getPaymentMappingController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeShopMapping' => 'getShopMappingController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeCouponMapping' => 'getCouponMappingController',
-            
+
             // api controllers
             'Enlight_Controller_Dispatcher_ControllerPath_Api_Btorders' => 'getBtordersApiController',
             'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticles' => 'getBtarticlesApiController',
@@ -56,6 +57,26 @@ class ControllerSubscriber implements SubscriberInterface
     {
         $this->container->get('template')->addTemplateDir(__DIR__ . '/../Views/', 'blisstribute');
         $this->container->get('snippets')->addConfigDir(__DIR__ . '/../Snippets/');
+    }
+
+    /**
+     * return article type controller path
+     *
+     * @return string
+     */
+    public function checkPluginAction(\Enlight_Event_EventArgs $eventArgs)
+    {
+        return true;
+    }
+
+    /**
+     * return article type controller path
+     *
+     * @return string
+     */
+    public function getCoreController(\Enlight_Event_EventArgs $eventArgs)
+    {
+        return __DIR__ . '/../Controllers/Backend/BlisstributeCore.php';
     }
 
     /**
