@@ -798,6 +798,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     public function applyStaticAttributeData($articleData, $orderLine)
     {
+        return $articleData;
+
         $this->logDebug('orderSyncMapping::applyStaticAttributeData::start');
         $product = $orderLine->getArticleDetail();
 
