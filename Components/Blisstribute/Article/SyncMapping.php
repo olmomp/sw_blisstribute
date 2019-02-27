@@ -77,8 +77,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'releaseDate' => $releaseDate,
             'removeDate' => $removeDate,
             'reorder' => true,
-            'customsTariffNumber' => '',
-            'countryOfOriginCode' => '',
+            'customsTariffNumber' => $this->_getCustomsTariffNumber($this->getArticle()->getMainDetail()),
+            'countryOfOriginCode' => $this->_getCountryOfOrigin($this->getArticle()->getMainDetail()),
             'sex' => 0,
             'sale' => null,
             'priceCode' => '0000',
@@ -106,6 +106,26 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 'article' => $this->getArticle()
             )
         );
+    }
+
+    /**
+     * @param Detail $mainDetail
+     *
+     * @return string
+     */
+    protected function _getCustomsTariffNumber($mainDetail)
+    {
+        return $mainDetail->getAttribute()->getBlisstributeCustomsTariffNumber();
+    }
+
+    /**
+     * @param Detail $mainDetail
+     *
+     * @return string
+     */
+    protected function _getCountryOfOrigin($mainDetail)
+    {
+        return $mainDetail->getAttribute()->getBlisstributeCountryOfOrigin();
     }
 
     /**
@@ -317,32 +337,24 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
-     * @todo implement tax rules ??
-     * @todo better mapping of vat types??
-     *
      * @return array
      */
     protected function buildVatCollection()
     {
         $vatCollection = array();
-        $articleTax = $this->getArticle()->getTax()->getTax();
-        if ($articleTax > 10) {
-            $vatType = 'HIGH';
-        } elseif ($articleTax > 5) {
-            $vatType = 'LOW';
-        } elseif ($articleTax > 0) {
-            $vatType = 'VERY-LOW';
-        } else {
-            $vatType = 'ZERO';
+        $tax = $this->getArticle()->getTax();
+
+        $vatPercentage = $tax->getTax();
+        if ($vatPercentage > 10 || preg_match('/HIGH/i', $tax->getName())) {
+            $vatType = 'H';
+        } elseif ($vatPercentage > 5 || preg_match('/LOW/i', $tax->getName())) {
+            $vatType = 'L';
+        }  else {
+            $vatType = 'Z';
         }
 
-        $countryRepository = Shopware()->Models()->getRepository('Shopware\Models\Country\Country');
-        $germany = $countryRepository->findOneBy(array(
-            'iso' => 'DE'
-        ));
-
         $vatCollection[] = array(
-            'countryIsoCode' => $germany->getIso(),
+            'countryIsoCode' => 'DE',
             'vatType' => $vatType
         );
 
@@ -574,6 +586,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'erpArticleNumber' => $this->getArticleVhsNumber($articleDetail),
             'articleNumber' => $articleDetail->getNumber(),
             'ean13' => $articleDetail->getEan(),
+            'manufacturerArticleNumber' => $this->_getManufacturerArticleNumber($articleDetail),
             'ean10' => '',
             'isrc' => '',
             'isbn' => '',
@@ -630,6 +643,20 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         return $supplierCode;
+    }
+
+    /**
+     * @param Detail $articleDetail
+     * @return mixed
+     */
+    private function _getManufacturerArticleNumber($articleDetail)
+    {
+        $manufacturerArticleNumber = '';
+        if ($articleDetail->getSupplierNumber() && $this->getConfig()['blisstribute-article-sync-manufacturer-article-number']) {
+            $manufacturerArticleNumber = $articleDetail->getSupplierNumber();
+        }
+
+        return $manufacturerArticleNumber;
     }
 
     /**
@@ -745,6 +772,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 'deliverer' => 'foreign'
             );
         }
+
+
 
         return $tagCollection;
     }

@@ -46,12 +46,13 @@ Ext.define('Shopware.apps.Index.view.ExitbBlisstribute.Menu', {
 
     checkPluginUpToDate: function() {
         Ext.Ajax.request({
-            url: '{url controller="BlisstributeOrder" action="checkPluginUpToDate"}',
+            url: '{url controller="BlisstributeCore" action="checkPluginUpToDate"}',
             async: false,
             success: function (response) {
                 var responseData = Ext.decode(response.responseText);
                 if (responseData.success == true && responseData.outdated) {
-                    var text = 'Ihre Version: ' + responseData.currentVersion + ' | Aktuellste Version: ' + responseData.latestVersion +
+                    var text = 'Ihre Version: ' + responseData.currentVersion +
+                        '<br />Aktuellste Version: <b>' + responseData.latestVersion + (responseData.importantUpdate ? ' (Wichtiges Update!)' : '') +  '</b>' +
                         '<br /><br />Laden Sie die neuste Version <a target="_blank" href="'+responseData.downloadLink+'">HIER</a> herunter';
 
                     Shopware.Notification.createStickyGrowlMessage({

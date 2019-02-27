@@ -61,6 +61,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     private $container = null;
 
+    /**
+     * @return array
+     */
     protected function getConfig()
     {
         $shop = $this->getModelEntity()->getOrder()->getShop();
@@ -170,12 +173,19 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $orderTotal = round($this->orderData['payment']['total'], 4);
         $orderTotal += round($this->orderData['shipmentTotal'], 4);
         foreach ($this->orderData['orderLines'] as $currentOrderLine) {
-            //enable after bliss release
-            //if ($currentOrderLine['isB2BOrder']) {
-            //    $orderTotal += round((($currentOrderLine['priceNet'] / $currentOrderLine['quantity']) / 100) * (100 + $currentOrderLine['vatRate']), 4);
-            //} else {
+            if ($currentOrderLine['isB2BOrder'] && $this->getConfig()['blisstribute-transfer-b2b-net']) {
+                $orderTotal += round((($currentOrderLine['priceNet'] / $currentOrderLine['quantity']) / 100) * (100 + $currentOrderLine['vatRate']), 4);
+            } else {
                 $orderTotal += round($currentOrderLine['price'], 4);
-            //}
+            }
+        }
+
+        foreach ($this->orderData['orderCoupons'] as $currentCoupon) {
+            if (!$currentCoupon['isMoneyVoucher']) {
+                continue;
+            }
+
+            $orderTotal -= round($currentCoupon['couponDiscount'], 4);
         }
 
         return $orderTotal;
@@ -236,7 +246,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $orderRemark[] = 'SWP - Bestellung gesperrt.';
         }
 
-        $customerNumber = '';
         switch ($this->getConfig()['blisstribute-order-sync-external-customer-number']) {
             case 2:
                 $customerNumber = $customer->getNumber();
@@ -558,13 +567,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $customerGroupId = $swOrder->getCustomer()->getGroup()->getId();
         $shopId =  $swOrder->getShop()->getId();
 
-        /** @var Detail $product */
+        /** @var Shopware\Models\Order\Detail $product */
         foreach ($basketItems as $product) {
             $priceNet = $price = 0;
-            if ($isB2BOrder) {
-                //enable after bliss release
-                //$priceNet = ($product->getPrice() / (100 + $product->getTaxRate())) * 100;
-                $price = $product->getPrice();
+            if ($isB2BOrder && $this->getConfig()['blisstribute-transfer-b2b-net']) {
+                $priceNet = ($product->getPrice() / (100 + $product->getTaxRate())) * 100;
             } else {
                 $price = $product->getPrice();
             }
@@ -617,8 +624,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'discountTotal' => 0,
                 'configuration' => '',
             ];
-            
-            $articleDataCollection[] = $this->applyCustomProducts($articleData, $product, $basketItems);
+
+            $articleData = $this->applyCustomProducts($articleData, $product, $basketItems);
+            $articleData = $this->applyStaticAttributeData($articleData, $product);
+
+            $articleDataCollection[] = $articleData;
         }
 
         $articleDataCollection = $this->applyPromoDiscounts($articleDataCollection, $promotions, $orderNumbers, $shopwareDiscountsAmount, $orderId);
@@ -780,6 +790,44 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         );
     }
 
+    /**
+     * @param array $articleData
+     * @param \Shopware\Models\Order\Detail $orderLine
+     *
+     * @return array
+     */
+    public function applyStaticAttributeData($articleData, $orderLine)
+    {
+        return $articleData;
+
+        $this->logDebug('orderSyncMapping::applyStaticAttributeData::start');
+        $product = $orderLine->getArticleDetail();
+
+        $configuration = array();
+        if (trim($articleData['configuration']) != '') {
+            $configuration = json_decode($articleData['configuration'], true);
+        }
+
+        if (trim($product->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
+            $configuration[] = array('category_type' => 'shipmentType', 'category' => trim($product->getAttribute()->getBlisstributeArticleShipmentCode()));
+        }
+
+        if (trim($product->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
+            $configuration[] = array('category_type' => 'advertisingMedium', 'category' => trim($product->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()));
+        }
+
+        $articleData['configuration'] = json_encode($configuration);
+        $this->logDebug('orderSyncMapping::applyStaticAttributeData::done ' . json_encode($configuration));
+
+        return $articleData;
+    }
+
+    /**
+     * @param array $articleData
+     * @param Shopware\Models\Order\Detail $product
+     * @param Shopware\Models\Order\Detail[] $basketItems
+     * @return mixed
+     */
     public function applyCustomProducts($articleData, $product, $basketItems)
     {
         // check if plugin SwagCustomProducts is installed
@@ -1480,6 +1528,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             }
 
             if ($voucher != null) {
+                /** @var $voucher Voucher */
                 $this->voucherCollection[] = $voucher;
 
                 $couponMapping = $couponMappingRepository->findByCoupon($voucher);
