@@ -40,6 +40,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNamePayOneELV: '{s name=blisstribute/paymentPayOneELV}PayOneELV{/s}',
         classNameKlarna: '{s name=blisstribute/paymentKlarna}Klarna{/s}',
         classNameKlarnaSofort: '{s name=blisstribute/paymentKlarnaSofort}Klarna Sofort{/s}',
+		classNameKlarnaRest: '{s name=blisstribute/paymentKlarnaRest}Klarna (Rest API){/s}',
         classNameAmazonPayments: '{s name=blisstribute/paymentAmazonPayments}Amazon Payments{/s}',
         classNameBillsafe: '{s name=blisstribute/paymentBillsafe}Billsafe{/s}',
         classNameAfterPay: '{s name=blisstribute/paymentAfterPay}AfterPay{/s}',
@@ -159,6 +160,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
 
                             case 'KlarnaSofort':
                                 return me.snippets.classNameKlarnaSofort;
+								
+							case 'KlarnaRest':
+								return me.snippets.classNameKlarnaRest;
 
                             case 'AmazonPayments':
                                 return me.snippets.classNameAmazonPayments;
@@ -201,6 +205,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['WirecardCP', me.snippets.classNameWirecardCP],
                                 ['Klarna', me.snippets.classNameKlarna],
                                 ['KlarnaSofort', me.snippets.classNameKlarnaSofort],
+								['KlarnaRest', me.snippets.classNameKlarnaRest],
                                 ['PayOneCC', me.snippets.classNamePayOneCC],
                                 ['PayOneELV', me.snippets.classNamePayOneELV],
                                 ['AmazonPayments', me.snippets.classNameAmazonPayments],
