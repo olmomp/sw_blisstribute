@@ -626,7 +626,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             ];
 
             $articleData = $this->applyCustomProducts($articleData, $product, $basketItems);
-            $articleData = $this->applyStaticAttributeData($articleData, $product);
+            $articleData = $this->applyStaticAttributeData($articleData, $article);
 
             $articleDataCollection[] = $articleData;
         }
@@ -791,35 +791,37 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * @param array $articleData
-     * @param \Shopware\Models\Order\Detail $orderLine
+     * @param array $configurationData
+     * @param \Shopware\Models\Article\Article $article
      *
      * @return array
      */
-    public function applyStaticAttributeData($articleData, $orderLine)
+    public function applyStaticAttributeData($configurationData, $article)
     {
-        return $articleData;
-
         $this->logDebug('orderSyncMapping::applyStaticAttributeData::start');
-        $product = $orderLine->getArticleDetail();
-
         $configuration = array();
-        if (trim($articleData['configuration']) != '') {
-            $configuration = json_decode($articleData['configuration'], true);
+        if (trim($configurationData['configuration']) != '') {
+            $configuration = json_decode($configurationData['configuration'], true);
         }
 
-        if (trim($product->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
-            $configuration[] = array('category_type' => 'shipmentType', 'category' => trim($product->getAttribute()->getBlisstributeArticleShipmentCode()));
+        if (trim($article->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
+            $configuration[] = array(
+                'category_type' => 'shipmentType',
+                'category' => trim($article->getAttribute()->getBlisstributeArticleShipmentCode())
+            );
         }
 
-        if (trim($product->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
-            $configuration[] = array('category_type' => 'advertisingMedium', 'category' => trim($product->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()));
+        if (trim($article->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
+            $configuration[] = array(
+                'category_type' => 'advertisingMedium',
+                'category' => trim($article->getAttribute()->getBlisstributeArticleAdvertisingMediumCode())
+            );
         }
 
-        $articleData['configuration'] = json_encode($configuration);
+        $configurationData['configuration'] = json_encode($configuration);
         $this->logDebug('orderSyncMapping::applyStaticAttributeData::done ' . json_encode($configuration));
 
-        return $articleData;
+        return $configurationData;
     }
 
     /**

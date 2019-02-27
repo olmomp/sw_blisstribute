@@ -8,11 +8,13 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.14.12",
-    "isUpdateImportant": true,
+    "currentVersion": "0.14.13",
+    "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "0.14.13": "reenable attribute handling",
+            "0.14.13": "adding klarna rest (by https://github.com/lacodimizer)",
             "0.14.12": "disable attribute handling",
             "0.14.11": "adding article attributes for shipment type and advertising medim",
             "0.14.11": "change article vat handling for material sync",
