@@ -133,27 +133,27 @@ class Btarticle extends BtArticleResource implements BatchInterface
         }
 
         switch ($status) {
-            case 0: {
+            case 0: { // komplett offline
                 $params['active'] = false;
                 if ($syncLastStock) {
-                    $params['lastStock'] = false;
+                    $params['lastStock'] = true;
                 }
                 break;
             }
-            case 1: {
+            case 1: { // nachbeschaffbar
                 $params['active'] = true;
                 if ($syncLastStock) {
                     $params['lastStock'] = false;
                 }
                 break;
             }
-            case 2:
+            case 2: // nicht verfügbar
                 $params['active'] = true;
                 if ($syncLastStock) {
                     $params['lastStock'] = true;
                 }
                 break;
-            case 3:
+            case 3: // offline / nicht nachbeschaffbar
             default: {
                 if ($params['inStock'] > 0) {
                     $params['active'] = true;
@@ -161,7 +161,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
                         $params['lastStock'] = true;
                     }
                 } else {
-                    $params['active'] = false;
+                    $params['active'] = true; // avoid loop with vhs
                     if ($syncLastStock) {
                         $params['lastStock'] = true;
                     }
