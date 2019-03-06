@@ -271,7 +271,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
     {
         if ($article->getConfiguratorSet() != null) {
 
-            if ($detail->getKind() == 1 && $detail->getActive() == 0 || ($detail->getInStock() == 0 && $detail->getLastStock())) {
+            if ($detail->getKind() == 1 && ($detail->getActive() == 0 || ($detail->getInStock() == 0 && $detail->getLastStock()))) {
 
                 /** @var Detail $articleDetail */
                 foreach ($article->getDetails() as $articleDetail) {
