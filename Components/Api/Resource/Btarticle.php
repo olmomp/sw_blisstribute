@@ -271,34 +271,21 @@ class Btarticle extends BtArticleResource implements BatchInterface
     {
         if ($article->getConfiguratorSet() != null) {
 
-            if ($detail->getKind() == 1 && ($detail->getActive() == 0 || ($detail->getInStock() == 0 && $detail->getLastStock()))) {
+            if ($detail->getKind() == 1 && !$this->isDetailAvailable($detail)) {
 
                 /** @var Detail $articleDetail */
                 foreach ($article->getDetails() as $articleDetail) {
 
-                    if (version_compare(Shopware()->Config()->version, '5.4.0', '<')) {
+                    if ($this->isDetailAvailable($articleDetail)) {
 
-                        if ($articleDetail->getActive() && ($articleDetail->getInStock() > 0 || !$article->getLastStock())) {
+                        $this->switchMainDetail($article, $detail, $articleDetail);
+                        $this->getManager()->persist($articleDetail);
 
-                            $this->switchMainDetail($article, $detail, $articleDetail);
-                            $this->getManager()->persist($articleDetail);
-
-                            break;
-                        }
-                    }
-                    else {
-
-                        if ($articleDetail->getActive() && ($articleDetail->getInStock() > 0 || !$articleDetail->getLastStock())) {
-
-                            $this->switchMainDetail($article, $detail, $articleDetail);
-                            $this->getManager()->persist($articleDetail);
-
-                            break;
-                        }
+                        break;
                     }
                 }
             }
-            else if ($detail->getKind() != 1 && !$article->getMainDetail()->getActive() && $detail->getActive()) {
+            else if ($detail->getKind() != 1 && !$this->isDetailAvailable($detail->getArticle()->getMainDetail()) && $this->isDetailAvailable($detail)) {
 
                 $oldMainDetail = $article->getMainDetail();
 
@@ -330,6 +317,20 @@ class Btarticle extends BtArticleResource implements BatchInterface
                 'new'     => $newDetail
             ]
         );
+    }
+
+    /**
+     * @param \Shopware\Models\Article\Detail $detail
+     * @return bool
+     */
+    protected function isDetailAvailable($detail)
+    {
+        if (version_compare(Shopware()->Config()->version, '5.4.0', '<')) {
+            return $detail->getActive() == 1 && ($detail->getInStock() > 0 || !$detail->getArticle()->getLastStock());
+        }
+        else {
+            return $detail->getActive() == 1 && ($detail->getInStock() > 0 || !$detail->getLastStock());
+        }
     }
 
     /**
