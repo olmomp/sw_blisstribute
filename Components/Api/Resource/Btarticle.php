@@ -285,7 +285,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
                     }
                 }
             }
-            else if ($detail->getKind() != 1 && !$this->isDetailAvailable($detail->getArticle()->getMainDetail()) && $this->isDetailAvailable($detail)) {
+            else if ($detail->getKind() != 1 && (!$this->isDetailAvailable($detail->getArticle()->getMainDetail()) || $detail->getArticle()->getMainDetail()->getKind() != 1) && $this->isDetailAvailable($detail)) {
 
                 $oldMainDetail = $article->getMainDetail();
 
