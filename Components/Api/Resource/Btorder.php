@@ -160,16 +160,21 @@ class Btorder extends Resource
                 );
             }
 
-            $detailModels = $this->getOrderDetailRepository()
-                ->createQueryBuilder('details')
-                ->where('details.number = :orderNumber')
-                ->andWhere('details.id = :lineId')
-                ->setParameters(array(
-                    'orderNumber' => $orderNumber,
-                    'lineId' => $detail['lineId'],
-                ))
-                ->getQuery()
-                ->getResult();
+            if (isset($detail['lineId'])) {
+                $detailModels = $this->getOrderDetailRepository()
+                    ->createQueryBuilder('details')
+                    ->where('details.number = :orderNumber')
+                    ->andWhere('details.id = :lineId') // fyi: could be the old counter values used and transmitted to bliss in the version
+                    // before today, but it should not lead to any problems as we use the order number also, so there should be no false matches
+                    ->setParameters(
+                        array(
+                            'orderNumber' => $orderNumber,
+                            'lineId'      => $detail['lineId'],
+                        )
+                    )
+                    ->getQuery()
+                    ->getResult();
+            }
 
             if (empty($detailModels)) {
                 $detailModels = $this->getOrderDetailRepository()
