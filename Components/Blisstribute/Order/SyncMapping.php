@@ -567,24 +567,24 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $customerGroupId = $swOrder->getCustomer()->getGroup()->getId();
         $shopId =  $swOrder->getShop()->getId();
 
-        /** @var Shopware\Models\Order\Detail $product */
-        foreach ($basketItems as $product) {
+        /** @var Shopware\Models\Order\Detail $orderDetail */
+        foreach ($basketItems as $orderDetail) {
             $priceNet = $price = 0;
             if ($isB2BOrder && $this->getConfig()['blisstribute-transfer-b2b-net']) {
-                $priceNet = ($product->getPrice() / (100 + $product->getTaxRate())) * 100;
+                $priceNet = ($orderDetail->getPrice() / (100 + $orderDetail->getTaxRate())) * 100;
             } else {
-                $price = $product->getPrice();
+                $price = $orderDetail->getPrice();
             }
 
-            $quantity = $product->getQuantity();
-            $mode = $product->getMode();
-            $articleNumber = $product->getArticleNumber();
+            $quantity = $orderDetail->getQuantity();
+            $mode = $orderDetail->getMode();
+            $articleNumber = $orderDetail->getArticleNumber();
 
             if (in_array($mode, [3, 4]) && $price <= 0) {
                 if (in_array($articleNumber, ['sw-payment', 'sw-discount', 'sw-payment-absolute'])) {
                     $shopwareDiscountsAmount += $price;
                 } else {
-                    $promotions[$product->getId()] = $product;
+                    $promotions[$orderDetail->getId()] = $orderDetail;
                 }
             }
 
@@ -599,33 +599,33 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             }
 
             /** @var Article $article */
-            $article = $articleRepository->find($product->getArticleId());
+            $article = $articleRepository->find($orderDetail->getArticleId());
 
             $articleData = [
-                'articleId' => $product->getArticleId(),
-                'lineId' => count($articleDataCollection) + 1,
-                'erpArticleNumber' => $this->getArticleDetail($product)->getAttribute()->getBlisstributeVhsNumber(),
-                'ean13' => $product->getEan(),
-                'articleNumber' => $product->getArticleNumber(),
+                'articleId' => $orderDetail->getArticleId(),
+                'lineId' => $orderDetail->getId(),
+                'erpArticleNumber' => $this->getArticleDetail($orderDetail)->getAttribute()->getBlisstributeVhsNumber(),
+                'ean13' => $orderDetail->getEan(),
+                'articleNumber' => $orderDetail->getArticleNumber(),
                 'mode' => $mode,
                 'supplierId' => $article->getSupplier()->getId(),
                 'customerGroupId' => $customerGroupId,
                 'shopId' => $shopId,
                 'originalPriceAmount' => $price,
-                'originalPrice' => $price * $product->getQuantity(),
+                'originalPrice' => $price * $orderDetail->getQuantity(),
                 'promoQuantity' => $quantity,
                 'quantity' => $quantity,
                 'priceAmount' => round($price, 4), // single article price
                 'priceAmountNet' => round($priceNet, 4), // single article price
                 'price' => round(($price * $quantity), 4),
                 'priceNet' => round(($priceNet * $quantity), 4),
-                'vatRate' => $this->getModelEntity()->getOrder()->getTaxFree() ? 0.0 : round($product->getTaxRate(), 2),
-                'title' => $product->getArticleName(),
+                'vatRate' => $this->getModelEntity()->getOrder()->getTaxFree() ? 0.0 : round($orderDetail->getTaxRate(), 2),
+                'title' => $orderDetail->getArticleName(),
                 'discountTotal' => 0,
                 'configuration' => '',
             ];
 
-            $articleData = $this->applyCustomProducts($articleData, $product, $basketItems);
+            $articleData = $this->applyCustomProducts($articleData, $orderDetail, $basketItems);
             $articleData = $this->applyStaticAttributeData($articleData, $article);
 
             $articleDataCollection[] = $articleData;
@@ -804,14 +804,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $configuration = json_decode($configurationData['configuration'], true);
         }
 
-        if (trim($article->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
+        if (!empty($article->getAttribute()) && trim($article->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
             $configuration[] = array(
                 'category_type' => 'shipmentType',
                 'category' => trim($article->getAttribute()->getBlisstributeArticleShipmentCode())
             );
         }
 
-        if (trim($article->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
+        if (!empty($article->getAttribute()) && trim($article->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
             $configuration[] = array(
                 'category_type' => 'advertisingMedium',
                 'category' => trim($article->getAttribute()->getBlisstributeArticleAdvertisingMediumCode())
