@@ -603,7 +603,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $articleData = [
                 'articleId' => $orderDetail->getArticleId(),
-                'lineId' => $orderDetail->getId(),
+                'lineId' => count($articleDataCollection) + 1,
+                'externalKey' => $orderDetail->getId(),
                 'erpArticleNumber' => $this->getArticleDetail($orderDetail)->getAttribute()->getBlisstributeVhsNumber(),
                 'ean13' => $orderDetail->getEan(),
                 'articleNumber' => $orderDetail->getArticleNumber(),

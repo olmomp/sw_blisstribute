@@ -160,16 +160,16 @@ class Btorder extends Resource
                 );
             }
 
-            if (isset($detail['lineId'])) {
+            if (!empty($detail['externalKey'])) {
                 $detailModels = $this->getOrderDetailRepository()
                     ->createQueryBuilder('details')
                     ->where('details.number = :orderNumber')
-                    ->andWhere('details.id = :lineId') // fyi: could be the old counter values used and transmitted to bliss in the version
+                    ->andWhere('details.id = :externalKey') // fyi: could be the old counter values used and transmitted to bliss in the version
                     // before today, but it should not lead to any problems as we use the order number also, so there should be no false matches
                     ->setParameters(
                         array(
                             'orderNumber' => $orderNumber,
-                            'lineId'      => $detail['lineId'],
+                            'externalKey'      => $detail['externalKey'],
                         )
                     )
                     ->getQuery()
