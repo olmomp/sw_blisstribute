@@ -13,6 +13,7 @@
 
     "changelog": {
         "de": {
+            "0.14.14": "identifying order details by order detail id (external key in bliss) not by product ean",
             "0.14.13": "reenable attribute handling",
             "0.14.13": "adding klarna rest (by https://github.com/lacodimizer)",
             "0.14.12": "disable attribute handling",
