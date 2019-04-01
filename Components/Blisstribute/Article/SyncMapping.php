@@ -495,72 +495,45 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
-     * @param int $mediaId
+     * @param Detail $detail
      * @return string
      */
-    protected function _loadImage($mediaId)
+    protected function getImageUrl($detail)
     {
-        try {
-            /** @var \Shopware\Components\Api\Resource\Media $mediaResource */
-            $mediaResource = Shopware\Components\Api\Manager::getResource('Media');
-            $media = $mediaResource->getOne($mediaId);
-            $this->logDebug('articleSyncMapping::_loadImage::got media data ' . json_encode($media));
+        /** @var \Shopware\Models\Article\Repository $respository */
+        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Article\Article::class);
 
-            return trim($media['path']);
-        } catch (Exception $ex) {
-            return null;
+        $mainImage = null;
+
+        $variantImages = $repository
+            ->getVariantImagesByArticleNumberQuery($detail->getNumber())
+            ->getArrayResult();
+
+        if (empty($variantImages)) {
+
+            $articleImages = $repository
+                ->getArticleImagesQuery($detail->getArticleId())
+                ->getArrayResult();
+
+            $mainImage = !empty($articleImages) ? $articleImages[0] : null;
         }
+        else {
+            $mainImage = $variantImages[0];
+        }
+
+        return $mainImage ? $this->getMediaUrlByImage($mainImage) : null;
     }
 
     /**
-     * @param Detail $articleDetail
-     * @return string
+     * @param $image
+     * @return null|string
      */
-    protected function getImageUrl(Detail $articleDetail)
+    protected function getMediaUrlByImage($image)
     {
-        /** @var \Shopware\Components\Api\Resource\Variant $variantResource */
-        $variantResource = Shopware\Components\Api\Manager::getResource('Variant');
-        $detail = $variantResource->getOne($articleDetail->getId());
+        /** @var \Shopware\Bundle\MediaBundle\MediaService $mediaService */
+        $mediaService = $this->container->get('shopware_media.media_service');
 
-        $imageCollection = $detail['images'];
-        if (count($imageCollection) == 0) {
-            $sql = 'SELECT media_id FROM s_articles_img WHERE articleID = :articleId AND main = 1 AND media_id IS NOT NULL';
-            $mediaId = (int)Shopware()->Db()->fetchOne($sql, array('articleId' => (int)$articleDetail->getArticle()->getId()));
-
-            if ($mediaId) {
-                return $this->_loadImage($mediaId);
-            }
-
-            return null;
-        }
-
-        $mediaId = 0;
-        $parentId = 0;
-        foreach ($imageCollection as $currentImageData) {
-            if ((int)$currentImageData['mediaId'] == 0) {
-                continue;
-            }
-
-            $mediaId = (int)$currentImageData['mediaId'];
-            break;
-        }
-
-        if ($mediaId == 0) {
-            $parentId = (int)$imageCollection[0]['parentId'];
-        }
-
-        if ($parentId == 0) {
-            return '';
-        }
-
-        if ($mediaId != 0) {
-            return $this->_loadImage($mediaId);
-        }
-
-        $sql = 'SELECT media_id FROM s_articles_img WHERE id = :parentId';
-        $mediaId = (int)Shopware()->Db()->fetchOne($sql, array('parentId' => (int)$parentId));
-
-        return $this->_loadImage($mediaId);
+        return $mediaService->getUrl('media/image/' . $image['path'] . '.' . $image['extension']);
     }
 
     /**
