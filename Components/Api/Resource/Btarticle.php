@@ -103,7 +103,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
 
         $config = Shopware()->Container()->get('shopware.plugin.config_reader')->getByPluginName('ExitBBlisstribute');
         $this->logDebug('plugin config loaded');
-        
+
         if (empty($detailId)) {
             throw new ApiException\ParameterMissingException();
         }
@@ -244,17 +244,18 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $this->switchMainVariantIfRequired($detail, $article);
 
         try {
-            $this->logDebug(sprintf('%s - persist article', $article->getId()));
+            $this->logDebug(sprintf('%s - persist and flush article', $article->getId()));
             $this->getManager()->persist($article);
+            $this->getManager()->flush($article);
 
-            $this->logDebug(sprintf('%s - persist detail', $detail->getId()));
+            $this->logDebug(sprintf('%s - persist and flush detail', $detail->getId()));
             $this->getManager()->persist($detail);
+            $this->getManager()->flush($detail);
 
-            $this->logDebug(sprintf('%s - persist attributes', $detail->getId()));
+            $this->logDebug(sprintf('%s - persist and flush attributes', $detail->getId()));
             $this->getManager()->persist($attributes);
+            $this->getManager()->flush($attributes);
 
-            $this->logDebug('flushing');
-            $this->flush();
             $this->logDebug(sprintf('%s - update done', $detailId));
         } catch (\Exception $ex) {
             $this->logWarn('save failed - ' . $ex);
@@ -280,6 +281,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
 
                         $this->switchMainDetail($article, $detail, $articleDetail);
                         $this->getManager()->persist($articleDetail);
+                        $this->getManager()->flush($articleDetail);
 
                         break;
                     }
@@ -291,6 +293,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
 
                 $this->switchMainDetail($article, $oldMainDetail, $detail);
                 $this->getManager()->persist($oldMainDetail);
+                $this->getManager()->flush($oldMainDetail);
             }
         }
     }
