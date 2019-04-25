@@ -667,8 +667,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     private function determineArticleActiveState($articleDetail)
     {
-        $article = $this->getModelEntity()->getArticle();
-        if (!$article->getActive()) {
+        $mainArticleActive = (bool)$this->getArticle()->getActive();
+        if (!$mainArticleActive) {
             return false;
         }
 
