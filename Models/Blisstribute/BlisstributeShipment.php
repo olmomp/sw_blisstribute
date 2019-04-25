@@ -33,6 +33,7 @@ class BlisstributeShipment extends ModelEntity
     const CLASS_DPDE12 = 'DPDE12';
     const CLASS_DPDE18 = 'DPDE18';
     const CLASS_FBA = 'FBA';
+    const CLASS_7SENDERS = 'SEVENSENDERS';
     /**@-*/
 
     /**
