@@ -26,7 +26,8 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
         classNameSelfcollector: '{s name=blisstribute/combo_shipment_selfcollector}Selbstabholer{/s}',
         classNameLettershipment: '{s name=blisstribute/combo_shipment_lettershipment}Briefversand{/s}',
         classNameSchenker: '{s name=blisstribute/combo_shipment_schenker}Schenker{/s}',
-        classNameWeiss: '{s name=blisstribute/combo_shipment_weiss}Gebr. Weiss{/s}'
+        classNameWeiss: '{s name=blisstribute/combo_shipment_weiss}Gebr. Weiss{/s}',
+        className7Senders: '{s name=blisstribute/combo_shipment_sevensenders}Seven Senders{/s}'
     },
 
     configure: function() {
