@@ -18,6 +18,7 @@ use Doctrine\ORM\NonUniqueResultException;
 use Shopware\CustomModels\Blisstribute\BlisstributeOrder;
 use Shopware\CustomModels\Blisstribute\BlisstributePaymentRepository;
 use Shopware\CustomModels\Blisstribute\BlisstributeShipmentRepository;
+use VIISON\AddressSplitter\AddressSplitter;
 
 /**
  * blisstribute order sync mapping class
@@ -430,9 +431,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $street = $billing->getStreet();
         $houseNumber = '';
-        if (strrpos($street, ' ') !== false) {
-            $houseNumber = substr($street, strrpos($street, ' ') + 1);
-            $street = substr($street, 0, strrpos($street, ' '));
+        try {
+            $match = AddressSplitter::splitAddress($street);
+            $street = $match['streetName'];
+            $houseNumber = $match['houseNumber'];
+        } catch (Exception $e) {
         }
 
         $invoiceAddressData = [
@@ -509,9 +512,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $street = $shipping->getStreet();
         $houseNumber = '';
-        if (strrpos($street, ' ') !== false) {
-            $houseNumber = substr($street, strrpos($street, ' ') + 1);
-            $street = substr($street, 0, strrpos($street, ' '));
+        try {
+            $match = AddressSplitter::splitAddress($street);
+            $street = $match['streetName'];
+            $houseNumber = $match['houseNumber'];
+        } catch (Exception $e) {
         }
 
         $deliveryAddressData = [

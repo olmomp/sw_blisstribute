@@ -1,0 +1,5 @@
+{
+    "require": {
+        "viison/address-splitter": "^0.3.2"
+    }
+}
