@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/Components/Blisstribute/Domain/LoggerTrait.php';
 require_once __DIR__ . '/Components/Blisstribute/Command/OrderExport.php';
 require_once __DIR__ . '/Components/Blisstribute/Command/ArticleExport.php';
