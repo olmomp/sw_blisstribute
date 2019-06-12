@@ -27,7 +27,10 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
         classNameLettershipment: '{s name=blisstribute/combo_shipment_lettershipment}Briefversand{/s}',
         classNameSchenker: '{s name=blisstribute/combo_shipment_schenker}Schenker{/s}',
         classNameWeiss: '{s name=blisstribute/combo_shipment_weiss}Gebr. Weiss{/s}',
-        className7Senders: '{s name=blisstribute/combo_shipment_sevensenders}Seven Senders{/s}'
+        className7Senders: '{s name=blisstribute/combo_shipment_sevensenders}Seven Senders{/s}',
+        classNameGls: '{s name=blisstribute/combo_shipment_gls}GLS{/s}',
+        classNameDTPG: '{s name=blisstribute/combo_shipment_dtpg}Deutsche Post Warensendung Gross{/s}',
+        classNameDTPM: '{s name=blisstribute/combo_shipment_dtpm}Deutsche Post Warensendung Maxi{/s}'
     },
 
     configure: function() {
@@ -50,7 +53,10 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
                 ['Selfcollector', me.snippets.classNameSelfcollector],
                 ['Skr', me.snippets.classNameSchenker],
                 ['Gww', me.snippets.classNameWeiss],
-                ['Lettershipment', me.snippets.classNameLettershipment]
+                ['Lettershipment', me.snippets.classNameLettershipment],
+                ['Gls', me.snippets.classNameGls],
+                ['Dtpg', me.snippets.classNameDTPG],
+                ['Dtpm', me.snippets.classNameDTPM]
             ]
         });
 
