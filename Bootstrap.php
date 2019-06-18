@@ -304,6 +304,32 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
         }
 
+        if (version_compare($version, '0.14.19', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'number',
+                'blisstribute-discount-difference-watermark',
+                [
+                    'label' => 'Schwellwert für Hinweis auf Rabattabweichung',
+                    'description' => 'Schwellwert für Hinweis auf Rabattabweichung in Euro',
+                    'value' => 0.10
+                ]
+            );
+            $form->setElement(
+                'text',
+                'blisstribute-error-email-receiver',
+                [
+                    'label' => 'Empfänger Email für Fehlerhinweise',
+                    'description' => 'Empfänger Email für Fehlerhinweise'
+                ]
+            );
+            /*
+             * Email Template
+             * Name: sBLISSORDERREJECTED
+             * Parameter: {$orderNumber}
+             */
+        }
+
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
@@ -1279,6 +1305,23 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'label' => 'B2B-Bestellungen Netto übertragen',
                 'description' => 'Wenn aktiviert, werden B2B Bestellungen (Bestellzeilen) Netto an Blisstribute übertragen.',
                 'value' => 0
+            ]
+        );
+        $form->setElement(
+            'number',
+            'blisstribute-discount-difference-watermark',
+            [
+                'label' => 'Schwellwert für Hinweis auf Rabattabweichung',
+                'description' => 'Schwellwert für Hinweis auf Rabattabweichung in Euro',
+                'value' => 0.10
+            ]
+        );
+        $form->setElement(
+            'text',
+            'blisstribute-error-email-receiver',
+            [
+                'label' => 'Empfänger Email für Fehlerhinweise',
+                'description' => 'Empfänger Email für Fehlerhinweise'
             ]
         );
     }

@@ -17,4 +17,23 @@ class Shopware_Components_Blisstribute_Order_Payment_PayOneCC
      * @inheritdoc
      */
     protected $code = 'payone';
+
+    /**
+     * @inheritdoc
+     */
+    protected function getAdditionalPaymentInformation()
+    {
+        $orderAttribute = $this->order->getAttribute();
+        $sequenceNumber = 0;
+        if (method_exists($orderAttribute, 'getMoptPayoneSequencenumber')) {
+            if (trim($orderAttribute->getMoptPayoneSequencenumber()) == '' || trim($orderAttribute->getMoptPayoneSequencenumber()) == '') {
+                $sequenceNumber = $orderAttribute->getMoptPayoneSequencenumber();
+            }
+        }
+
+        return array(
+            'resToken' => $this->order->getTransactionId(),
+            'cardAlias' => $sequenceNumber,
+        );
+    }
 }

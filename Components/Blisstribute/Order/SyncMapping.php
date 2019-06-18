@@ -161,7 +161,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $order = $this->getModelEntity()->getOrder();
         $originalTotal = round($order->getInvoiceAmount(), 2);
         $newOrderTotal = round($this->_getOrderTotal(), 2);
-        if ($originalTotal != $newOrderTotal) {
+        $orderTotalDeviation = $originalTotal - $newOrderTotal;
+        $deviationWatermark = round($this->getConfig()['blisstribute-discount-difference-watermark'], 2);
+
+        if (abs($orderTotalDeviation) > abs($deviationWatermark)) {
             $this->logDebug(sprintf('orderSyncMapping::buildBaseData::amount differs %s to %s', $originalTotal, $newOrderTotal));
             $this->orderData['orderRemark'] .= 'RABATT PRÜFEN! (ORIG ' . $originalTotal .')';
         }

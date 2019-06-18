@@ -8,11 +8,14 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.14.18",
+    "currentVersion": "0.14.19",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "0.14.19": "adding discount alert watermark",
+            "0.14.19": "adding error email receiver",
+            "0.14.19": "adding payone sequence numbers",
             "0.14.18": "add new shipment types",
             "0.14.18": "adding address splitting class (by https://github.com/hlohaus)",
             "0.14.17": "article sync mapping changes",
