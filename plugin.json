@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.14.19",
+    "currentVersion": "0.15.0",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "0.15.0": "add alternative customer phone number field from order attribute",
             "0.14.19": "adding discount alert watermark",
             "0.14.19": "adding error email receiver",
             "0.14.19": "adding payone sequence numbers",

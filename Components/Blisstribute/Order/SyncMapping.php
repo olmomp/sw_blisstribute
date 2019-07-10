@@ -282,10 +282,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $orderRemark[] = 'BUHA - Bestellung angehalten.';
         }
 
+        $customerPhone = $customer->getDefaultBillingAddress()->getPhone();
+        if (trim($customerPhone) == '') {
+            $customerPhone = $this->getAlternativePhoneNumber($order);
+        }
+
         return [
             'externalCustomerNumber' => $customerNumber,
             'externalCustomerEmail' => $customer->getEmail(),
-            'externalCustomerPhoneNumber' => $customer->getDefaultBillingAddress()->getPhone(),
+            'externalCustomerPhoneNumber' => $customerPhone,
             'externalCustomerMobilePhoneNumber' => '',
             'externalCustomerFaxNumber' => '',
             'customerBirthdate' => $customerBirthday,
@@ -302,6 +307,44 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'shipmentType' => $this->determineShippingType(),
             'shipmentTotal' => $order->getInvoiceShipping(),
         ];
+    }
+
+    /**
+     * @param \Shopware\Models\Order\Order $order
+     *
+     * @return string
+     */
+    protected function getAlternativePhoneNumber($order)
+    {
+        $fieldName = $this->getConfig()['blisstribute-alternative-phone-number-order-attribute'];
+        $this->logDebug('orderSyncMapping::alternativePhoneNumber::fieldName ' . $fieldName);
+        return $this->getAttribute($order, $fieldName);
+    }
+
+    /**
+     * @param \Shopware\Models\Order\Order $order
+     * @param string $fieldName
+     * @return string
+     */
+    protected function getAttribute($order, $fieldName)
+    {
+        if (trim($fieldName) == '') {
+            return null;
+        }
+
+        $value = '';
+        $method = 'get' . ucfirst($fieldName);
+
+        $attribute = $order->getAttribute();
+        $this->logDebug('orderSyncMapping::getAttribute::got attribute ' . $attribute->getId());
+
+        if (method_exists($attribute, $method)) {
+            $value = $attribute->$method();
+        }
+
+        $this->logDebug('orderSyncMapping::getAttribute::attribute value ' . $value);
+
+        return $value;
     }
 
     /**

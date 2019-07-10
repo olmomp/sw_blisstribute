@@ -330,6 +330,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
              */
         }
 
+        if (version_compare($version, '0.15.0', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'text',
+                'blisstribute-alternative-phone-number-order-attribute',
+                [
+                    'label' => 'Alternative Kunden-Telefonnummer',
+                    'description' => 'Order-Attribut (Freitextfeld) für Kunden-Telefonnummer'
+                ]
+            );
+        }
+
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
@@ -1322,6 +1334,14 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Empfänger Email für Fehlerhinweise',
                 'description' => 'Empfänger Email für Fehlerhinweise'
+            ]
+        );
+        $form->setElement(
+            'text',
+            'blisstribute-alternative-phone-number-order-attribute',
+            [
+                'label' => 'Alternative Kunden-Telefonnummer',
+                'description' => 'Order-Attribut (Freitextfeld) für Kunden-Telefonnummer'
             ]
         );
     }
