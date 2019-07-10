@@ -135,7 +135,11 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                 if (!$addressValidatorResponse && !$this->config->get('blisstribute-transfer-orders')) {
                     throw new Exception('could not validate the order address.');
                 }
-            }        
+            }
+
+            Shopware()->Events()->notify('Shopware_Components_Blisstribute_Order_Sync::beforeSyncOrder', [
+                'order' => $blisstributeOrder
+            ]);
         
             $orderData = $this->initializeModelMapping($blisstributeOrder);
 
