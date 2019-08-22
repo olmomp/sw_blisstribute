@@ -165,6 +165,15 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         $value = '';
         $method = 'get' . ucfirst($fieldName);
+
+        if (method_exists($article->getAttribute(), $method)) {
+            $value = $article->getAttribute()->$method();
+        }
+
+        if (trim($value) != '') {
+            return $value;
+        }
+
         $mainDetail = $this->_getMainDetail($article);
         if ($mainDetail != null) {
             $this->logDebug('articleSyncMapping::getClassification::got mainDetail ' . $mainDetail->getId());
@@ -179,14 +188,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             }
         } else {
             $this->logDebug('articleSyncMapping::getClassification::main detail not found.');
-        }
-
-        if (trim($value) == '') {
-            $this->logDebug('articleSyncMapping::getClassification::switch to article attribute');
-            if (method_exists($article->getAttribute(), $method)) {
-                $value = $article->getAttribute()->$method();
-            }
-            $this->logDebug('articleSyncMapping::getClassification::article attribute value ' . $value);
         }
 
         return $value;
