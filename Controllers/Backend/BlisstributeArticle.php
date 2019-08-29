@@ -49,7 +49,7 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
      */
     public function get($name)
     {
-        if (version_compare(Shopware::VERSION, '4.2.0', '<') && Shopware::VERSION != '___VERSION___') {
+        if (version_compare(Shopware()->Config()->version, '4.2.0', '<') && Shopware()->Config()->version != '___VERSION___') {
             $name = ucfirst($name);
 
             /** @noinspection PhpUndefinedMethodInspection */

@@ -205,7 +205,7 @@ class Btarticle extends BtArticleResource implements BatchInterface
         $detail->setShippingTime($params['shippingTime']);
         $this->logDebug(sprintf('%s - set detail shipping time %s', $detailId, $params['shippingTime']));
 
-        if (version_compare(\Shopware::VERSION, '5.2.1') >= 0) {
+        if (version_compare(Shopware()->Config()->version, '5.2.1') >= 0) {
             $detail->setPurchasePrice(round($params['evaluatedStockPrice'], 2));
             $this->logDebug(sprintf('%s - set detail purchase price %s', $detailId, round($params['evaluatedStockPrice'], 2)));
         }
