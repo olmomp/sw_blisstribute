@@ -153,6 +153,33 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
+     * get the base price of the main detail
+     *
+     * @param Detail $articleDetail
+     *
+     * @return float
+     * @throws Exception
+     */
+    protected function getMainDetailBasePrice(Detail $articleDetail)
+    {
+        $fieldName = $this->getConfig()['blisstribute-article-mapping-base-price'];
+        if (trim($fieldName) != '') {
+            $method = 'get' . ucfirst($fieldName);
+
+            if (method_exists($articleDetail->getAttribute(), $method)) {
+                $value = $articleDetail->getAttribute()->$method();
+                return round(trim($value), 2);
+            }
+        }
+
+        if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
+            return $articleDetail->getPurchasePrice();
+        }
+
+        return $articleDetail->getPrices()->first()->getBasePrice();
+    }
+
+    /**
      * @param Article $article
      * @param string $fieldName
      * @return string
@@ -752,19 +779,4 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         return $tagCollection;
     }
 
-    /**
-     * get the base price of the main detail
-     *
-     * @param Detail $articleDetail
-     *
-     * @return float
-     */
-    protected function getMainDetailBasePrice(Detail $articleDetail)
-    {
-        if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
-            return $articleDetail->getPurchasePrice();
-        }
-
-        return $articleDetail->getPrices()->first()->getBasePrice();
-    }
 }

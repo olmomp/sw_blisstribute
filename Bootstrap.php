@@ -342,6 +342,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
         }
 
+        if (version_compare($version, '0.15.3', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'text',
+                'blisstribute-article-mapping-base-price',
+                array(
+                    'label' => 'HAP Verknüpfung',
+                    'description' => '',
+                    'value' => ''
+                )
+            );
+        }
+
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
@@ -1238,6 +1251,15 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'blisstribute-article-mapping-classification4',
             array(
                 'label' => 'Klassifikation 4 Verknüpfung',
+                'description' => '',
+                'value' => ''
+            )
+        );
+        $form->setElement(
+            'text',
+            'blisstribute-article-mapping-base-price',
+            array(
+                'label' => 'HAP Verknüpfung',
                 'description' => '',
                 'value' => ''
             )
