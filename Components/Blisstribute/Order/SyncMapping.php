@@ -856,17 +856,17 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $configuration = json_decode($configurationData['configuration'], true);
         }
 
-        if (!empty($article->getAttribute()) && trim($article->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
+        if (!empty($article->getMainDetail()->getAttribute()) && trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
             $configuration[] = array(
                 'category_type' => 'shipmentType',
-                'category' => trim($article->getAttribute()->getBlisstributeArticleShipmentCode())
+                'category' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleShipmentCode())
             );
         }
 
-        if (!empty($article->getAttribute()) && trim($article->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
+        if (!empty($article->getMainDetail()->getAttribute()) && trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
             $configuration[] = array(
                 'category_type' => 'advertisingMedium',
-                'category' => trim($article->getAttribute()->getBlisstributeArticleAdvertisingMediumCode())
+                'category' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleAdvertisingMediumCode())
             );
         }
         else if ($advertisingMedium = $this->getAdvertisingMediumFromCategory($article)) {
