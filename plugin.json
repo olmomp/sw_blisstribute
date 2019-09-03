@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.15.3",
+    "currentVersion": "0.15.4",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "0.15.4": "plugin article sync fix",
             "0.15.3": "alternative field for article base price import",
             "0.15.2": "compatibilty for 5.6 (by https://github.com/lacodimizer)",
             "0.15.1": "switch order of classification3/4 mapping from mainDetail -> detail to detail -> mainDetail",

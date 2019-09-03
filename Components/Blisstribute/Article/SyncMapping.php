@@ -632,13 +632,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         if (trim($supplierCode) == '') {
-            if ($articleDetail->getArticle() != null && $articleDetail->getArticle()->getAttribute() != null)
-                $supplierCode = $articleDetail->getArticle()->getAttribute()->getBlisstributeSupplierCode();
-        }
-
-        $mainDetail = $this->_getMainDetail($articleDetail->getArticle());
-        if (trim($supplierCode) == '') {
-             if ($mainDetail != null && $mainDetail->getAttribute() != null) {
+            $mainDetail = $this->_getMainDetail($articleDetail->getArticle());
+            if ($mainDetail != null && $mainDetail->getAttribute() != null) {
                 $supplierCode = $mainDetail->getAttribute()->getBlisstributeSupplierCode();
             }
         }
