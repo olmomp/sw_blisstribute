@@ -478,9 +478,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $street = $billing->getStreet();
         $houseNumber = '';
         try {
-            $match = AddressSplitter::splitAddress($street);
-            $street = $match['streetName'];
-            $houseNumber = $match['houseNumber'];
+            $disableAddressSplitting = $this->getConfig()['blisstribute-disable-address-splitting'];
+            if (!$disableAddressSplitting) {
+                $match = AddressSplitter::splitAddress($street);
+                $street = $match['streetName'];
+                $houseNumber = $match['houseNumber'];
+            }
         } catch (Exception $e) {
         }
 
@@ -559,9 +562,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $street = $shipping->getStreet();
         $houseNumber = '';
         try {
-            $match = AddressSplitter::splitAddress($street);
-            $street = $match['streetName'];
-            $houseNumber = $match['houseNumber'];
+            $disableAddressSplitting = $this->getConfig()['blisstribute-disable-address-splitting'];
+            if (!$disableAddressSplitting) {
+                $match = AddressSplitter::splitAddress($street);
+                $street = $match['streetName'];
+                $houseNumber = $match['houseNumber'];
+            }
         } catch (Exception $e) {
         }
 

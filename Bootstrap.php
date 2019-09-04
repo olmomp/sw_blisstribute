@@ -355,6 +355,21 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
         }
 
+        if (version_compare($version, '0.15.6', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'text',
+                'blisstribute-disable-address-splitting',
+                [
+                    'label' => 'Deaktiviert die automatische Adressanpassung',
+                    'description' => 'Wenn aktiviert, werden Adressdaten nicht durch einen Validator verändert. ',
+                    'maxLength' => 3,
+                    'value' => 0,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
+
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
@@ -1178,6 +1193,17 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'description' => 'Das Standard-Werbemittel für die Bestellanlage, falls kein Werbemittel gefunden werden kann',
                 'maxLength' => 3,
                 'value' => '',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+        $form->setElement(
+            'text',
+            'blisstribute-disable-address-splitting',
+            [
+                'label' => 'Deaktiviert die automatische Adressanpassung',
+                'description' => 'Wenn aktiviert, werden Adressdaten nicht durch einen Validator verändert. ',
+                'maxLength' => 3,
+                'value' => 0,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );
