@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.15.4",
+    "currentVersion": "0.15.5",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "0.15.5": "plugin order sync fix",
             "0.15.4": "plugin article sync fix",
             "0.15.3": "alternative field for article base price import",
             "0.15.2": "compatibilty for 5.6 (by https://github.com/lacodimizer)",
