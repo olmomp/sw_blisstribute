@@ -615,7 +615,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         $promotions = [];
-        $orderNumbers = [];
         $shopwareDiscountsAmount = 0;
 
         /** @var ArticleRepository $articleRepository */
@@ -647,12 +646,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             if ($mode > 0) {
                 continue;
-            }
-
-            if (array_key_exists($articleNumber, $orderNumbers)) {
-                $orderNumbers[$articleNumber] += $quantity;
-            } else {
-                $orderNumbers[$articleNumber] = $quantity;
             }
 
             /** @var Article $article */
@@ -689,7 +682,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $articleDataCollection[] = $articleData;
         }
 
-        $articleDataCollection = $this->applyPromoDiscounts($articleDataCollection, $promotions, $orderNumbers, $shopwareDiscountsAmount, $orderId);
+        $articleDataCollection = $this->applyPromoDiscounts($articleDataCollection, $promotions, $shopwareDiscountsAmount);
 
         return $articleDataCollection;
     }
@@ -988,366 +981,119 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return $articleData;
     }
 
-    protected $_newPromotionSuite = false;
 
-    public function applyPromoDiscounts($articleDataCollection, $promotions, $orderNumbers, $shopwareDiscountsAmount, $orderId)
+    public function applyPromoDiscounts($articleDataCollection, $promotions, $shopwareDiscountsAmount)
     {
-        // check if plugin SwagPromotion is installed
-        $plugin = $this->getPluginRepository()->findOneBy([
-            'name' => 'SwagPromotion',
+        // check if Intedia Promotion Recorder plugin is installed
+        $intediaPromoPlugin = $this->getPluginRepository()->findOneBy([
+            'name' => 'IntediaPromotionRecorder',
             'active' => true
         ]);
 
-        $allPromotions = [];
+        $this->logDebug('apply promo discounts');
 
-        if ($plugin) {
-            /** @var Detail $promotionItem */
-            foreach ($promotions as $promotionItem) {
-                if (class_exists('\Shopware\CustomModels\SwagPromotion\Promotion')) {
-                    /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-                    $promotion = $this->container->get('models')->getRepository('\Shopware\CustomModels\SwagPromotion\Promotion')->findOneBy(['number' => $promotionItem->getArticleNumber()]);
-                } else {
-                    $this->_newPromotionSuite = true;
-                    /** @var \SwagPromotion\Models\Promotion $promotion */
-                    $promotion = $this->container->get('models')->getRepository('\SwagPromotion\Models\Promotion')->findOneBy(['number' => $promotionItem->getArticleNumber()]);
-                }
+        $handledPromotionIds = [];
+        $handledVoucherIds = [];
+        if ($intediaPromoPlugin) {
+            $this->logDebug('apply promo discounts via intedia plugin');
+            //1a. handle non-default discounts, most vouchers (Promotion suite etc) by intedia plugin
+            $orderDetailIds = array_column($articleDataCollection, 'externalKey');
 
-                if (is_null($promotion)) {
-                    continue;
-                }
+            $promotionDiscounts = $this->getPromotionDiscountsFromRecorderPlugin($orderDetailIds);
 
-                $allPromotions[$promotion->getType()][] = ['promotion' => $promotion, 'promoAmount' => abs($promotionItem->getPrice())];
-            }
+            foreach ($articleDataCollection as $key => $articleData) {
+                $detailId = $articleData['externalKey'];
 
-            $products = $this->getProductContext($orderNumbers, $orderId);
+                if (isset($promotionDiscounts[$detailId])) {
 
-            //First apply free product discount
-            if (array_key_exists('product.freegoods', $allPromotions)) {
-                $articleDataCollection = $this->applyFreeDiscount($allPromotions['product.freegoods'], $articleDataCollection);
-            }
+                    foreach ($promotionDiscounts[$detailId] as $discount) {
 
-            if (array_key_exists('product.buyxgetyfree', $allPromotions)) {
-                $articleDataCollection = $this->applyXYDiscount($allPromotions['product.buyxgetyfree'], $articleDataCollection, $products);
-            }
-        }
-
-        $articleDataCollection = $this->applyVouchers($articleDataCollection);
-
-        $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $shopwareDiscountsAmount);
-
-        if ($plugin) {
-            //Apply product absolute discount
-            if (array_key_exists('product.absolute', $allPromotions)) {
-                $articleDataCollection = $this->applyProductAbsoluteDiscount($allPromotions['product.absolute'], $articleDataCollection, $products);
-            }
-
-            //Apply product percent discount
-            if (array_key_exists('product.percentage', $allPromotions)) {
-                $articleDataCollection = $this->applyProductPercentDiscount($allPromotions['product.percentage'], $articleDataCollection, $products);
-            }
-
-            //Apply cart absolute discount
-            if (array_key_exists('basket.absolute', $allPromotions)) {
-                $articleDataCollection = $this->applyCartAbsoluteDiscount($allPromotions['basket.absolute'], $articleDataCollection);
-            }
-
-            //Apply cart percent discount, this discount must be handled in special way
-            if (array_key_exists('basket.percentage', $allPromotions)) {
-                $articleDataCollection = $this->applyCartPercentDiscount($allPromotions['basket.percentage'], $articleDataCollection);
-            }
-        }
-
-        return $articleDataCollection;
-    }
-
-    public function getPromotionStackedProducts($promotion, $products)
-    {
-        /** @var \Shopware\SwagPromotion\Components\ProductMatcher $productMatcher */
-        $productMatcher = $this->_newPromotionSuite ? $this->container->get('swag_promotion.product_matcher') : $this->container->get('promotion.product_matcher');
-
-        /** @var \Shopware\SwagPromotion\Components\Promotion\ProductStacker\ProductStacker $productStackRegistry */
-        $productStackRegistry = $this->_newPromotionSuite ? $this->container->get('swag_promotion.stacker.product_stacker_registry') : $this->container->get('promotion.stacker.registry');
-
-        $promotionProducts = $productMatcher->getMatchingProducts($products, json_decode($promotion->getApplyRules(), true));
-
-        return $productStackRegistry->getStacker($promotion->getStackMode())->getStack(
-            $promotionProducts,
-            $promotion->getStep(),
-            $promotion->getMaxQuantity(),
-            'cheapest'
-        );
-    }
-
-    public function applyFreeDiscount($promotions, $articleDataCollection)
-    {
-        /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $currentPromotion) {
-            $promotion = $currentPromotion['promotion'];
-            $freeProducts = [];
-
-            foreach ($promotion->getFreeGoodsArticle() as $article) {
-                $freeProducts[] = $article->getId();
-            }
-
-            foreach ($articleDataCollection as &$product) {
-                if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
-                    continue;
-                }
-
-                if (!in_array($product['articleId'], $freeProducts)) {
-                    continue;
-                }
-
-                if ($product['originalPriceAmount'] == $currentPromotion['promoAmount']) {
-                    $countedAmountToDiscount = $product['originalPriceAmount'];
-                    $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
-
-                    $product['promoQuantity'] -= 1;
-                    $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-                    $product['price'] -= round($countedAmountToDiscount, 4);
-                    $product['discountTotal'] += $countedAmountToDiscountPerQty;
-
-                    break;
-                }
-            }
-        }
-
-        return $articleDataCollection;
-    }
-
-    public function applyXYDiscount($promotions, $articleDataCollection, $products)
-    {
-        /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $currentPromotion) {
-            $promotion = $currentPromotion['promotion'];
-            $stackedProducts = $this->getPromotionStackedProducts($promotion, $products);
-
-            foreach ($stackedProducts as $stack) {
-                $amount = $promotion->getAmount();
-
-                $stackProduct = array_map(
-                    function ($p) {
-                        return $p['ordernumber'];
-                    },
-                    // get the "free" items
-                    array_slice($stack, 0, $amount)
-                );
-
-                foreach ($articleDataCollection as &$product) {
-                    if ($amount == 0) {
-                        break;
-                    }
-
-                    if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
-                        continue;
-                    }
-
-                    if (in_array($product['articleNumber'], $stackProduct)) {
-                        if ($amount > $product['quantity']) {
-                            $qty = $product['quantity'];
-                        } else {
-                            $qty = $amount;
+                        if ($discount['promotionId']) {
+                            $handledPromotionIds[] = $discount['promotionId']; //remember promotion as handled by plugin
+                        }
+                        if ($discount['voucherId']) {
+                            $handledVoucherIds[] = $discount['voucherId'];
                         }
 
-                        $countedAmountToDiscount = round($qty * $product['originalPriceAmount'], 4);
-                        $countedAmountToDiscountPerQty = round($countedAmountToDiscount / $product['quantity'], 4);
-
-                        $product['promoQuantity'] -= 1;
-                        $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-                        $product['price'] -= $countedAmountToDiscount;
-                        $product['discountTotal'] += $countedAmountToDiscountPerQty;
-
-                        $amount -= $qty;
+                        $discountTotal = $discount['promotionValue'];
+                        if ($discountTotal > 0) {
+                            $quantity = $articleData['quantity'];
+                            $newPrice = round($articleData['price'] - $discountTotal, 4);
+                            $newPriceSingle = round($articleData['priceAmount'] - ($discountTotal / $quantity), 4);
+                            $articleDataCollection[$key]['price'] = $newPrice;
+                            $articleDataCollection[$key]['priceAmount'] = $newPriceSingle;
+                            $articleDataCollection[$key]['discountTotal'] = $discountTotal;
+                        }
                     }
                 }
             }
+
+            //1b. split remaining promotions (absolute card discounts etc) to all products, weighted by price
+            /** @var Detail $promotion */
+            foreach ($promotions as $promotion) {
+                $promotionId = $promotion->getAttribute()->getIntediaPromotionRecorderPromotionId();
+                if (in_array($promotionId, $handledPromotionIds)) { //handled above
+                    continue;
+                }
+                $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $promotion->getPrice());
+            }
+
         }
+        else {
+            //1c. without plugin: split all promotions to all products, weighted by price
+            /** @var Detail $promotion */
+            foreach ($promotions as $promotion) {
+                $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $promotion->getPrice());
+            }
+        }
+
+        /**
+         * 2. split voucher discounts to all allowed products, weighted by price
+         * Note: Most vouchers are handled by Intedia Plugin (if present)
+         * However: Absolute discount vouchers not specific to certain products/suppliers
+         * still need to be split by weight over all articles
+         */
+        $articleDataCollection = $this->applyVouchers($articleDataCollection, $handledVoucherIds);
+        //3. split shopware default discounts to all products, weighted by price (not handled by intedia Plugin)
+        $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $shopwareDiscountsAmount);
 
         return $articleDataCollection;
     }
 
-    public function applyProductAbsoluteDiscount($promotions, $articleDataCollection, $products)
-    {
-        /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $currentPromotion) {
-            $promotion = $currentPromotion['promotion'];
-            $stackedProducts = $this->getPromotionStackedProducts($promotion, $products);
+    /**
+     * @param int[] $orderDetailIds
+     * @return array
+     */
+    private function getPromotionDiscountsFromRecorderPlugin(array $orderDetailIds) {
 
-            $productWithDiscount = [];
-            $basketAmount = 0;
-
-            foreach ($stackedProducts as $stack) {
-                $product = array_map(
-                    function ($p) {
-                        return $p['ordernumber'];
-                    },
-                    $stack
-                );
-
-                if (!array_key_exists($product[0], $productWithDiscount[$product[0]])) {
-                    $productWithDiscount[$product[0]] = 1;
-                } else {
-                    $productWithDiscount[$product[0]]++;
-                }
-            }
-
-            foreach ($articleDataCollection as $product) {
-                if ($product['promoQuantity'] == 0 && $product['price'] <= 0) {
-                    continue;
-                }
-
-                if (array_key_exists($product['articleNumber'], $productWithDiscount)) {
-                    $basketAmount += $productWithDiscount[$product['articleNumber']] * $product['priceAmount'];
-                }
-            }
-
-            foreach ($articleDataCollection as &$product) {
-                if ($product['promoQuantity'] == 0 || $product['priceAmount'] == 0) {
-                    continue;
-                }
-
-                if (array_key_exists($product['articleNumber'], $productWithDiscount)) {
-                    $weight = $productWithDiscount[$product['articleNumber']] * $product['priceAmount'] / $basketAmount;
-
-                    $countedAmountToDiscount = $currentPromotion['promoAmount'] * $weight;
-                    $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
-
-                    $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-                    $product['price'] -= $countedAmountToDiscount;
-                    $product['discountTotal'] += $countedAmountToDiscountPerQty;
-                }
-            }
+        if (!class_exists('IntediaPromotionRecorder\Models\PromotionRecord')) {
+            return [];
         }
 
-        return $articleDataCollection;
-    }
+        $promotionRecordRepo = $this->container->get('models')->getRepository('IntediaPromotionRecorder\Models\PromotionRecord');
 
-    public function applyProductPercentDiscount($promotions, $articleDataCollection, $products)
-    {
-        /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $currentPromotion) {
-            $promotion = $currentPromotion['promotion'];
-            $stackedProducts = $this->getPromotionStackedProducts($promotion, $products);
 
-            $productWithDiscount = [];
-            $basketAmount = 0;
+        $builder = $promotionRecordRepo->createQueryBuilder('records')
+            ->andWhere('records.orderDetailId IN (?1)')
+            ->setParameter(1, $orderDetailIds);
 
-            foreach ($stackedProducts as $stack) {
-                $product = array_map(
-                    function ($p) {
-                        return $p['ordernumber'];
-                    },
-                    $stack
-                );
+        $records = $builder->getQuery()->getArrayResult();
 
-                if (!array_key_exists($product[0], $productWithDiscount[$product[0]])) {
-                    $productWithDiscount[$product[0]] = 1;
-                } else {
-                    $productWithDiscount[$product[0]]++;
-                }
+        $discounts = [];
+
+        foreach ($records as $record) {
+            $detailId = $record['orderDetailId'];
+            if (!isset($discounts[$detailId])) {
+                $discounts[$detailId] = [];
             }
-
-            foreach ($articleDataCollection as $product) {
-                if ($product['promoQuantity'] == 0 && $product['price'] <= 0) {
-                    continue;
-                }
-
-                if (array_key_exists($product['articleNumber'], $productWithDiscount)) {
-                    $basketAmount += $productWithDiscount[$product['articleNumber']] * $product['priceAmount'];
-                }
-            }
-
-            foreach ($articleDataCollection as &$product) {
-                if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
-                    continue;
-                }
-
-                if (array_key_exists($product['articleNumber'], $productWithDiscount)) {
-                    $weight = $productWithDiscount[$product['articleNumber']] * $product['priceAmount'] / $basketAmount;
-
-                    $countedAmountToDiscount = $currentPromotion['promoAmount'] * $weight;
-                    $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
-
-                    $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-                    $product['price'] -= $countedAmountToDiscount;
-                    $product['discountTotal'] += $countedAmountToDiscountPerQty;
-                }
-            }
+            $discounts[$detailId][] = [
+                'promotionValue' => $record['promotionValue'],
+                'promotionId'   => $record['promotionId'],
+                'voucherId'     => $record['voucherId']
+            ];
         }
 
-        return $articleDataCollection;
-    }
-
-    public function applyCartAbsoluteDiscount($promotions, $articleDataCollection)
-    {
-        $promotionDiscount = 0;
-        $basketAmount = 0;
-
-        /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $currentPromotion) {
-            $promotionDiscount += $currentPromotion['promotion']->getAmount();
-        }
-
-        foreach ($articleDataCollection as $product) {
-            if ($product['promoQuantity'] == 0 && $product['price'] <= 0) {
-                continue;
-            }
-
-            $basketAmount += $product['price'];
-        }
-
-        foreach ($articleDataCollection as &$product) {
-            if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
-                continue;
-            }
-
-            $weight = $product['price'] / $basketAmount;
-
-            $countedAmountToDiscount = $promotionDiscount * $weight;
-            $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
-
-            $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-            $product['price'] -= $countedAmountToDiscount;
-            $product['discountTotal'] += $countedAmountToDiscountPerQty;
-        }
-
-        return $articleDataCollection;
-    }
-
-    public function applyCartPercentDiscount($promotions, $articleDataCollection)
-    {
-        $promotionDiscount = 0;
-        $basketAmount = 0;
-
-        /** @var \Shopware\CustomModels\SwagPromotion\Promotion $promotion */
-        foreach ($promotions as $currentPromotion) {
-            $promotionDiscount += $currentPromotion['promoAmount'];
-        }
-
-        foreach ($articleDataCollection as $product) {
-            if ($product['promoQuantity'] == 0 && $product['price'] <= 0) {
-                continue;
-            }
-
-            $basketAmount += $product['price'];
-        }
-
-        foreach ($articleDataCollection as &$product) {
-            if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
-                continue;
-            }
-
-            $weight = $product['price'] / $basketAmount;
-
-            $countedAmountToDiscount = $promotionDiscount * $weight;
-            $countedAmountToDiscountPerQty = $countedAmountToDiscount / $product['quantity'];
-
-            $product['priceAmount'] -= $countedAmountToDiscountPerQty;
-            $product['price'] -= $countedAmountToDiscount;
-            $product['discountTotal'] += $countedAmountToDiscountPerQty;
-        }
-
-        return $articleDataCollection;
+        return $discounts;
     }
 
     public function applyShopwareDiscount($articleDataCollection, $shopwareDiscountsAmount)
@@ -1378,13 +1124,23 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return $articleDataCollection;
     }
 
-    public function applyVouchers($articleDataCollection)
+    public function applyVouchers($articleDataCollection, $excludedVoucherIds = [])
     {
         $couponMappingRepository = $this->getCouponMappingRepository();
 
-        $basketAmount = 0;
-        $productBasket = 0;
         $vouchersData = [];
+
+        // check if plugin CoeExcludeProducerOnVoucher is installed
+        $coeExcludePlugin = $this->getPluginRepository()->findOneBy([
+            'name' => 'CoeExcludeProducerOnVoucher',
+            'active' => true
+        ]);
+
+        // check if plugin CoeVoucherOnReducedArticle is installed
+        $coeReducedPlugin = $this->getPluginRepository()->findOneBy([
+            'name' => 'CoeVoucherOnReducedArticle',
+            'active' => true
+        ]);
 
         foreach ($this->voucherCollection as $currentVoucher) {
             $couponMapping = $couponMappingRepository->findByCoupon($currentVoucher->getId());
@@ -1392,14 +1148,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            // check if plugin CoeExcludeProducerOnVoucher is installed
-            $plugin = $this->getPluginRepository()->findOneBy([
-                'name' => 'CoeExcludeProducerOnVoucher',
-                'active' => true
-            ]);
+            if (in_array($currentVoucher->getId(), $excludedVoucherIds)) {
+                continue;
+            }
 
             $coeExcludeSuppliers = [];
-            if ($plugin) {
+            if ($coeExcludePlugin) {
                 if ($currentVoucher->getAttribute() != null) {
                     $coeExcludeSupplier = $currentVoucher->getAttribute()->getCoeExcludeSupplier();
 
@@ -1416,14 +1170,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 }
             }
 
-            // check if plugin CoeVoucherOnReducedArticle is installed
-            $plugin = $this->getPluginRepository()->findOneBy([
-                'name' => 'CoeVoucherOnReducedArticle',
-                'active' => true
-            ]);
-
             $coeReducedArticle = null;
-            if ($plugin) {
+            if ($coeReducedPlugin) {
                 if ($currentVoucher->getAttribute() != null) {
                     $coeReducedArticle = $currentVoucher->getAttribute()->getCoeReducedArticle();
                 }
@@ -1433,15 +1181,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'coeExcludeSuppliers' => $coeExcludeSuppliers,
                 'coeReducedArticle' => $coeReducedArticle,
             ];
-
-            foreach ($articleDataCollection as $product) {
-                if ($this->isProductBlockedForVoucher($product, $currentVoucher, $vouchersData)) {
-                    continue;
-                }
-
-                $basketAmount += round($product['originalPrice'], 4);
-                $productBasket += round($product['price'], 4);
-            }
         }
 
         foreach ($articleDataCollection as &$product) {
@@ -1453,8 +1192,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     continue;
                 }
 
+                //percentile and product specific discount vouchers are handled by intedia plugin (if present)
+                if (in_array($currentVoucher->getId(), $excludedVoucherIds)) {
+                    continue;
+                }
+
                 $voucherDiscount = round($this->calculateArticleDiscountForVoucher(
-                    $product, $currentVoucher, $vouchersData, $price, $articleDataCollection, $basketAmount, $productBasket
+                    $product, $currentVoucher, $vouchersData, $price, $articleDataCollection
                 ), 4);
 
                 $voucherDiscountPerQuantity = round($voucherDiscount / $product['promoQuantity'], 4);
@@ -1718,12 +1462,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * @param array $vouchersData
      * @param float $articlePrice
      * @param array $articleDataCollection
-     * @param integer $basketAmount
-     * @param integer $productBasket
      *
      * @return float
      */
-    protected function calculateArticleDiscountForVoucher($product, Voucher $voucher, $vouchersData, $articlePrice, $articleDataCollection, $basketAmount, $productBasket)
+    protected function calculateArticleDiscountForVoucher($product, Voucher $voucher, $vouchersData, $articlePrice, $articleDataCollection)
     {
         if ($this->isProductBlockedForVoucher($product, $voucher, $vouchersData)) {
             return 0.00;
@@ -1818,7 +1560,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * calculate the voucher discount for current article price for a percentage coupon
+     * calculate the voucher discount for current article price for a absolute value coupon
      *
      * @param float $price
      * @param int $quantity
@@ -1836,7 +1578,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $this->logDebug('orderSyncMapping::calculateDiscountForAbsoluteVoucher::evaluatedOrderLinePrice ' . $evaluateOrderLine);
 
         // get the discount for the order line
-        $orderLineDiscount = $discount / 100 * ($evaluateOrderLine * 100);
+        $orderLineDiscount = $discount * $evaluateOrderLine;
         $this->logDebug('orderSyncMapping::calculateDiscountForAbsoluteVoucher::orderLineDiscount ' . $orderLineDiscount);
 
         return round($orderLineDiscount, 4, PHP_ROUND_HALF_UP);
