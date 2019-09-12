@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "0.15.8",
-    "isUpdateImportant": false,
+    "currentVersion": "0.16.0",
+    "isUpdateImportant": true,
 
     "changelog": {
         "de": {
+            "0.16.0": "fixing error email order number",
             "0.15.8": "7Senders fix",
             "0.15.7": "activating shipment mapping 7Senders",
             "0.15.6": "Option to disable address splitting based on shop",
