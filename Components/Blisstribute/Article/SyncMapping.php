@@ -481,6 +481,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      * build base classification data
      *
      * @return array
+     * @throws Exception
      */
     protected function buildClassificationData()
     {
@@ -629,6 +630,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      * build series mapping
      *
      * @return array
+     * @throws Exception
      */
     protected function buildSeriesCollection()
     {
