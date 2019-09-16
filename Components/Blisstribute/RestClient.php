@@ -1,6 +1,7 @@
 <?php
 
 use GuzzleHttp\Client;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * HTTP client for the Blisstribute REST API.
@@ -38,8 +39,7 @@ class Shopware_Components_Blisstribute_RestClient
      * @param $path
      * @param array $data
      * @param array $query
-     * @return mixed|\Psr\Http\Message\ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return mixed|ResponseInterface
      */
     public function post($path, $data = [], $query = [])
     {
@@ -54,8 +54,7 @@ class Shopware_Components_Blisstribute_RestClient
      * @param $path
      * @param array $data
      * @param array $query
-     * @return mixed|\Psr\Http\Message\ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return mixed|ResponseInterface
      */
     public function put($path, $data = [], $query = [])
     {
@@ -72,7 +71,6 @@ class Shopware_Components_Blisstribute_RestClient
      *
      * @param string $apiKey
      * @return string
-     * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws Exception
      */
     public function authenticateWithApiKey(string $apiKey): string
@@ -88,7 +86,6 @@ class Shopware_Components_Blisstribute_RestClient
      * @param string $user
      * @param string $password
      * @return string
-     * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws Exception
      */
     public function authenticateWithClientUserPassword(string $client, string $user, string $password): string
@@ -103,7 +100,6 @@ class Shopware_Components_Blisstribute_RestClient
     /**
      * @param array $credentials
      * @return string
-     * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws Exception
      */
     private function authenticate(array $credentials): string
@@ -133,8 +129,7 @@ class Shopware_Components_Blisstribute_RestClient
      * with a unique VHS identifier or not.
      *
      * @param array $products
-     * @return mixed|\Psr\Http\Message\ResponseInterface
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return mixed|ResponseInterface
      */
     public function createOrUpdateProduct(array $products)
     {
