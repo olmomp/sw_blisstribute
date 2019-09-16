@@ -370,6 +370,33 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
         }
 
+        if (version_compare($version, '0.16.0', '<')) {
+            // Migrate the SOAP Host to REST Host, if it's set.
+            $form            = $this->Form();
+            $soapHostElement = $form->getElement('blisstribute-soap-host');
+            $soapHost        = $this->config->get('blisstribute-soap-host');
+            $restHost        = '';
+
+            if (trim($soapHost) != '') {
+                $restHost = str_replace('soap', 'rest', $soapHost);
+            }
+
+            // Add REST Host.
+            $form->setElement(
+                'text',
+                'blisstribute-rest-host',
+                [
+                    'label'       => 'REST Host',
+                    'description' => 'REST-Hostname für den Verbindungsaufbau zum Blisstribute-System',
+                    'maxLength'   => 255,
+                    'value'       => $restHost
+                ]
+            );
+
+            // Change SOAP Host label to "SOAP Host" for clarity.
+            $soapHostElement->setLabel('SOAP Host');
+        }
+
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
@@ -1087,8 +1114,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'text',
             'blisstribute-soap-host',
             [
-                'label' => 'Host',
+                'label' => 'Host', // SOAP
                 'description' => 'SOAP-Hostname für den Verbindungsaufbau zum Blisstribute-System',
+                'maxLength' => 255,
+                'value' => ''
+            ]
+        );
+        $form->setElement(
+            'text',
+            'blisstribute-rest-host',
+            [
+                'label' => 'REST Host',
+                'description' => 'REST-Hostname für den Verbindungsaufbau zum Blisstribute-System',
                 'maxLength' => 255,
                 'value' => ''
             ]
