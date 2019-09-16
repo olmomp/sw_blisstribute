@@ -44,25 +44,7 @@ class Shopware_Components_Blisstribute_RestClient
     public function post($path, $data = [], $query = [])
     {
         return $this->httpClient
-                    ->post($path, ['json' => $data, 'query' => $query])
-                    ->json();
-    }
-
-    /**
-     * Update a resource.
-     *
-     * @param $path
-     * @param array $data
-     * @param array $query
-     * @return mixed|ResponseInterface
-     */
-    public function put($path, $data = [], $query = [])
-    {
-        return json_decode(
-            $this->httpClient
-                 ->put($path, ['json' => $data, 'query' => $query])
-                 ->getBody()->getContents()
-        );
+                    ->post($path, ['json' => $data, 'query' => $query]);
     }
 
     /**
@@ -112,7 +94,7 @@ class Shopware_Components_Blisstribute_RestClient
             return $this->httpClient->getDefaultOption('headers/Authorization');
         }
 
-        $response = $this->post('login/authenticate', $credentials);
+        $response = $this->post('login/authenticate', $credentials)->json();
         $token    = $response['response']['jwt'] ?? false;
 
         if (!$token) {
