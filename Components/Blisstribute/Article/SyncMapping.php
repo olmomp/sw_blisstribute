@@ -7,7 +7,6 @@ use Shopware\Models\Article\Article;
 use Shopware\Models\Article\Price;
 use Shopware\Models\Category\Category;
 use Shopware\CustomModels\Blisstribute\BlisstributeArticle;
-use Shopware\Models\Tax\Tax;
 
 /**
  * mapping service to sync article information to blisstribute
@@ -40,9 +39,9 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             $this->logDebug('articleSyncMapping::load config done');
 
             return $c;
-        }catch (Exception $ex) {
-            $this->logWarn($ex->getMessage());
-            throw $ex;
+        }catch (Exception $e) {
+            $this->logWarn($e->getMessage());
+            throw $e;
         }
     }
 
@@ -62,36 +61,26 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function buildBaseData()
     {
+        // Fetch details of parent article + variants.
         $articleDetails = $this->getArticle()->getDetails();
-        $data = [];
+        $articleData = [];
 
         foreach ($articleDetails as $articleDetail) {
             $classifications = $this->buildClassificationData();
 
-            $data[] = [
+            $data = [
                 // Required fields.
                 'classification1'  => $classifications['classification1'],
                 'classification2'  => $classifications['classification2'],
-                'releaseDate'      => $this->getReleaseDate(),
+                'releaseDate'      => $this->getReleaseDate($articleDetail),
                 'identifications'  => $this->getIdentifications($articleDetail),
                 'vatRates'         => $this->getVatRates(),
                 'prices'           => $this->getPrices($articleDetail),
                 'vendors'          => $this->getVendors($articleDetail),
 
-                // Optional fields.
-                'vhsArticleNumber' => $this->getArticleVhsNumber($articleDetail),
-                'classification3'  => $classifications['classification3'],
-                'classification4'  => $classifications['classification4'],
-                'classification5'  => $classifications['classification5'],
-                'imageUrl'         => $this->getImageUrl($articleDetail),
-                'isActive'         => $this->determineArticleActiveState($articleDetail),
-                'removeDate'       => $this->getRemoveDate(),
-                'tags'             => $this->getTags($articleDetail),
-                'customsData'      => $this->getCustomsData($articleDetail),
-
                 // Unavailable fields in Shopware.
                 // 'unitType'            => Not used, because it would override on each sync.
-                // 'stockLevel'          =>> Not used, because it would override on each sync.
+                // 'stockLevel'          => Not used, because it would override on each sync.
                 // 'isConsignment'       => ...,
                 // 'isSet'               => ...,
                 // 'calculateStockLevel' => ...,
@@ -100,36 +89,49 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 // 'isPackingMaterial'   => ...,
                 // 'isVirtual'           => ...,
                 // 'hasSerialNumber'     => ...,
+                // 'removeDate'          => $this->getRemoveDate(),
             ];
+
+            // Optional fields.
+            $optional = [
+                'vhsArticleNumber' => $this->getArticleVhsNumber($articleDetail),
+                'classification3'  => $classifications['classification3'],
+                'classification4'  => $classifications['classification4'],
+                'classification5'  => $classifications['classification5'],
+                'imageUrl'         => $this->getImageUrl($articleDetail),
+                'isActive'         => $this->determineArticleActiveState($articleDetail),
+                'tags'             => $this->getTags($articleDetail),
+                'customsData'      => $this->getCustomsData($articleDetail),
+            ];
+
+            // Only add optional fields that are not null to data.
+            foreach ($optional as $k => $v) {
+                if ($v != null) {
+                    $data[$k] = $v;
+                }
+            }
+
+            $articleData[] = $data;
         }
 
         // Allow plugins to change the data.
-        return Enlight()->Events()->filter('ExitBBlisstribute_ArticleSyncMapping_AfterBuildBaseData', $data,
+        return Enlight()->Events()->filter('ExitBBlisstribute_ArticleSyncMapping_AfterBuildBaseData', $articleData,
             ['subject' => $this, 'article' => $this->getArticle()]);
     }
 
     /**
+     * @param Detail $articleDetail
      * @return string|null
      */
-    private function getReleaseDate()
+    private function getReleaseDate(Detail $articleDetail)
     {
-        if ($this->getArticle()->getAvailableFrom() == null) {
+        $releaseDate = $articleDetail->getReleaseDate() ?? false;
+
+        if (!$releaseDate) {
             return null;
         }
 
-        return $this->getArticle()->getAvailableFrom()->format('Y-m-d H:i:s');
-    }
-
-    /**
-     * @return string|null
-     */
-    private function getRemoveDate()
-    {
-        if ($this->getArticle()->getAvailableTo() == null) {
-            return null;
-        }
-
-        return $this->getArticle()->getAvailableTo()->format('Y-m-d H:i:s');
+        return $releaseDate->format('Y-m-d');
     }
 
     /**
@@ -141,12 +143,12 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     {
         return [
             [
-                'identificationType' => 'erpArticleNumber',
+                'identificationType' => 'external-key',
                 'identification'     => $this->getArticleVhsNumber($articleDetail),
             ],
 
             [
-                'identificationType' => 'articleNumber',
+                'identificationType' => 'article_number',
                 'identification'     => $articleDetail->getNumber(),
             ],
 
@@ -156,8 +158,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             ],
 
             [
-                'identificationType' => 'manufacturerArticleNumber',
-                'identification'     => $this->_getManufacturerArticleNumber($articleDetail),
+                'identificationType' => 'manufacturer_article_number',
+                'identification'     => $this->getManufacturerArticleNumber($articleDetail),
             ],
         ];
     }
@@ -265,7 +267,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     private function getPrices(Detail $articleDetail)
     {
-        $shops = [['advertisingMediumCode' => '', 'currency' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK']];
+        $shops = [['currency' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK']];
 
         if ($this->getConfig()['blisstribute-transfer-shop-article-prices']) {
             $shops = array_merge(
@@ -334,8 +336,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     {
         return [[
             'supplierCode'         => $this->getSupplierCode($articleDetail),
-            'price'                => $this->getMainDetailBasePrice($articleDetail),
-            'packageUnit'          => 1,
+            'price'                => (float) $this->getMainDetailBasePrice($articleDetail),
+            'packingUnit'          => 1,
             'orderUnit'            => 1,
             'minOrder'             => 1,
             'maxOrder'             => 0,
@@ -616,14 +618,20 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function formatPricesFromNetToGross($advertisingMediumCode, $netPrice, $tax, $currency, $isRecommendedRetailPrice = false)
     {
-        return [
-            'countryCode'              => 'DE',
-            'currency'                 => $currency,
-            'price'                    => round($netPrice / 100 * (100 + $tax), 6),
-            'advertisingMediumCode'    => $advertisingMediumCode,
-            'isNet'                    => false,
-            'isRecommendedRetailPrice' => $isRecommendedRetailPrice,
-        ];
+        return array_filter(
+            [
+                'countryCode'              => 'DE',
+                'currency'                 => $currency,
+                'price'                    => round($netPrice / 100 * (100 + $tax), 6),
+                'advertisingMediumCode'    => $advertisingMediumCode,
+                'isNet'                    => false,
+                'isRecommendedRetailPrice' => $isRecommendedRetailPrice,
+            ],
+
+            function ($v) {
+                return $v != null;
+            }
+        );
     }
 
     /**
@@ -730,34 +738,13 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     protected function buildSpecificationCollection(Detail $articleDetail)
     {
-        $releaseDate = '';
-        if ($articleDetail->getArticle()->getAvailableFrom() !== null) {
-            $releaseDate = $articleDetail->getArticle()->getAvailableFrom()->format('Y-m-d H:i:s');
-        }
-
-        $removeDate = '';
-        if ($articleDetail->getArticle()->getAvailableTo() !== null) {
-            $articleDetail->getArticle()->getAvailableTo()->format('Y-m-d H:i:s');
-        }
-
         $specificationData = array(
             'erpArticleNumber' => $this->getArticleVhsNumber($articleDetail),
             'articleNumber' => $articleDetail->getNumber(),
-            'ean13' => $articleDetail->getEan(),
-            'manufacturerArticleNumber' => $this->_getManufacturerArticleNumber($articleDetail),
-            'ean10' => '',
-            'isrc' => '',
-            'isbn' => '',
             'classification1' => $this->determineDetailArticleName($articleDetail),
             'imageUrl' => $this->getImageUrl($articleDetail),
-            'releaseDate' => $releaseDate,
-            'removeDate' => $removeDate,
             'releaseState' => (bool)$this->determineArticleActiveState($articleDetail),
             'setCount' => 1,
-            'color' => '',
-            'colorCode' => '',
-            'size' => '',
-            'sortingIndex' => 0,
             'reorder' => true,
             'noticeStockLevel' => (int)$articleDetail->getStockMin(),
             'reorderStockLevel' => (int)$articleDetail->getStockMin(),
@@ -803,7 +790,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      * @return mixed
      * @throws Exception
      */
-    private function _getManufacturerArticleNumber($articleDetail)
+    private function getManufacturerArticleNumber($articleDetail)
     {
         $manufacturerArticleNumber = '';
         if ($articleDetail->getSupplierNumber() && $this->getConfig()['blisstribute-article-sync-manufacturer-article-number']) {
