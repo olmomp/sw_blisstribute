@@ -230,8 +230,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     private function getStockLevel(Detail $articleDetail)
     {
         return [
-            'noticeStockLevel'  => (int) $articleDetail->getStockMin(),
-            'reorderStockLevel' => (int) $articleDetail->getStockMin(),
+            // 'noticeStockLevel'  => (int) $articleDetail->getStockMin(),
+            // 'reorderStockLevel' => (int) $articleDetail->getStockMin(),
             'minimumStockLevel' => (int) $articleDetail->getStockMin(),
         ];
     }
