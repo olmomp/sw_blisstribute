@@ -32,8 +32,8 @@ class Shopware_Components_Blisstribute_Order_Payment_PayOneCC
         }
 
         return array(
-            'resToken' => $this->order->getTransactionId(),
-            'cardAlias' => $sequenceNumber,
+            'token' => $this->order->getTransactionId(),
+            'tokenReference' => $sequenceNumber,
         );
     }
 }

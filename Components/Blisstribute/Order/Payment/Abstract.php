@@ -87,7 +87,7 @@ class Shopware_Components_Blisstribute_Order_Payment_Abstract
 
         $payment = array(
             'total' => round($paymentCosts, 6),
-            'type' => $this->code,
+            'code' => $this->code,
             'isPayed' => (bool)$this->payment->getIsPayed(),
         );
 

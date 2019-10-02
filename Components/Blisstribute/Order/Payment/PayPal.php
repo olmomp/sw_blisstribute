@@ -46,7 +46,7 @@ class Shopware_Components_Blisstribute_Order_Payment_PayPal
     protected function getAdditionalPaymentInformation()
     {
         return array(
-            'resToken' => $this->order->getTransactionId(),
+            'token' => $this->order->getTransactionId(),
         );
     }
 }
