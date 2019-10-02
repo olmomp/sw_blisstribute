@@ -117,4 +117,15 @@ class Shopware_Components_Blisstribute_RestClient
     {
         return $this->post('product/createOrUpdate', ['productData' => $products]);
     }
+
+    /**
+     * Creates a single order.
+     *
+     * @param array $order
+     * @return mixed|ResponseInterface
+     */
+    public function createOrder(array $order)
+    {
+        return $this->post('order/create', ['orderData' => $order]);
+    }
 }
