@@ -397,6 +397,24 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $soapHostElement->setLabel('SOAP Host');
         }
 
+        if (version_compare($version, '0.16.2', '<')) {
+            // Migrate the SOAP Host to REST Host, if it's set.
+            // $pluginConfig->get('blisstribute-article-sync-enabled')
+            $form = $this->Form();
+
+            // Add option to disable article sync.
+            $form->setElement(
+                'checkbox',
+                'blisstribute-article-sync-enabled',
+                [
+                    'label' => 'Artikel synchronisieren',
+                    'description' => 'Wenn deaktiviert werden keine Artikel zwischen diesem Shop und Blisstribute synchronisiert.',
+                    'value' => 1,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
+
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
