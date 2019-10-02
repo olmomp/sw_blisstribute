@@ -590,10 +590,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {
         if(is_null($job)) return;
 
+        $pluginConfig = Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config();
+
+        // If the user disabled article synchronization, stop here.
+        if (!$pluginConfig->get('blisstribute-article-sync-enabled')) {
+            echo date('r') . ' - BLISSTRIBUTE article sync is disabled' . PHP_EOL;
+            return;
+        }
+
         try {
-            $controller = new \Shopware_Components_Blisstribute_Article_Sync(
-                Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config()
-            );
+            $controller = new \Shopware_Components_Blisstribute_Article_Sync($pluginConfig);
 
             $controller->processBatchArticleSync();
         } catch (\Exception $ex) {
