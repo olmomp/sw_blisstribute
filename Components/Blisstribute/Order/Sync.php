@@ -216,7 +216,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
         if (!$result) {
             $errorReceiver = trim(Shopware()->Config()['blisstribute-error-email-receiver']);
             if ($errorReceiver != '') {
-                $email = Shopware()->TemplateMail()->createMail('sBLISSORDERREJECTED', ['orderNumber' => '123456']);
+                $email = Shopware()->TemplateMail()->createMail('sBLISSORDERREJECTED', ['orderNumber' => $blisstributeOrder->getOrder()->getNumber()]);
                 $email->addTo($errorReceiver);
                 $email->send();
             }

@@ -57,7 +57,7 @@ Ext.define('Shopware.apps.BlisstributeShipmentMapping.view.list.Shipment', {
                 ['Gls', me.snippets.classNameGls],
                 ['Dtpg', me.snippets.classNameDTPG],
                 ['Dtpm', me.snippets.classNameDTPM],
-                ['7Senders', me.snippets.className7Senders]
+                ['Sevensenders', me.snippets.className7Senders]
             ]
         });
 

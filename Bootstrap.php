@@ -370,7 +370,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
         }
 
-        if (version_compare($version, '0.16.0', '<')) {
+        if (version_compare($version, '0.16.1', '<')) {
             // Migrate the SOAP Host to REST Host, if it's set.
             $form            = $this->Form();
             $soapHostElement = $form->getElement('blisstribute-soap-host');
