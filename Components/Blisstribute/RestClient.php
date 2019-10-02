@@ -55,9 +55,9 @@ class Shopware_Components_Blisstribute_RestClient
      * @return string
      * @throws Exception
      */
-    public function authenticateWithApiKey(string $apiKey): string
+    public function authenticateWithApiKey(string $client, string $apiKey): string
     {
-        return $this->authenticate(['apiKey' => $apiKey]);
+        return $this->authenticate(['client' => $client, 'apiKey' => $apiKey]);
     }
 
     /**
