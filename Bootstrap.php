@@ -1453,6 +1453,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'description' => 'Order-Attribut (Freitextfeld) für Kunden-Telefonnummer'
             ]
         );
+
+        // Add option to disable article sync.
+        $form->setElement(
+            'checkbox',
+            'blisstribute-article-sync-enabled',
+            [
+                'label' => 'Artikel synchronisieren',
+                'description' => 'Wenn deaktiviert werden keine Artikel zwischen diesem Shop und Blisstribute synchronisiert.',
+                'value' => 1,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
     }
 
     /**
