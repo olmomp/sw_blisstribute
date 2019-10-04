@@ -96,7 +96,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
         $result = $this->processOrderSync($blisstributeOrder);
 
         $this->unlockTask();
-        
+
         return $result;
     }
 
@@ -131,7 +131,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                 /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
                 $addressValidator = Shopware()->Container()->get('blisstribute.google_address_validator');
                 $addressValidatorResponse = $addressValidator->validateAddress($blisstributeOrder, $this->config);
-                    
+
                 if (!$addressValidatorResponse && !$this->config->get('blisstribute-transfer-orders')) {
                     throw new Exception('could not validate the order address.');
                 }
@@ -140,12 +140,24 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
             Shopware()->Events()->notify('Shopware_Components_Blisstribute_Order_Sync::beforeSyncOrder', [
                 'order' => $blisstributeOrder
             ]);
-        
+
             $orderData = $this->initializeModelMapping($blisstributeOrder);
 
-            $soapClient = new Shopware_Components_Blisstribute_Order_SoapClient($this->config);
-            $orderResponse = $soapClient->syncOrder($orderData);
-            if ($orderResponse === true) {
+            $restClient = new Shopware_Components_Blisstribute_RestClient(
+                sprintf(
+                    '%s://%s',
+                    ($this->config->get('blisstribute-soap-protocol') == 1 ? 'http' : 'https'),
+                    $this->config->get('blisstribute-rest-host')
+                )
+            );
+            $restClient->authenticateWithClientUserPassword(
+                $this->config->get('blisstribute-soap-client'),
+                $this->config->get('blisstribute-soap-username'),
+                $this->config->get('blisstribute-soap-password')
+            );
+            $orderResponse = $restClient->createOrder($orderData);
+            $syncWasSuccessful = ($orderResponse->json()['success'] ?? false);
+            if ($syncWasSuccessful === 'true') {
                 $result = true;
                 $this->logMessage('order transferred::' . $blisstributeOrder->getOrder()->getNumber(), __FUNCTION__);
 
