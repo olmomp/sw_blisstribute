@@ -156,6 +156,13 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                 $this->config->get('blisstribute-soap-password')
             );
             $orderResponse = $restClient->createOrder($orderData);
+
+            // Response must be successful.
+            if ($orderResponse->getStatusCode() < 200 || $orderResponse->getStatusCode() >= 300) {
+                throw new Shopware_Components_Blisstribute_Exception_TransferException(
+                    sprintf('Unexpected status code %d', $orderResponse->getStatusCode()));
+            }
+
             $syncWasSuccessful = ($orderResponse->json()['success'] ?? false);
             if ($syncWasSuccessful === 'true') {
                 $result = true;
