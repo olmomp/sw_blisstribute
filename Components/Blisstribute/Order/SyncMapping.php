@@ -136,7 +136,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     /**
      * return shopware plugin repository
      *
-     * @return \Shopware\Models\Plugin\Plugin
+     * @return \Doctrine\ORM\EntityRepository|\Shopware\Models\Plugin\Plugin
      */
     protected function getPluginRepository()
     {
@@ -144,12 +144,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * @inheritdoc
+     * @throws Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException
+     * @throws Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException
+     * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
+     * @throws NonUniqueResultException
      */
     protected function buildBaseData()
     {
         $this->logDebug('orderSyncMapping::buildBaseData::start');
-        // determine used vouchers
+
         $this->determineVoucherDiscount();
 
         $this->orderData = $this->buildBasicOrderData();
@@ -163,11 +166,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $this->logDebug('orderSyncMapping::buildBaseData::done');
         $this->logDebug('orderSyncMapping::buildBaseData::result:' . json_encode($this->orderData));
 
-        $order = $this->getModelEntity()->getOrder();
-        $originalTotal = round($order->getInvoiceAmount(), 2);
-        $newOrderTotal = round($this->_getOrderTotal(), 2);
+        $order               = $this->getModelEntity()->getOrder();
+        $originalTotal       = round($order->getInvoiceAmount(), 2);
+        $newOrderTotal       = round($this->getOrderTotal(), 2);
         $orderTotalDeviation = $originalTotal - $newOrderTotal;
-        $deviationWatermark = round($this->getConfig()['blisstribute-discount-difference-watermark'], 2);
+        $deviationWatermark  = round($this->getConfig()['blisstribute-discount-difference-watermark'], 2);
 
         if (abs($orderTotalDeviation) > abs($deviationWatermark)) {
             $this->logDebug(sprintf('orderSyncMapping::buildBaseData::amount differs %s to %s', $originalTotal, $newOrderTotal));
@@ -637,9 +640,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * build article list
+     * Build article list.
      *
      * @return array
+     * @throws NonUniqueResultException
+     * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
      */
     protected function buildArticleData()
     {
@@ -673,8 +678,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $price = $orderDetail->getPrice();
             }
 
-            $quantity = $orderDetail->getQuantity();
-            $mode = $orderDetail->getMode();
+            $quantity      = $orderDetail->getQuantity();
+            $mode          = $orderDetail->getMode();
             $articleNumber = $orderDetail->getArticleNumber();
 
             if (in_array($mode, [3, 4]) && $price <= 0) {
@@ -821,7 +826,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $row = $this->container->get('db')->fetchRow(
                 "SELECT configuration, template
                           FROM s_plugin_custom_products_configuration_hash
-                          WHERE hash = :hash", array('hash' => $hash)
+                          WHERE hash = :hash", ['hash' => $hash]
             );
 
             if (empty($configurationArticles) || !$row) {
