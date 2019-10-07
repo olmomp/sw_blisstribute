@@ -495,46 +495,38 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * @param $salutation
-     * @return string
-     */
-    private function toGermanSalutation($salutation)
-    {
-        if ($salutation == 'mr') {
-            return base64_encode('Herr');
-        } elseif ($salutation == 'ms') {
-            return base64_encode('Frau');
-        }
-    }
-
-    /**
-     * Build invoice address data.
-     *
+     * @param $addrType string Either 'billing' or 'shipping'.
      * @return array
      * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
      */
-    private function buildInvoiceAddressData()
+    private function buildAddressData($addrType)
     {
-        $billing = $this->getModelEntity()->getOrder()->getBilling();
-        if ($billing == null) {
+        if ($addrType == 'billing') {
+            $ent = $this->getModelEntity()->getOrder()->getBilling();
+        }
+        elseif ($addrType == 'shipping') {
+            $ent = $this->getModelEntity()->getOrder()->getShipping();
+        }
+
+        if ($ent == null) {
             throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException(
                 'no billing address given for order ' . $this->getModelEntity()->getOrder()->getNumber()
             );
         }
 
         $salutation = '';
-        if ($billing->getSalutation() == 'mr') {
+        if ($salutation == 'mr') {
             $salutation = base64_encode('Herr');
-        } elseif ($billing->getSalutation() == 'ms') {
+        } elseif ($salutation == 'ms') {
             $salutation = base64_encode('Frau');
         }
 
-        $country = $billing->getCountry();
+        $country = $ent->getCountry();
         if ($country == null) {
             throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('no country given');
         }
 
-        $street = $billing->getStreet();
+        $street = $ent->getStreet();
         $houseNumber = '';
         try {
             $disableAddressSplitting = $this->getConfig()['blisstribute-disable-address-splitting'];
@@ -546,28 +538,22 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         } catch (Exception $e) {
         }
 
-        $invoiceAddressData = [
-            'addressType' => 'BILL',
-            'salutation' => $salutation,
-            'title' => '',
-            'firstName' => base64_encode($this->_processAddressDataMatching($billing->getFirstName())),
-            'addName' => base64_encode($this->_processAddressDataMatching($billing->getDepartment())),
-            'lastName' => base64_encode($this->_processAddressDataMatching($billing->getLastName())),
-            'company' => base64_encode($this->_processAddressDataMatching($billing->getCompany())),
-            'gender' => $gender,
-            'street' => base64_encode($this->_processAddressDataMatching($street)),
-            'houseNumber' => base64_encode($this->_processAddressDataMatching($houseNumber)),
-            'addressAddition' => base64_encode($this->_processAddressDataMatching($billing->getAdditionalAddressLine1())),
-            'zipCode' => base64_encode($this->_processAddressDataMatching($billing->getZipCode())),
-            'city' => base64_encode($this->_processAddressDataMatching($billing->getCity())),
-            'countryCode' => $country->getIso(),
-            'isTaxFree' => (((bool)$this->getModelEntity()->getOrder()->getTaxFree()) ? true : false),
-            'taxIdNumber' => trim($billing->getVatId()),
-            'remark' => '',
-            'stateCode' => '',
+        $addrData = [
+            'salutation'      => $salutation,
+            'title'           => '',
+            'firstName'       => base64_encode($this->_processAddressDataMatching($ent->getFirstName())),
+            'lastName'        => base64_encode($this->_processAddressDataMatching($ent->getLastName())),
+            'nameAddition'    => base64_encode($this->_processAddressDataMatching($ent->getDepartment())),
+            'company'         => base64_encode($this->_processAddressDataMatching($ent->getCompany())),
+            'street'          => base64_encode($this->_processAddressDataMatching($street)),
+            'houseNumber'     => base64_encode($this->_processAddressDataMatching($houseNumber)),
+            'addressAddition' => base64_encode($this->_processAddressDataMatching($ent->getAdditionalAddressLine1())),
+            'zip'             => base64_encode($this->_processAddressDataMatching($ent->getZipCode())),
+            'city'            => base64_encode($this->_processAddressDataMatching($ent->getCity())),
+            'countryCode'     => $country->getIso(),
         ];
 
-        return $invoiceAddressData;
+        return $addrData;
     }
 
     private function _processAddressDataMatching($addressString)
@@ -585,71 +571,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         return $addressString;
-    }
-
-
-
-    /**
-     * Build delivery address data.
-     *
-     * @return array
-     * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
-     */
-    protected function buildDeliveryAddressData()
-    {
-        $shipping = $this->getModelEntity()->getOrder()->getShipping();
-        if ($shipping == null) {
-            throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException(
-                'no shipping address given for order ' . $this->getModelEntity()->getOrder()->getNumber()
-            );
-        }
-
-        $salutation = '';
-        if ($shipping->getSalutation() == 'mr') {
-            $salutation = base64_encode('Herr');
-        } elseif ($shipping->getSalutation() == 'ms') {
-            $salutation = base64_encode('Frau');
-        }
-
-        $country = $shipping->getCountry();
-        if ($country == null) {
-            throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('no country given');
-        }
-
-        $street = $shipping->getStreet();
-        $houseNumber = '';
-        try {
-            $disableAddressSplitting = $this->getConfig()['blisstribute-disable-address-splitting'];
-            if (!$disableAddressSplitting) {
-                $match = AddressSplitter::splitAddress($street);
-                $street = $match['streetName'];
-                $houseNumber = $match['houseNumber'];
-            }
-        } catch (Exception $e) {
-        }
-
-        $deliveryAddressData = [
-            'addressType' => 'DELIVERY',
-            'salutation' => $salutation,
-            'title' => '',
-            'firstName' => base64_encode($this->_processAddressDataMatching($shipping->getFirstName())),
-            'addName' => base64_encode($this->_processAddressDataMatching($shipping->getDepartment())),
-            'lastName' => base64_encode($this->_processAddressDataMatching($shipping->getLastName())),
-            'company' => base64_encode($this->_processAddressDataMatching($shipping->getCompany())),
-            'gender' => $gender,
-            'street' => base64_encode($this->_processAddressDataMatching($street)),
-            'houseNumber' => base64_encode($this->_processAddressDataMatching($houseNumber)),
-            'addressAddition' => base64_encode($this->_processAddressDataMatching($shipping->getAdditionalAddressLine1())),
-            'zipCode' => base64_encode($this->_processAddressDataMatching($shipping->getZipCode())),
-            'city' => base64_encode($this->_processAddressDataMatching($shipping->getCity())),
-            'countryCode' => $country->getIso(),
-            'isTaxFree' => (((bool)$this->getModelEntity()->getOrder()->getTaxFree()) ? true : false),
-            'taxIdNumber' => '',
-            'remark' => '',
-            'stateCode' => '',
-        ];
-
-        return $deliveryAddressData;
     }
 
     /**
