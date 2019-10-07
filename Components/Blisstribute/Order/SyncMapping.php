@@ -371,18 +371,20 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * @param string $attrName
      * @return string
      */
-    protected function getAttribute($order, $fieldName)
+    private function getAttribute($order, $attrName)
     {
-        if (trim($fieldName) == '') {
+        if (trim($attrName) == '') {
             return null;
         }
 
+        // Build the method name of $fieldNames getter.
         $value = '';
-        $method = 'get' . ucfirst($fieldName);
+        $method = 'get' . ucfirst($attrName);
 
         $attribute = $order->getAttribute();
         $this->logDebug('orderSyncMapping::getAttribute::got attribute ' . $attribute->getId());
 
+        // Get the $fieldName by calling the getter using the build method name.
         if (method_exists($attribute, $method)) {
             $value = $attribute->$method();
         }
