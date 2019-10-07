@@ -495,6 +495,19 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
+     * @param $salutation
+     * @return string
+     */
+    private function toGermanSalutation($salutation)
+    {
+        if ($salutation == 'mr') {
+            return base64_encode('Herr');
+        } elseif ($salutation == 'ms') {
+            return base64_encode('Frau');
+        }
+    }
+
+    /**
      * Build invoice address data.
      *
      * @return array
