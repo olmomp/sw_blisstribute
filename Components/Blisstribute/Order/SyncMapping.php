@@ -443,14 +443,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     protected function buildAdvertisingMediumData()
     {
         $advertisingMediumCode = $this->getConfig()['blisstribute-default-advertising-medium'];
-        $advertisingMediumData = [
-            'origin' => 'O',
-            'medium' => 'O',
-            'code' => $advertisingMediumCode,
+
+        return [
+            'code'            => $advertisingMediumCode,
+            'origin'          => 'O',
+            'medium'          => 'O',
             'affiliateSource' => '',
         ];
-
-        return $advertisingMediumData;
     }
 
     /**
