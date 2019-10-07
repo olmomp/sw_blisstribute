@@ -505,13 +505,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             );
         }
 
-        $gender = '';
         $salutation = '';
         if ($billing->getSalutation() == 'mr') {
-            $gender = 'm';
             $salutation = base64_encode('Herr');
         } elseif ($billing->getSalutation() == 'ms') {
-            $gender = 'f';
             $salutation = base64_encode('Frau');
         }
 
@@ -590,13 +587,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             );
         }
 
-        $gender = '';
         $salutation = '';
         if ($shipping->getSalutation() == 'mr') {
-            $gender = 'm';
             $salutation = base64_encode('Herr');
         } elseif ($shipping->getSalutation() == 'ms') {
-            $gender = 'f';
             $salutation = base64_encode('Frau');
         }
 
