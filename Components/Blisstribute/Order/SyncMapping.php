@@ -60,7 +60,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected $voucherCollection = [];
 
-    private $container = null;
+    private $container;
+
+    public function __construct()
+    {
+        $this->container = Shopware()->Container();
+    }
 
     /**
      * @return array
@@ -89,7 +94,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * get blisstribute shipment mapping database repository
+     * Get Blisstribute shipment mapping database repository.
      *
      * @return BlisstributeShipmentRepository
      */
@@ -195,17 +200,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return $orderTotal;
     }
 
-    public function __construct()
-    {
-        $this->container = Shopware()->Container();
-    }
-
     /**
      * build basic order data
      *
      * @return array
      *
      * @throws Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException
+     * @throws NonUniqueResultException
+     * @throws Exception
      */
     protected function buildBasicOrderData()
     {
@@ -323,7 +325,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     /**
      * @param \Shopware\Models\Order\Order $order
-     * @param string $fieldName
+     * @param string $attrName
      * @return string
      */
     protected function getAttribute($order, $fieldName)
@@ -353,6 +355,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * @return string
      *
      * @throws Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException
+     * @throws NonUniqueResultException
      */
     protected function determineShippingType()
     {
@@ -388,7 +391,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * build advertising medium data
+     * Build advertising medium data.
      *
      * @return array
      */
@@ -406,11 +409,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * build payment data
+     * Build payment data.
      *
      * @return array
-     *
      * @throws Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException
+     * @throws NonUniqueResultException
      */
     protected function buildPaymentData()
     {
@@ -445,13 +448,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * build invoice address data
+     * Build invoice address data.
      *
      * @return array
-     *
      * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
      */
-    protected function buildInvoiceAddressData()
+    private function buildInvoiceAddressData()
     {
         $billing = $this->getModelEntity()->getOrder()->getBilling();
         if ($billing == null) {
@@ -528,11 +530,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return $addressString;
     }
 
+
+
     /**
-     * build delivery address data
+     * Build delivery address data.
      *
      * @return array
-     *
      * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
      */
     protected function buildDeliveryAddressData()
@@ -982,6 +985,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
 
+    /**
+     * @param $articleDataCollection
+     * @param $promotions
+     * @param $shopwareDiscountsAmount
+     * @return mixed
+     * @throws NonUniqueResultException
+     */
     public function applyPromoDiscounts($articleDataCollection, $promotions, $shopwareDiscountsAmount)
     {
         // check if Intedia Promotion Recorder plugin is installed
@@ -1124,6 +1134,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return $articleDataCollection;
     }
 
+    /**
+     * @param $articleDataCollection
+     * @param array $excludedVoucherIds
+     * @return mixed
+     * @throws NonUniqueResultException
+     */
     public function applyVouchers($articleDataCollection, $excludedVoucherIds = [])
     {
         $couponMappingRepository = $this->getCouponMappingRepository();
@@ -1535,8 +1551,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     /***
      * @param array $articleDataCollection
      * @param Voucher $voucher
-     * @param integer $supplierId
-     *
+     * @param $vouchersData
      * @return int
      */
     public function getBasketTotal($articleDataCollection, Voucher $voucher, $vouchersData)
@@ -1563,7 +1578,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * calculate the voucher discount for current article price for a absolute value coupon
      *
      * @param float $price
-     * @param int $quantity
      * @param float $orderSubtotal
      * @param float $discount
      *
@@ -1588,10 +1602,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * calculate the voucher discount for current article price for a percentage coupon
      *
      * @param float $price
-     * @param float $basketAmount
-     * @param float $productBasketAmount
      * @param float $discount
-     *
      * @return float
      */
     protected function calculateDiscountForPercentVoucher($price, $discount)
