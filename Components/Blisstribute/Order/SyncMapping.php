@@ -1600,28 +1600,29 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * build order voucher data
+     * Build order voucher data.
      *
      * @return array
+     * @throws NonUniqueResultException
      */
-    protected function buildCouponData()
+    protected function buildVouchersData()
     {
         $voucherData = [];
 
         foreach ($this->getModelEntity()->getOrder()->getDetails() as $currentDetail) {
             if (($currentDetail->getMode() == 4 || $currentDetail->getMode() == 3) && $currentDetail->getPrice() < 0) {
-                $voucherData[] = array(
-                    'couponCode' => $currentDetail->getArticleName(),
-                    'couponDiscount' => abs(round($currentDetail->getPrice(), 4)),
-                    'couponDiscountPercentage' => false,
-                    'isMoneyVoucher' => false,
-                );
+                $voucherData[] = [
+                    'code'               => $currentDetail->getArticleName(),
+                    'discount'           => abs(round($currentDetail->getPrice(), 4)),
+                    'discountPercentage' => false,
+                    'isMoneyVoucher'     => false,
+                ];
             }
         }
 
         foreach ($this->voucherCollection as $currentVoucher) {
             $voucherPercentage = 0.00;
-            $voucherDiscount = $currentVoucher->getValue();
+            $voucherDiscount   = $currentVoucher->getValue();
 
             if ((bool)$currentVoucher->getPercental()) {
                 $voucherPercentage = round($currentVoucher->getValue(), 4);
@@ -1635,7 +1636,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             }
 
             $couponMappingRepository = $this->getCouponMappingRepository();
-            $couponMapping = $couponMappingRepository->findByCoupon($currentVoucher->getId());
+            $couponMapping           = $couponMappingRepository->findByCoupon($currentVoucher->getId());
 
             $isMoneyVoucher = false;
             if ($couponMapping != null && $couponMapping->getIsMoneyVoucher()) {
@@ -1648,12 +1649,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $voucherCode = $currentVoucher->getVoucherCode();
             }
 
-            $voucherData[] = array(
-                'couponCode' => $voucherCode,
-                'couponDiscount' => round($voucherDiscount, 4),
-                'couponDiscountPercentage' => $voucherPercentage,
-                'isMoneyVoucher' => $isMoneyVoucher,
-            );
+            $voucherData[] = [
+                'code'               => $voucherCode,
+                'discount'           => round($voucherDiscount, 4),
+                'discountPercentage' => $voucherPercentage,
+                'isMoneyVoucher'     => $isMoneyVoucher,
+            ];
         }
 
         return $voucherData;
