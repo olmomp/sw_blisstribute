@@ -495,12 +495,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
+     * Returns the data for the billing or shipping address.
+     *
      * @param $addrType string Either 'billing' or 'shipping'.
      * @return array
      * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
      */
     private function buildAddressData($addrType)
     {
+        $ent = null;
         if ($addrType == 'billing') {
             $ent = $this->getModelEntity()->getOrder()->getBilling();
         }
@@ -510,14 +513,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         if ($ent == null) {
             throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException(
-                'no billing address given for order ' . $this->getModelEntity()->getOrder()->getNumber()
+                'no ' . $addrType . ' address given for order ' . $this->getModelEntity()->getOrder()->getNumber()
             );
         }
 
         $salutation = '';
         if ($salutation == 'mr') {
             $salutation = base64_encode('Herr');
-        } elseif ($salutation == 'ms') {
+        }
+        elseif ($salutation == 'ms') {
             $salutation = base64_encode('Frau');
         }
 
@@ -526,17 +530,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('no country given');
         }
 
-        $street = $ent->getStreet();
+        $street      = $ent->getStreet();
         $houseNumber = '';
         try {
-            $disableAddressSplitting = $this->getConfig()['blisstribute-disable-address-splitting'];
-            if (!$disableAddressSplitting) {
-                $match = AddressSplitter::splitAddress($street);
-                $street = $match['streetName'];
+            if (!$this->getConfig()['blisstribute-disable-address-splitting']) {
+                $match       = AddressSplitter::splitAddress($street);
+                $street      = $match['streetName'];
                 $houseNumber = $match['houseNumber'];
             }
-        } catch (Exception $e) {
-        }
+        } catch (Exception $e) {}
 
         $addrData = [
             'salutation'      => $salutation,
