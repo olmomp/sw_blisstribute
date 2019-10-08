@@ -552,22 +552,22 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $addrData = [
             'salutation'      => $salutation,
             'title'           => '',
-            'firstName'       => base64_encode($this->_processAddressDataMatching($ent->getFirstName())),
-            'lastName'        => base64_encode($this->_processAddressDataMatching($ent->getLastName())),
-            'nameAddition'    => base64_encode($this->_processAddressDataMatching($ent->getDepartment())),
-            'company'         => base64_encode($this->_processAddressDataMatching($ent->getCompany())),
-            'street'          => base64_encode($this->_processAddressDataMatching($street)),
-            'houseNumber'     => base64_encode($this->_processAddressDataMatching($houseNumber)),
-            'addressAddition' => base64_encode($this->_processAddressDataMatching($ent->getAdditionalAddressLine1())),
-            'zip'             => base64_encode($this->_processAddressDataMatching($ent->getZipCode())),
-            'city'            => base64_encode($this->_processAddressDataMatching($ent->getCity())),
+            'firstName'       => base64_encode($this->processAddressDataMatching($ent->getFirstName())),
+            'lastName'        => base64_encode($this->processAddressDataMatching($ent->getLastName())),
+            'nameAddition'    => base64_encode($this->processAddressDataMatching($ent->getDepartment())),
+            'company'         => base64_encode($this->processAddressDataMatching($ent->getCompany())),
+            'street'          => base64_encode($this->processAddressDataMatching($street)),
+            'houseNumber'     => base64_encode($this->processAddressDataMatching($houseNumber)),
+            'addressAddition' => base64_encode($this->processAddressDataMatching($ent->getAdditionalAddressLine1())),
+            'zip'             => base64_encode($this->processAddressDataMatching($ent->getZipCode())),
+            'city'            => base64_encode($this->processAddressDataMatching($ent->getCity())),
             'countryCode'     => $country->getIso(),
         ];
 
         return $addrData;
     }
 
-    private function _processAddressDataMatching($addressString)
+    private function processAddressDataMatching($addressString)
     {
         $blackListPattern = $this->getConfig()['blisstribute-hold-order-address-pattern'];
         if (trim($blackListPattern) == '') {
