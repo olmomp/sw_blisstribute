@@ -591,19 +591,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * @throws NonUniqueResultException
      * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
      */
-    protected function buildArticleData()
+    protected function buildItemsData()
     {
-        $articleDataCollection = [];
+        $items = [];
 
-        $swOrder = $this->getModelEntity()->getOrder();
+        $swOrder     = $this->getModelEntity()->getOrder();
         $basketItems = $swOrder->getDetails();
-        $orderId = $swOrder->getId();
 
-        $isB2BOrder = false;
         $company = trim($swOrder->getBilling()->getCompany());
-        if ($company != '' && $company != 'x' && $company != '*' && $company != '/' && $company != '-') {
-            $isB2BOrder = true;
-        }
+        $isB2B   = !in_array($company, ['', 'x', '*', '/', '-']);
 
         $promotions = [];
         $shopwareDiscountsAmount = 0;
@@ -611,13 +607,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         /** @var ArticleRepository $articleRepository */
         $articleRepository = $this->container->get('models')->getRepository('Shopware\Models\Article\Article');
 
-        $customerGroupId = $swOrder->getCustomer()->getGroup()->getId();
-        $shopId =  $swOrder->getShop()->getId();
-
         /** @var Shopware\Models\Order\Detail $orderDetail */
         foreach ($basketItems as $orderDetail) {
             $priceNet = $price = 0;
-            if ($isB2BOrder && $this->getConfig()['blisstribute-transfer-b2b-net']) {
+
+            if ($isB2B && $this->getConfig()['blisstribute-transfer-b2b-net']) {
                 $priceNet = ($orderDetail->getPrice() / (100 + $orderDetail->getTaxRate())) * 100;
             } else {
                 $price = $orderDetail->getPrice();
@@ -643,78 +637,74 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $article = $articleRepository->find($orderDetail->getArticleId());
 
             $articleData = [
-                'articleId' => $orderDetail->getArticleId(),
-                'lineId' => count($articleDataCollection) + 1,
-                'externalKey' => $orderDetail->getId(),
-                'erpArticleNumber' => $this->getArticleDetail($orderDetail)->getAttribute()->getBlisstributeVhsNumber(),
-                'ean13' => $orderDetail->getEan(),
-                'articleNumber' => $orderDetail->getArticleNumber(),
-                'mode' => $mode,
-                'supplierId' => $article->getSupplier()->getId(),
-                'customerGroupId' => $customerGroupId,
-                'shopId' => $shopId,
-                'originalPriceAmount' => $price,
-                'originalPrice' => $price * $orderDetail->getQuantity(),
-                'promoQuantity' => $quantity,
-                'quantity' => $quantity,
-                'priceAmount' => round($price, 4), // single article price
-                'priceAmountNet' => round($priceNet, 4), // single article price
-                'price' => round(($price * $quantity), 4),
-                'priceNet' => round(($priceNet * $quantity), 4),
-                'vatRate' => $this->getModelEntity()->getOrder()->getTaxFree() ? 0.0 : round($orderDetail->getTaxRate(), 2),
-                'title' => $orderDetail->getArticleName(),
-                'discountTotal' => 0,
-                'configuration' => '',
+                'externalNumber'   => $orderDetail->getId(),
+                'vhsArticleNumber' => $this->getArticleDetail($orderDetail)->getAttribute()->getBlisstributeVhsNumber(),
+                'ean13'            => $orderDetail->getEan(),
+                'articleTitle'     => $orderDetail->getArticleName(),
+                'quantity'         => $quantity,
+                'price'            => round($price, 4), // single article price
+                'priceNet'         => round($priceNet, 4), // single article price
+                'discount'         => 0,
+                'discountNet'      => 0,
+                'vatRate'          => $this->getModelEntity()->getOrder()->getTaxFree() ? 0.0 : round($orderDetail->getTaxRate(), 2),
+                'configuration'    => [],
+
+//                'originalPriceAmount' => $price,
+//                'originalPrice' => $price * $orderDetail->getQuantity(),
+//                'promoQuantity' => $quantity,
+//                'price' => round(($price * $quantity), 4),
+//                'priceNet' => round(($priceNet * $quantity), 4),
+//                'discountTotal' => 0,
             ];
 
             $articleData = $this->applyCustomProducts($articleData, $orderDetail, $basketItems);
             $articleData = $this->applyStaticAttributeData($articleData, $article);
 
-            $articleDataCollection[] = $articleData;
+            $items[] = $articleData;
         }
 
-        $articleDataCollection = $this->applyPromoDiscounts($articleDataCollection, $promotions, $shopwareDiscountsAmount);
+        $items = $this->applyPromoDiscounts($items, $promotions, $shopwareDiscountsAmount);
 
-        return $articleDataCollection;
+        return $items;
     }
 
     /**
-     * @param array $configurationData
+     * @param array $articleData
      * @param \Shopware\Models\Article\Article $article
      * @return array
      */
-    public function applyStaticAttributeData($configurationData, $article)
+    public function applyStaticAttributeData($articleData, $article)
     {
         $this->logDebug('orderSyncMapping::applyStaticAttributeData::start');
-        $configuration = array();
-        if (trim($configurationData['configuration']) != '') {
-            $configuration = json_decode($configurationData['configuration'], true);
+        $configuration = [];
+        if (!empty($articleData['configuration'])) {
+            $configuration = $articleData['configuration'];
         }
 
         if (!empty($article->getMainDetail()->getAttribute()) && trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
-            $configuration[] = array(
-                'category_type' => 'shipmentType',
-                'category' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleShipmentCode())
-            );
+            $configuration[] = [
+                'key'   => 'shipmentType',
+                'value' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleShipmentCode())
+            ];
         }
 
         if (!empty($article->getMainDetail()->getAttribute()) && trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
-            $configuration[] = array(
-                'category_type' => 'advertisingMedium',
-                'category' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleAdvertisingMediumCode())
-            );
+            $configuration[] = [
+                'key'   => 'advertisingMedium',
+                'value' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleAdvertisingMediumCode())
+            ];
         }
         else if ($advertisingMedium = $this->getAdvertisingMediumFromCategory($article)) {
-            $configuration[] = array(
-                'category_type' => 'advertisingMedium',
-                'category' => trim($advertisingMedium)
-            );
+            $configuration[] = [
+                'key'   => 'advertisingMedium',
+                'value' => trim($advertisingMedium)
+            ];
         }
 
-        $configurationData['configuration'] = json_encode($configuration);
+        $articleData['configuration'] = $configuration;
         $this->logDebug('orderSyncMapping::applyStaticAttributeData::done ' . json_encode($configuration));
 
-        return $configurationData;
+        return $articleData;
     }
 
     /**
@@ -785,12 +775,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $this->logDebug('customProduct::got configuration articles ' . count($configurationArticles));
             foreach ($configurationArticles as $configurationArticle) {
                 $price = $configurationArticle->getPrice();
-                $quantity = $configurationArticle->getQuantity();
 
-                $articleData['originalPriceAmount'] += $price;
-                $articleData['originalPrice'] += $price * $quantity;
-                $articleData['priceAmount'] += round($price, 6);
-                $articleData['price'] += round(($price * $quantity), 6);
+
+                if ($this->orderData['isB2B'] && $this->getConfig()['blisstribute-transfer-b2b-net']) {
+                    $articleData['priceNet'] += ($price / (100 + $articleData['vatRate'])) * 100;
+                } else {
+                    $articleData['price'] += round($price, 6);
+                }
+
 
                 if ($configurationArticle->getAttribute()->getSwagCustomProductsMode() == 2) {
                     foreach ($templateCollection as $currentTemplate) {
@@ -800,14 +792,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
                         $value = trim($currentConfigurationData[$currentTemplate['id']][0]);
                         if ($value != '') {
-                            $orderLineConfiguration[] = array('category_type' => $currentTemplate['name'], 'category' => $value);
+                            $orderLineConfiguration[] = ['key' => $currentTemplate['name'], 'value' => $value];
                         }
                     }
                 }
             }
 
             if (!empty($orderLineConfiguration)) {
-                $articleData['configuration'] = json_encode($orderLineConfiguration);
+                $articleData['configuration'] = $orderLineConfiguration;
             }
 
             return $articleData;
@@ -818,15 +810,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
 
     /**
-     * @param $articleDataCollection
+     * @param $items
      * @param $promotions
      * @param $shopwareDiscountsAmount
      * @return mixed
      * @throws NonUniqueResultException
      */
-    public function applyPromoDiscounts($articleDataCollection, $promotions, $shopwareDiscountsAmount)
+    public function applyPromoDiscounts($items, $promotions, $shopwareDiscountsAmount)
     {
-        // check if Intedia Promotion Recorder plugin is installed
+        // Try to get the Intedia Promotion Recorder.
         $intediaPromoPlugin = $this->getPluginRepository()->findOneBy([
             'name' => 'IntediaPromotionRecorder',
             'active' => true
@@ -834,37 +826,53 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $this->logDebug('apply promo discounts');
 
-        $handledPromotionIds = [];
-        $handledVoucherIds = [];
+        $appliedPromotionIds = [];
+        $appliedVoucherIds = [];
+
+        // If the Intedia Promotion Recorder is available, we first apply all article-specific discounts, like a 15%
+        // discount on a specific shirt brand. After that, the remaining discounts are applied cart-wide, weighted by
+        // the price of the article.
+        // In case the plugin is not available, all discounts will be applied cart-wide, weighted by the price.
         if ($intediaPromoPlugin) {
             $this->logDebug('apply promo discounts via intedia plugin');
             //1a. handle non-default discounts, most vouchers (Promotion suite etc) by intedia plugin
-            $orderDetailIds = array_column($articleDataCollection, 'externalKey');
 
+            // We begin by filtering out the IDs of the articles in this order, because they're required by
+            // getPromotionDiscountsFromRecorderPlugin. Calling getPromotionDiscountsFromRecorderPlugin returns the
+            // promotion ID, promotion value, and voucher ID. The promotion value is the monetary discount that will be
+            // deducted from the price of each article. The discount data either refers to a promotion or voucher
+            // depending on which ID is set.
+            $orderDetailIds     = array_column($items, 'externalNumber');
             $promotionDiscounts = $this->getPromotionDiscountsFromRecorderPlugin($orderDetailIds);
 
-            foreach ($articleDataCollection as $key => $articleData) {
-                $detailId = $articleData['externalKey'];
+            foreach ($items as $key => $articleData) {
+                $detailId = $articleData['externalNumber'];
 
                 if (isset($promotionDiscounts[$detailId])) {
+                    // A discount for this specific article exists...
 
                     foreach ($promotionDiscounts[$detailId] as $discount) {
 
+                        // Mark the discount as applied.
+                        // TODO: Can a discount be a promotion *and* voucher discount? If not attach the second if with
+                        //       elseif.
                         if ($discount['promotionId']) {
-                            $handledPromotionIds[] = $discount['promotionId']; //remember promotion as handled by plugin
+                            $appliedPromotionIds[] = $discount['promotionId'];
                         }
+
                         if ($discount['voucherId']) {
-                            $handledVoucherIds[] = $discount['voucherId'];
+                            $appliedVoucherIds[] = $discount['voucherId'];
                         }
 
                         $discountTotal = $discount['promotionValue'];
                         if ($discountTotal > 0) {
                             $quantity = $articleData['quantity'];
-                            $newPrice = round($articleData['price'] - $discountTotal, 4);
-                            $newPriceSingle = round($articleData['priceAmount'] - ($discountTotal / $quantity), 4);
-                            $articleDataCollection[$key]['price'] = $newPrice;
-                            $articleDataCollection[$key]['priceAmount'] = $newPriceSingle;
-                            $articleDataCollection[$key]['discountTotal'] = $discountTotal;
+                            $newPriceSingle = round($articleData['price'] - ($discountTotal / $quantity), 4);
+                            $newPrice = round($articleData['priceAmount'] - $discountTotal, 4);
+                            $items[$key]['price'] = $newPriceSingle;
+                            $items[$key]['priceAmount'] = $newPrice;
+                            $items[$key]['discount'] = $discountTotal / $quantity;
+                            $items[$key]['discountNet'] = $discountTotal / $quantity / (100 + $articleData['vatRate']) * 100;
                         }
                     }
                 }
@@ -874,10 +882,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             /** @var Detail $promotion */
             foreach ($promotions as $promotion) {
                 $promotionId = $promotion->getAttribute()->getIntediaPromotionRecorderPromotionId();
-                if (in_array($promotionId, $handledPromotionIds)) { //handled above
+                if (in_array($promotionId, $appliedPromotionIds)) { //handled above
                     continue;
                 }
-                $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $promotion->getPrice());
+                $items = $this->applyShopwareDiscount($items, $promotion->getPrice());
             }
 
         }
@@ -885,7 +893,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             //1c. without plugin: split all promotions to all products, weighted by price
             /** @var Detail $promotion */
             foreach ($promotions as $promotion) {
-                $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $promotion->getPrice());
+                $items = $this->applyShopwareDiscount($items, $promotion->getPrice());
             }
         }
 
@@ -895,11 +903,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
          * However: Absolute discount vouchers not specific to certain products/suppliers
          * still need to be split by weight over all articles
          */
-        $articleDataCollection = $this->applyVouchers($articleDataCollection, $handledVoucherIds);
+        $items = $this->applyVouchers($items, $appliedVoucherIds);
         //3. split shopware default discounts to all products, weighted by price (not handled by intedia Plugin)
-        $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $shopwareDiscountsAmount);
+        $items = $this->applyShopwareDiscount($items, $shopwareDiscountsAmount);
 
-        return $articleDataCollection;
+        return $items;
     }
 
     /**
@@ -946,7 +954,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $totalProductAmount += round($product['price'], 4);
+            $totalProductAmount += round($product['price'] * $product['promoQuantity'], 4);
         }
 
         foreach ($articleDataCollection as &$product) {
@@ -956,11 +964,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $weight = $product['price'] / $totalProductAmount;
 
-            $countedAmountToDiscountPerQuantity = (abs($shopwareDiscountsAmount) * $weight) / $product['promoQuantity'];
+            $singleDiscount = (abs($shopwareDiscountsAmount) * $weight) / $product['promoQuantity'];
 
-            $product['discountTotal'] += round($countedAmountToDiscountPerQuantity, 4);
-            $product['price'] -= round($countedAmountToDiscountPerQuantity * $product['promoQuantity'], 4);
-            $product['priceAmount'] -= round($countedAmountToDiscountPerQuantity, 4);
+            $product['discount'] += round($singleDiscount, 4);
+            $product['priceAmount'] -= round($singleDiscount * $product['promoQuantity'], 4);
+            $product['price'] -= round($singleDiscount, 4);
         }
 
         return $articleDataCollection;
