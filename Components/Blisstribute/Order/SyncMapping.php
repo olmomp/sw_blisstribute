@@ -156,12 +156,16 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $this->determineVoucherDiscount();
 
         $this->orderData = $this->buildBasicOrderData();
-        $this->orderData['payment'] = $this->buildPaymentData();
+
+        // Required fields...
+        $this->orderData['payment']           = $this->buildPaymentData();
         $this->orderData['advertisingMedium'] = $this->buildAdvertisingMediumData();
-        $this->orderData['billAddressData'] = $this->buildInvoiceAddressData();
-        $this->orderData['deliveryAddressData'] = $this->buildDeliveryAddressData();
-        $this->orderData['orderLines'] = $this->buildArticleData();
-        $this->orderData['orderCoupons'] = $this->buildCouponData();
+
+        $this->orderData['invoiceAddress']    = $this->buildAddressData('billing');
+        $this->orderData['deliveryAddress']   = $this->buildAddressData('shipping');
+        $this->orderData['items']             = $this->buildItemsData();
+
+        $this->orderData['vouchers']          = $this->buildVouchersData();
 
         $this->logDebug('orderSyncMapping::buildBaseData::done');
         $this->logDebug('orderSyncMapping::buildBaseData::result:' . json_encode($this->orderData));
