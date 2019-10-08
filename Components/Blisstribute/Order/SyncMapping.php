@@ -178,7 +178,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         if (abs($orderTotalDeviation) > abs($deviationWatermark)) {
             $this->logDebug(sprintf('orderSyncMapping::buildBaseData::amount differs %s to %s', $originalTotal, $newOrderTotal));
-            $this->orderData['orderRemark'] .= 'RABATT PRÜFEN! (ORIG ' . $originalTotal .')';
+            $this->orderData['customerRemark'] .= 'RABATT PRÜFEN! (ORIG ' . $originalTotal .')';
         }
 
         return $this->orderData;
@@ -576,8 +576,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         if (preg_match('/' . $blackListPattern . '/i', $addressString)) {
             $this->orderData['orderHold'] = true;
-            if (!preg_match('/Bestellung prüfen/i', $this->orderData['orderRemark'])) {
-                $this->orderData['orderRemark'] = 'Bestellung prüfen (SW Blacklist) - ' . $this->orderData['orderRemark'];
+            if (!preg_match('/Bestellung prüfen/i', $this->orderData['customerRemark'])) {
+                $this->orderData['customerRemark'] = 'Bestellung prüfen (SW Blacklist) - ' . $this->orderData['customerRemark'];
             }
         }
 
