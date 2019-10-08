@@ -340,7 +340,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         return [
             'number'         => $order->getNumber(),
-            'externalNumber' => '',
             'date'           => $order->getOrderTime()->format('Y-m-d H:i:s'),
             'currency'       => $order->getCurrency(),
             'isB2B'          => $isB2B,
@@ -575,7 +574,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         if (preg_match('/' . $blackListPattern . '/i', $addressString)) {
-            $this->orderData['orderHold'] = true;
+            $this->orderData['hold'] = true;
             if (!preg_match('/Bestellung prüfen/i', $this->orderData['customerRemark'])) {
                 $this->orderData['customerRemark'] = 'Bestellung prüfen (SW Blacklist) - ' . $this->orderData['customerRemark'];
             }
@@ -1248,7 +1247,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $customer = $this->getModelEntity()->getOrder()->getCustomer();
 
             if ($customer) {
-                $hasPseudoPrice = $this->container->get('db')->fetchOne("SELECT sap.pseudoprice FROM s_articles_prices sap LEFT JOIN s_articles_details sad ON sap.articleDetailsID = sad.id WHERE sad.ordernumber = ? AND sap.pricegroup = ? AND sap.pseudoprice > 0", array($product['articleNumber'], $customer->getGroupKey()));
+                $hasPseudoPrice = $this->container->get('db')->fetchOne("SELECT sap.pseudoprice FROM s_articles_prices sap LEFT JOIN s_articles_details sad ON sap.articleDetailsID = sad.id WHERE sad.ordernumber = ? AND sap.pricegroup = ? AND sap.pseudoprice > 0", [$product['articleNumber'], $customer->getGroupKey()]);
 
                 if ($hasPseudoPrice) {
                     return true;
