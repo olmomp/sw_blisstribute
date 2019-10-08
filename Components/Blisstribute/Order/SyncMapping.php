@@ -336,24 +336,30 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         return [
-            'externalCustomerNumber' => $customerNumber,
-            'externalCustomerEmail' => $customer->getEmail(),
-            'externalCustomerPhoneNumber' => $customerPhone,
-            'externalCustomerMobilePhoneNumber' => '',
-            'externalCustomerFaxNumber' => '',
-            'customerBirthdate' => $customerBirthday,
-            'externalOrderNumber' => $order->getNumber(),
-            'customerOrderNumber' => '',
-            'isAnonymousCustomer' => false,
-            'orderDate' => $order->getOrderTime()->format('Y-m-d H:i:s'),
-            'orderShipLock' => $orderShipLock,
-            'orderHold' => $orderHold,
-            'orderCurrency' => $order->getCurrency(),
-            'orderRemark' => implode(' - ', $orderRemark),
-            'isB2BOrder' => $isB2BOrder,
-            'advertisingMediumCode' => '',
-            'shipmentType' => $this->determineShippingType(),
-            'shipmentTotal' => $order->getInvoiceShipping(),
+            'number'         => $order->getNumber(),
+            'externalNumber' => '',
+            'date'           => $order->getOrderTime()->format('Y-m-d H:i:s'),
+            'currency'       => $order->getCurrency(),
+            'isB2B'          => $isB2B,
+            'customerRemark' => implode(' - ', $orderRemark),
+            'hold'           => $orderHold,
+            'lock'           => $orderShipLock,
+
+            'customer' => [
+                'number'      => $customerNumber,
+                'email'       => $customer->getEmail(),
+                'phone'       => $customerPhone,
+                'birthday'    => $customerBirthday,
+                'isB2B'       => $isB2B,
+                'taxIdNumber' => trim($billingAddress->getVatId()),
+            ],
+
+            'shipment' => [
+                'code'                 => $this->determineShippingType(),
+                'total'                => $order->getInvoiceShipping(),
+                'totalIsNet'           => false,
+                'allowPartialDelivery' => true,
+            ],
         ];
     }
 
