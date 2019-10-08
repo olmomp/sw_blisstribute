@@ -259,14 +259,16 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * @throws NonUniqueResultException
      * @throws Exception
      */
-    protected function buildBasicOrderData()
+    private function buildBasicOrderData()
     {
-        $order = $this->getModelEntity()->getOrder();
-        $customer = $order->getCustomer();
+        $order          = $this->getModelEntity()->getOrder();
+        $customer       = $order->getCustomer();
         $billingAddress = $order->getBilling();
+
         if ($billingAddress == null) {
             throw new Exception('invalid billing address data');
         }
+
         if ($order->getShipping() == null) {
             throw new Exception('invalid shipping address data');
         }
@@ -311,11 +313,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $customerNumber = $customer->getEmail();
         }
 
-        $isB2BOrder = false;
         $company = trim($billingAddress->getCompany());
-        if ($company != '' && $company != 'x' && $company != '*' && $company != '/' && $company != '-') {
-            $isB2BOrder = true;
-        }
+        $isB2B   = !in_array($company, ['', 'x', '*', '/', '-']);
 
         if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
             $customerBirthday = $customer->getBirthday();
@@ -682,7 +681,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     /**
      * @param array $configurationData
      * @param \Shopware\Models\Article\Article $article
-     *
      * @return array
      */
     public function applyStaticAttributeData($configurationData, $article)
@@ -730,7 +728,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     {
         /** @var Shopware\Models\Category\Category $category */
         foreach ($article->getAllCategories() as $category) {
-
             if ($category->getAttribute() && $category->getAttribute()->getBlisstributeCategoryAdvertisingMediumCode()) {
                 return $category->getAttribute()->getBlisstributeCategoryAdvertisingMediumCode();
             }
@@ -749,7 +746,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     {
         // check if plugin SwagCustomProducts is installed
         $plugin = $this->getPluginRepository()->findOneBy([
-            'name' => 'SwagCustomProducts',
+            'name'   => 'SwagCustomProducts',
             'active' => true
         ]);
 
@@ -771,8 +768,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $this->logDebug('customProduct::load configuration by hash %s', $hash);
             $row = $this->container->get('db')->fetchRow(
                 "SELECT configuration, template
-                          FROM s_plugin_custom_products_configuration_hash
-                          WHERE hash = :hash", ['hash' => $hash]
+                     FROM s_plugin_custom_products_configuration_hash
+                     WHERE hash = :hash", ['hash' => $hash]
             );
 
             if (empty($configurationArticles) || !$row) {
@@ -1204,7 +1201,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
 
-    public function isProductBlockedForVoucher($product, Voucher $voucher, $vouchersData) {
+    public function isProductBlockedForVoucher($product, Voucher $voucher, $vouchersData)
+    {
         if ($voucher == null) {
             return true;
         }
@@ -1253,18 +1251,18 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return false;
     }
 
-    /***
-     * @param array $articleDataCollection
+    /**
+     * @param array $items
      * @param Voucher $voucher
      * @param $vouchersData
      * @return int
      */
-    public function getBasketTotal($articleDataCollection, Voucher $voucher, $vouchersData)
+    public function getBasketTotal($items, Voucher $voucher, $vouchersData)
     {
         $totalAmount = 0;
 
         //todo: use price or originalPrice?
-        foreach ($articleDataCollection as $product) {
+        foreach ($items as $product) {
             if ($product['promoQuantity'] == 0 || $product['originalPrice'] <= 0) {
                 continue;
             }
