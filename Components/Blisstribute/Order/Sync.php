@@ -164,7 +164,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
             }
 
             $syncWasSuccessful = ($orderResponse->json()['success'] ?? false);
-            if ($syncWasSuccessful === 'true') {
+            if ($syncWasSuccessful) {
                 $result = true;
                 $this->logMessage('order transferred::' . $blisstributeOrder->getOrder()->getNumber(), __FUNCTION__);
 
