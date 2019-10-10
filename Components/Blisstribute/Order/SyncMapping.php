@@ -636,7 +636,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $article = $articleRepository->find($orderDetail->getArticleId());
 
             $articleData = [
-                'externalNumber'   => $orderDetail->getId(),
+                'externalNumber'   => (string) $orderDetail->getId(),
                 'vhsArticleNumber' => $this->getArticleDetail($orderDetail)->getAttribute()->getBlisstributeVhsNumber(),
                 'ean13'            => $orderDetail->getEan(),
                 'articleTitle'     => $orderDetail->getArticleName(),
