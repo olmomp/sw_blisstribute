@@ -357,7 +357,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'customerRemark' => implode(' - ', $orderRemark),
             'hold'           => $orderHold,
             'lock'           => $orderShipLock,
-            'lock'           => $orderShipLock,
             'isPriority'     => $isPriority,
 
             'customer' => [
