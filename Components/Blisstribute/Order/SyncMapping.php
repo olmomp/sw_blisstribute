@@ -338,6 +338,17 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $customerPhone = $this->getAlternativePhoneNumber($order);
         }
 
+        $shipmentRepository = $this->getShipmentMappingRepository();
+        $shipment           = $shipmentRepository->findOneByShipment($this->getModelEntity()->getOrder()->getDispatch()->getId());
+
+        if ($shipment === null) {
+            throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
+                'no shipment mapping given for order ' . $this->getModelEntity()->getOrder()->getNumber()
+            );
+        }
+
+        $isPriority = $shipment->getShipment()->getAttribute()->getBlisstributeShipmentIsPriority();
+
         return [
             'number'         => $order->getNumber(),
             'date'           => $order->getOrderTime()->format('Y-m-d H:i:s'),
@@ -346,6 +357,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'customerRemark' => implode(' - ', $orderRemark),
             'hold'           => $orderHold,
             'lock'           => $orderShipLock,
+            'lock'           => $orderShipLock,
+            'isPriority'     => $isPriority,
 
             'customer' => [
                 'number'      => $customerNumber,
@@ -416,34 +429,23 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     protected function determineShippingType()
     {
         $shipmentRepository = $this->getShipmentMappingRepository();
-        $shipment = $shipmentRepository->findOneByShipment($this->getModelEntity()->getOrder()->getDispatch()->getId());
+        $shipment           = $shipmentRepository->findOneByShipment($this->getModelEntity()->getOrder()->getDispatch()->getId());
+
         if ($shipment === null) {
             throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
                 'no shipment mapping given for order ' . $this->getModelEntity()->getOrder()->getNumber()
             );
         }
 
-        if (trim($shipment->getClassName()) == '') {
+        $shipmentCode = $shipment->getShipment()->getAttribute()->getBlisstributeShipmentCode();
+
+        if (empty(trim($shipmentCode))) {
             throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
                 'no shipment mapping class found for order ' . $this->getModelEntity()->getOrder()->getNumber()
             );
         }
 
-        $shipmentClassFileName = str_replace(' ', '', ucwords(str_replace('_', ' ', $shipment->getClassName())));
-        $shipmentClass = 'Shopware_Components_Blisstribute_Order_Shipment_'
-            . $shipmentClassFileName;
-
-        /** @noinspection PhpIncludeInspection */
-        include_once __DIR__ . '/Shipment/' . $shipmentClassFileName . '.php';
-        if (!class_exists($shipmentClass)) {
-            throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
-                'no shipment mapping class found for order ' . $this->getModelEntity()->getOrder()->getNumber()
-            );
-        }
-
-        /** @var Shopware_Components_Blisstribute_Order_Shipment_Abstract $orderShipment */
-        $orderShipment = new $shipmentClass;
-        return $orderShipment->getCode();
+        return $shipmentCode;
     }
 
     /**

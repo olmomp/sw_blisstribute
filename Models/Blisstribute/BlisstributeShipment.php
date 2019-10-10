@@ -37,6 +37,34 @@ class BlisstributeShipment extends ModelEntity
     /**@-*/
 
     /**
+     * Maps shipping code to labels. This field is used to populate the combobox options in
+     * s_premium_dispatch_attributes. It must therefore include all supported shipping codes.
+     *
+     * @var array
+     */
+    public static $CODE_LABELS = [
+        'DHL'        => 'DHL',
+        'DHLEXPRESS' => 'DHL Express',
+        'DPD'        => 'DPD',
+        'DPDE12'     => 'DPD E12',
+        'DPDE18'     => 'DPD E18',
+        'DPDS12'     => 'DPD S12',
+        'DTPG'       => 'Deutsche Post Warensendung Gross',
+        'DTPM'       => 'Deutsche Post Warensendung Maxi',
+        'FBA'        => 'FBA',
+        'FEDEX'      => 'FedEx',
+        'GLS'        => 'GLS',
+        'GWW'        => 'Gebr. Weiss',
+        'HERMES'     => 'Hermes',
+        'LSH'        => 'Briefversand',
+        'PAT'        => 'Post AT',
+        'PATEXPRESS' => 'Post AT Express',
+        'SEL'        => 'Selbstabholer',
+        '7SENDERS'   => 'Seven Senders',
+        'SKR'        => 'Schenker',
+    ];
+
+    /**
      * entity identifier
      *
      * @var int
@@ -135,5 +163,4 @@ class BlisstributeShipment extends ModelEntity
     {
         return $this->className;
     }
-
 }
