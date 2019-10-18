@@ -693,6 +693,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $items = $this->applyPromoDiscounts($items, $promotions, $shopwareDiscountsAmount);
 
+        if (!$this->getConfig()['blisstribute-order-include-vatrate']) {
+            foreach ($items as &$item) {
+                $item['vatRate'] = 0;
+            }
+        }
+
         return $items;
     }
 

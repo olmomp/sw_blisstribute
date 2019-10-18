@@ -415,6 +415,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
                 ]
             );
+
+            // Add option to always send vatRate = 0.
+            $form->setElement(
+                'checkbox',
+                'blisstribute-order-include-vatrate',
+                [
+                    'label' => 'Steuersatz übertragen',
+                    'description' => 'Wenn deaktiviert wird der Steuersatz bei Bestellungen nicht übertragen und im Blisstribute ermittelt.',
+                    'value' => 1,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
         }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
@@ -1477,6 +1489,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             [
                 'label' => 'Artikel synchronisieren',
                 'description' => 'Wenn deaktiviert werden keine Artikel zwischen diesem Shop und Blisstribute synchronisiert.',
+                'value' => 1,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+
+        // Add option to always send vatRate = 0.
+        $form->setElement(
+            'checkbox',
+            'blisstribute-order-include-vatrate',
+            [
+                'label' => 'Steuersatz übertragen',
+                'description' => 'Wenn deaktiviert wird der Steuersatz bei Bestellungen nicht übertragen und im Blisstribute ermittelt.',
                 'value' => 1,
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
