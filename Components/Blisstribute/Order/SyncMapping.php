@@ -273,8 +273,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             throw new Exception('invalid shipping address data');
         }
 
-        $orderShipLock = false;
-        $orderHold = false;
+        // Transfer the order as locked or on hold if the mapped order attribute contains any value.
+        $orderShipLock = $this->getOrderLock($order);
+        $orderHold     = $this->getOrderHold($order);
 
         $orderRemark = [];
         if (trim($order->getCustomerComment()) != '') {
@@ -391,6 +392,32 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     /**
      * @param \Shopware\Models\Order\Order $order
+     *
+     * @return boolean
+     */
+    private function getOrderHold($order)
+    {
+        $fieldName = $this->getConfig()['blisstribute-order-hold-mapping'];
+        $this->logDebug('orderSyncMapping::orderHold::fieldName ' . $fieldName);
+
+        return !empty($this->getAttribute($order, $fieldName));
+    }
+
+    /**
+     * @param \Shopware\Models\Order\Order $order
+     *
+     * @return boolean
+     */
+    private function getOrderLock($order)
+    {
+        $fieldName = $this->getConfig()['blisstribute-order-lock-mapping'];
+        $this->logDebug('orderSyncMapping::orderLock::fieldName ' . $fieldName);
+
+        return !empty($this->getAttribute($order, $fieldName));
+    }
+
+    /**
+     * @param \Shopware\Models\Order\Order $order
      * @param string $attrName
      * @return string
      */
@@ -400,9 +427,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             return null;
         }
 
+        // Shopware converts field names like shipment_type to getShipmentType.
         // Build the method name of $fieldNames getter.
         $value = '';
-        $method = 'get' . ucfirst($attrName);
+        $method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', $attrName)));
 
         $attribute = $order->getAttribute();
         $this->logDebug('orderSyncMapping::getAttribute::got attribute ' . $attribute->getId());

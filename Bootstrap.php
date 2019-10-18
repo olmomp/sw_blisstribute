@@ -1481,6 +1481,26 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             ]
         );
+
+        $form->setElement(
+            'text',
+            'blisstribute-order-lock-mapping',
+            array(
+                'label' => 'Bestellsperre Verknüpfung',
+                'description' => '',
+                'value' => ''
+            )
+        );
+
+        $form->setElement(
+            'text',
+            'blisstribute-order-hold-mapping',
+            array(
+                'label' => 'Bestellhalt Verknüpfung',
+                'description' => '',
+                'value' => ''
+            )
+        );
     }
 
     /**
