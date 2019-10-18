@@ -555,11 +555,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         $salutation = '';
-        if ($salutation == 'mr') {
-            $salutation = base64_encode('Herr');
+        if ($ent->getSalutation() == 'mr') {
+            $salutation = 'Herr';
         }
-        elseif ($salutation == 'ms') {
-            $salutation = base64_encode('Frau');
+        elseif ($ent->getSalutation() == 'ms') {
+            $salutation = 'Frau';
         }
 
         $country = $ent->getCountry();
@@ -580,15 +580,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $addrData = [
             'salutation'      => $salutation,
             'title'           => '',
-            'firstName'       => base64_encode($this->processAddressDataMatching($ent->getFirstName())),
-            'lastName'        => base64_encode($this->processAddressDataMatching($ent->getLastName())),
-            'nameAddition'    => base64_encode($this->processAddressDataMatching($ent->getDepartment())),
-            'company'         => base64_encode($this->processAddressDataMatching($ent->getCompany())),
-            'street'          => base64_encode($this->processAddressDataMatching($street)),
-            'houseNumber'     => base64_encode($this->processAddressDataMatching($houseNumber)),
-            'addressAddition' => base64_encode($this->processAddressDataMatching($ent->getAdditionalAddressLine1())),
-            'zip'             => base64_encode($this->processAddressDataMatching($ent->getZipCode())),
-            'city'            => base64_encode($this->processAddressDataMatching($ent->getCity())),
+            'firstName'       => $this->processAddressDataMatching($ent->getFirstName()),
+            'lastName'        => $this->processAddressDataMatching($ent->getLastName()),
+            'nameAddition'    => $this->processAddressDataMatching($ent->getDepartment()),
+            'company'         => $this->processAddressDataMatching($ent->getCompany()),
+            'street'          => $this->processAddressDataMatching($street),
+            'houseNumber'     => $this->processAddressDataMatching($houseNumber),
+            'addressAddition' => $this->processAddressDataMatching($ent->getAdditionalAddressLine1()),
+            'zip'             => $this->processAddressDataMatching($ent->getZipCode()),
+            'city'            => $this->processAddressDataMatching($ent->getCity()),
             'countryCode'     => $country->getIso(),
         ];
 
