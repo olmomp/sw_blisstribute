@@ -342,7 +342,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             ],
 
             'shipment' => [
-                'code'                 => $this->determineShippingType(),
+                'code'                 => $this->determineShippingType($order),
                 'total'                => $order->getInvoiceShipping(),
                 'totalIsNet'           => false,
                 'allowPartialDelivery' => true,
