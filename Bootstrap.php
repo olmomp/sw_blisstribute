@@ -564,19 +564,20 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $crud->update('s_order_basket_attributes', 'blisstribute_swag_promotion_is_free_good', 'string');
         $crud->update('s_order_basket_attributes', 'blisstribute_swag_is_free_good_by_promotion_id', 'string');
 
-        // TODO: Welche Tabelle am besten?
-        $crud->update('s_premium_dispatch_attributes', 'blisstribute_shipment_code', 'combobox', [
+        $crud->update('s_premium_dispatch_attributes', 'blisstribute_shipment_code', 'string', [
             'custom'           => 1,
             'displayInBackend' => true,
             'label'            => 'VHS - Shipment Code',
             'supportText'      => 'Der Shipment Code für diese Bestellung.',
-            'arrayStore'       => array_map(function ($k, $v) { return ['key' => $k, 'value' => $v]; }, array_keys(BlisstributeShipment::$CODE_LABELS), BlisstributeShipment::$CODE_LABELS ),
         ]);
         $crud->update('s_premium_dispatch_attributes', 'blisstribute_shipment_is_priority', 'boolean', [
             'custom' => 1,
             'displayInBackend' => true,
             'label' => 'VHS - Priorisierter Versand'
         ]);
+
+        // TODO: Migrate s_plugin_blisstribute_shipment to s_premium_dispatch_attributes->blisstribute_shipment_code and
+        // delete it afterwards.
 
         $this->get('db')->query(
             "INSERT IGNORE INTO `s_core_engine_elements` (`groupID`, `type`, `label`, `required`, `position`, " .
