@@ -462,8 +462,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
 
             $this->get('db')->query(
-                <<<SQL
-                INSERT IGNORE INTO s_premium_dispatch_attributes (blisstribute_shipment_code, dispatchID, blisstribute_shipment_is_priority)
+                "INSERT IGNORE INTO s_premium_dispatch_attributes (blisstribute_shipment_code, dispatchID, blisstribute_shipment_is_priority)
                 SELECT
                 CASE mapping_class_name
                     WHEN 'Dhl' THEN 'DHL'
@@ -480,8 +479,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     WHEN 'Patexpress' THEN 'PATEXPRESS'
                     WHEN 'Selfcollector' THEN 'SEL'
                 END AS blisstribute_shipment_code, s_premium_dispatch_id, 0 AS blisstribute_shipment_is_priority
-                FROM s_plugin_blisstribute_shipment
-SQL
+                FROM s_plugin_blisstribute_shipment"
             );
 
             $this->get('db')->query("DROP TABLE IF EXISTS s_plugin_blisstribute_shipment");
