@@ -460,6 +460,31 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
                 )
             );
+
+            $this->get('db')->query(
+                <<<SQL
+                INSERT IGNORE INTO s_premium_dispatch_attributes (blisstribute_shipment_code, dispatchID, blisstribute_shipment_is_priority)
+                SELECT
+                CASE mapping_class_name
+                    WHEN 'Dhl' THEN 'DHL'
+                    WHEN 'Dhlexpress' THEN 'DHLEXPRESS'
+                    WHEN 'Dpd' THEN 'DPD'
+                    WHEN 'Dpde12' THEN 'DPDE12'
+                    WHEN 'Dpde18' THEN 'DPDE18'
+                    WHEN 'Dpds12' THEN 'DPDS12'
+                    WHEN 'Fba' THEN 'FBA'
+                    WHEN 'Fedex' THEN 'FEDEX'
+                    WHEN 'Hermes' THEN 'HERMES'
+                    WHEN 'Lettershipment' THEN 'LSH'
+                    WHEN 'Pat' THEN 'PAT'
+                    WHEN 'Patexpress' THEN 'PATEXPRESS'
+                    WHEN 'Selfcollector' THEN 'SEL'
+                END AS blisstribute_shipment_code, s_premium_dispatch_id, 0 AS blisstribute_shipment_is_priority
+                FROM s_plugin_blisstribute_shipment
+SQL
+            );
+
+            $this->get('db')->query("DROP TABLE IF EXISTS s_plugin_blisstribute_shipment");
         }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
@@ -582,31 +607,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             "'blisstributeVhsNumber', 0, 0), (7, 'number', 'Bestand Lieferant', 0, 102, " .
             "'blisstributeSupplierStock', 0, 0)"
         );
-
-        $this->get('db')->query(
-            <<<SQL
-                INSERT IGNORE INTO s_premium_dispatch_attributes (blisstribute_shipment_code, dispatchID, blisstribute_shipment_is_priority)
-                SELECT 
-                CASE mapping_class_name
-                    WHEN 'Dhl' THEN 'DHL'
-                    WHEN 'Dhlexpress' THEN 'DHLEXPRESS'
-                    WHEN 'Dpd' THEN 'DPD'
-                    WHEN 'Dpde12' THEN 'DPDE12'
-                    WHEN 'Dpde18' THEN 'DPDE18'
-                    WHEN 'Dpds12' THEN 'DPDS12'
-                    WHEN 'Fba' THEN 'FBA'
-                    WHEN 'Fedex' THEN 'FEDEX'
-                    WHEN 'Hermes' THEN 'HERMES'
-                    WHEN 'Lettershipment' THEN 'LSH'
-                    WHEN 'Pat' THEN 'PAT'
-                    WHEN 'Patexpress' THEN 'PATEXPRESS'
-                    WHEN 'Selfcollector' THEN 'SEL'
-                END AS blisstribute_shipment_code, s_premium_dispatch_id, 0 AS blisstribute_shipment_is_priority
-                FROM s_plugin_blisstribute_shipment
-SQL
-        );
-
-        $this->get('db')->query("DROP TABLE s_plugin_blisstribute_shipment");
 
         $metaDataCache = Shopware()->Models()->getConfiguration()->getMetadataCacheImpl();
         $metaDataCache->deleteAll();
@@ -1145,16 +1145,11 @@ SQL
                 . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a",
                 "INSERT IGNORE INTO s_plugin_blisstribute_article_type (created_at, modified_at, s_filter_id, "
                 . "article_type) SELECT CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, id, 4 FROM s_filter",
-                "INSERT IGNORE INTO s_plugin_blisstribute_shipment (mapping_class_name, s_premium_dispatch_id) "
-                . "SELECT NULL, pd.id FROM s_premium_dispatch AS pd",
                 "INSERT IGNORE INTO s_plugin_blisstribute_payment (mapping_class_name, flag_payed, "
                 . "s_core_paymentmeans_id) SELECT NULL, 0, cp.id FROM s_core_paymentmeans AS cp",
-                "INSERT IGNORE INTO s_plugin_blisstribute_shop (s_shop_id, advertising_medium_code) "
-                . "SELECT s.id, '' FROM s_core_shops AS s",
                 "INSERT IGNORE INTO s_plugin_blisstribute_coupon (s_voucher_id, flag_money_voucher) "
                 . "SELECT v.id, 0 FROM s_emarketing_vouchers AS v",
                 "DELETE FROM s_plugin_blisstribute_payment WHERE s_core_paymentmeans_id NOT IN (SELECT id FROM s_core_paymentmeans)",
-                "DELETE FROM s_plugin_blisstribute_shipment WHERE s_premium_dispatch_id NOT IN (SELECT id FROM s_premium_dispatch)",
             ];
 
             foreach ($defaultTableData as $currentDataSet) {
