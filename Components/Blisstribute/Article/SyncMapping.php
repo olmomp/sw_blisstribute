@@ -76,7 +76,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 'identifications'  => $this->getIdentifications($articleDetail),
                 'vatRates'         => $this->getVatRates(),
                 'prices'           => $this->getPrices($articleDetail),
-                'vendors'          => $this->getVendors($articleDetail),
 
                 // Unavailable fields in Shopware.
                 // 'unitType'            => Not used, because it would override on each sync.
@@ -103,6 +102,11 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 'tags'             => $this->getTags($articleDetail),
                 'customsData'      => $this->getCustomsData($articleDetail),
             ];
+
+            $vendorData = $this->getVendors($articleDetail);
+            if (count($vendorData) > 0) {
+                $optional['vendors'] = $vendorData;
+            }
 
             // Only add optional fields that are not null to data.
             foreach ($optional as $k => $v) {
@@ -334,8 +338,13 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     private function getVendors(Detail $articleDetail)
     {
+        $supplierCode = $this->getSupplierCode($articleDetail);
+        if (trim($supplierCode) == '') {
+            return [];
+        }
+
         return [[
-            'supplierCode'         => $this->getSupplierCode($articleDetail),
+            'supplierCode'         => $supplierCode,
             'price'                => (float) $this->getMainDetailBasePrice($articleDetail),
             'packingUnit'          => 1,
             'orderUnit'            => 1,
