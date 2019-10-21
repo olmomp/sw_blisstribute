@@ -1562,7 +1562,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Bestellsperre Verknüpfung',
                 'description' => '',
-                'value' => ''
+                'value' => '',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
 
@@ -1572,7 +1573,8 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             array(
                 'label' => 'Bestellhalt Verknüpfung',
                 'description' => '',
-                'value' => ''
+                'value' => '',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
 
@@ -1583,7 +1585,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'label' => 'Artikelbestand Verknüpfung',
                 'description' => '',
                 'value' => '',
-                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
             )
         );
     }
