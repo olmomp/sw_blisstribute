@@ -431,7 +431,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         }
 
         $value = '';
-        $method = 'get' . ucfirst($fieldName);
+        $method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', $fieldName)));
 
         if (method_exists($article->getAttribute(), $method)) {
             $value = $article->getAttribute()->$method();
