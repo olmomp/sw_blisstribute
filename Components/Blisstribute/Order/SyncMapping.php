@@ -9,6 +9,7 @@ require_once __DIR__ . '/../Domain/LoggerTrait.php';
 
 use Shopware\Models\Order\Detail;
 use Shopware\Models\Article\Article;
+use Shopware\Models\Order\Order;
 use Shopware\Models\Voucher\Voucher;
 use Shopware\Models\Article\Repository as ArticleRepository;
 use Shopware\Models\Voucher\Repository as VoucherRepository;
@@ -339,16 +340,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $customerPhone = $this->getAlternativePhoneNumber($order);
         }
 
-        $shipmentRepository = $this->getShipmentMappingRepository();
-        $shipment           = $shipmentRepository->findOneByShipment($this->getModelEntity()->getOrder()->getDispatch()->getId());
-
-        if ($shipment === null) {
-            throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
-                'no shipment mapping given for order ' . $this->getModelEntity()->getOrder()->getNumber()
-            );
-        }
-
-        $isPriority = $shipment->getShipment()->getAttribute()->getBlisstributeShipmentIsPriority();
+        $isPriority = $order->getDispatch()->getAttribute()->getBlisstributeShipmentIsPriority();
 
         return [
             'number'         => $order->getNumber(),
@@ -448,23 +440,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     /**
      * determine blisstribute shipping code
      *
+     * @param Order $order
      * @return string
      *
      * @throws Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException
-     * @throws NonUniqueResultException
      */
-    protected function determineShippingType()
+    protected function determineShippingType(Order $order)
     {
-        $shipmentRepository = $this->getShipmentMappingRepository();
-        $shipment           = $shipmentRepository->findOneByShipment($this->getModelEntity()->getOrder()->getDispatch()->getId());
-
-        if ($shipment === null) {
-            throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
-                'no shipment mapping given for order ' . $this->getModelEntity()->getOrder()->getNumber()
-            );
-        }
-
-        $shipmentCode = $shipment->getShipment()->getAttribute()->getBlisstributeShipmentCode();
+        $shipmentCode = $order->getDispatch()->getAttribute()->getBlisstributeShipmentCode();
 
         if (empty(trim($shipmentCode))) {
             throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
