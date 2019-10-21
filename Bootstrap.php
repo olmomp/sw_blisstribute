@@ -399,7 +399,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $soapHostElement->setLabel('SOAP Host');
         }
 
-        if (version_compare($version, '0.16.2', '<')) {
+        if (version_compare($version, '0.16.3', '<')) {
             // Migrate the SOAP Host to REST Host, if it's set.
             // $pluginConfig->get('blisstribute-article-sync-enabled')
             $form = $this->Form();
@@ -426,6 +426,39 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     'value' => 1,
                     'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
                 ]
+            );
+
+            $form->setElement(
+                'text',
+                'blisstribute-order-lock-mapping',
+                array(
+                    'label' => 'Bestellsperre Verknüpfung',
+                    'description' => '',
+                    'value' => '',
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                )
+            );
+
+            $form->setElement(
+                'text',
+                'blisstribute-order-hold-mapping',
+                array(
+                    'label' => 'Bestellhalt Verknüpfung',
+                    'description' => '',
+                    'value' => '',
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                )
+            );
+
+            $form->setElement(
+                'text',
+                'blisstribute-article-stock-mapping',
+                array(
+                    'label' => 'Artikelbestand Verknüpfung',
+                    'description' => '',
+                    'value' => '',
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                )
             );
         }
 
