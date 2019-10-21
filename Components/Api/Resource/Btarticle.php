@@ -196,8 +196,13 @@ class Btarticle extends BtArticleResource implements BatchInterface
             $detail->setReleaseDate($params['attribute']['blisstributeEstimatedDeliveryDate']);
         }
 
-        $detail->setInStock($params['inStock']);
-        $this->logDebug(sprintf('%s - set detail stock %s', $detailId, $params['inStock']));
+        $articleStockMappingFieldName = trim($config['blisstribute-article-stock-mapping']);
+        if (!empty($articleStockMappingFieldName)) {
+            $this->setArticleDetailAttribute($detail, $articleStockMappingFieldName, $params['inStock']);
+        } else {
+            $detail->setInStock($params['inStock']);
+            $this->logDebug(sprintf('%s - set detail stock %s', $detailId, $params['inStock']));
+        }
 
         $detail->setStockMin($params['stockMin']);
         $this->logDebug(sprintf('%s - set detail min stock %s', $detailId, $params['stockMin']));
@@ -262,6 +267,29 @@ class Btarticle extends BtArticleResource implements BatchInterface
         }
 
         return $detail;
+    }
+
+    /**
+     * @param \Shopware\Models\Article\Detail $article
+     * @param $attr
+     * @param $value
+     * @return string
+     */
+    private function setArticleDetailAttribute($article, $attr, $value)
+    {
+        // Shopware converts field names like shipment_type to setShipmentType.
+        // Build the method name of $fieldNames setter.
+        $method = 'set' . str_replace(' ', '', ucwords(str_replace('_', ' ', $attr)));
+
+        $attribute = $article->getAttribute();
+        $this->logDebug('orderSyncMapping::getAttribute::got attribute ' . $attribute->getId());
+
+        // Get the $fieldName by calling the setter using the build method name.
+        if (method_exists($attribute, $method)) {
+            $attribute->$method($value);
+        }
+
+        $this->logDebug('orderSyncMapping::setAttribute::attribute value ' . $value);
     }
 
     /**
