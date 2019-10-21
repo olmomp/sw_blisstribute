@@ -576,15 +576,37 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'label' => 'VHS - Priorisierter Versand'
         ]);
 
-        // TODO: Migrate s_plugin_blisstribute_shipment to s_premium_dispatch_attributes->blisstribute_shipment_code and
-        // delete it afterwards.
-
         $this->get('db')->query(
             "INSERT IGNORE INTO `s_core_engine_elements` (`groupID`, `type`, `label`, `required`, `position`, " .
             "`name`, `variantable`, `translatable`) VALUES  (7, 'text', 'VHS Nummer', 0, 101, " .
             "'blisstributeVhsNumber', 0, 0), (7, 'number', 'Bestand Lieferant', 0, 102, " .
             "'blisstributeSupplierStock', 0, 0)"
         );
+
+        $this->get('db')->query(
+            <<<SQL
+                INSERT INTO s_premium_dispatch_attributes (blisstribute_shipment_code, dispatchID, blisstribute_shipment_is_priority)
+                SELECT 
+                CASE mapping_class_name
+                    WHEN 'Dhl' THEN 'DHL'
+                    WHEN 'Dhlexpress' THEN 'DHLEXPRESS'
+                    WHEN 'Dpd' THEN 'DPD'
+                    WHEN 'Dpde12' THEN 'DPDE12'
+                    WHEN 'Dpde18' THEN 'DPDE18'
+                    WHEN 'Dpds12' THEN 'DPDS12'
+                    WHEN 'Fba' THEN 'FBA'
+                    WHEN 'Fedex' THEN 'FEDEX'
+                    WHEN 'Hermes' THEN 'HERMES'
+                    WHEN 'Lettershipment' THEN 'LSH'
+                    WHEN 'Pat' THEN 'PAT'
+                    WHEN 'Patexpress' THEN 'PATEXPRESS'
+                    WHEN 'Selfcollector' THEN 'SEL'
+                END AS blisstribute_shipment_code, s_premium_dispatch_id, 0 AS blisstribute_shipment_is_priority
+                FROM s_plugin_blisstribute_shipment
+SQL
+        );
+
+        $this->get('db')->query("DROP TABLE s_plugin_blisstribute_shipment");
 
         $metaDataCache = Shopware()->Models()->getConfiguration()->getMetadataCacheImpl();
         $metaDataCache->deleteAll();
