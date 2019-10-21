@@ -1705,33 +1705,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         ]);
 
         $this->createMenuItem([
-            'label' => 'Versandarten',
-            'controller' => 'BlisstributeShipmentMapping',
-            'class' => 'sprite-envelope--arrow settings--delivery-charges',
-            'action' => 'Index',
-            'active' => 1,
-            'position' => 1,
-            'parent' => $mappingItem
-        ]);
-
-        $this->createMenuItem([
             'label' => 'Zahlarten',
             'controller' => 'BlisstributePaymentMapping',
             'class' => 'sprite-credit-cards settings--payment-methods',
             'action' => 'Index',
             'active' => 1,
-            'position' => 2,
+            'position' => 1,
             'parent' => $mappingItem
-        ]);
-
-        $this->createMenuItem([
-            'label' => 'Shops',
-            'controller' => 'BlisstributeShopMapping',
-            'class' => 'sprite-store-share',
-            'action' => 'Index',
-            'active' => 1,
-            'position' => 3,
-            'parent' => $mappingItem,
         ]);
 
         $this->createMenuItem([
@@ -1740,7 +1720,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'class' => 'sprite-money--pencil',
             'action' => 'Index',
             'active' => 1,
-            'position' => 4,
+            'position' => 2,
             'parent' => $mappingItem,
         ]);
     }
