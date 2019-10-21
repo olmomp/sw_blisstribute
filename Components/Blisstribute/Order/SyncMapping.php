@@ -95,16 +95,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * Get Blisstribute shipment mapping database repository.
-     *
-     * @return BlisstributeShipmentRepository
-     */
-    protected function getShipmentMappingRepository()
-    {
-        return Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeShipment');
-    }
-
-    /**
      * return blisstribute payment mapping database repository
      *
      * @return BlisstributePaymentRepository
@@ -112,16 +102,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     protected function getPaymentMappingRepository()
     {
         return Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributePayment');
-    }
-
-    /**
-     * return blisstribute shop mapping database repository
-     *
-     * @return \Shopware\CustomModels\Blisstribute\BlisstributeShopRepository
-     */
-    protected function getShopMappingRepository()
-    {
-        return Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeShop');
     }
 
     /**
