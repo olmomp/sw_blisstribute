@@ -615,7 +615,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         $metaDataCache = Shopware()->Models()->getConfiguration()->getMetadataCacheImpl();
         $metaDataCache->deleteAll();
-        Shopware()->Models()->generateAttributeModels(['s_articles_attributes', 's_categories_attributes', 's_order_details_attributes', 's_order_basket_attributes']);
+        Shopware()->Models()->generateAttributeModels(['s_articles_attributes', 's_categories_attributes', 's_order_details_attributes', 's_order_basket_attributes', 's_premium_dispatch_attributes']);
     }
 
     /**
