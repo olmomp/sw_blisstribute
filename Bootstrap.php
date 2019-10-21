@@ -472,13 +472,19 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                     WHEN 'Dpde12' THEN 'DPDE12'
                     WHEN 'Dpde18' THEN 'DPDE18'
                     WHEN 'Dpds12' THEN 'DPDS12'
+                    WHEN 'Dtpg' THEN 'DTPG'
+                    WHEN 'Dtpm' THEN 'DTPM'
                     WHEN 'Fba' THEN 'FBA'
                     WHEN 'Fedex' THEN 'FEDEX'
+                    WHEN 'Gls' THEN 'GLS'
+                    WHEN 'Gww' THEN 'GWW'
                     WHEN 'Hermes' THEN 'HERMES'
                     WHEN 'Lettershipment' THEN 'LSH'
                     WHEN 'Pat' THEN 'PAT'
                     WHEN 'Patexpress' THEN 'PATEXPRESS'
                     WHEN 'Selfcollector' THEN 'SEL'
+                    WHEN 'Sevensenders' THEN '7SENDERS'
+                    WHEN 'Skr' THEN 'SKR'
                 END AS blisstribute_shipment_code, s_premium_dispatch_id, 0 AS blisstribute_shipment_is_priority
                 FROM s_plugin_blisstribute_shipment"
             );
