@@ -6,12 +6,10 @@ require_once __DIR__ . '/Components/Blisstribute/Command/OrderExport.php';
 require_once __DIR__ . '/Components/Blisstribute/Command/ArticleExport.php';
 require_once __DIR__ . '/Components/Blisstribute/Article/Sync.php';
 require_once __DIR__ . '/Components/Blisstribute/Order/Sync.php';
-require_once __DIR__ . '/Models/Blisstribute/BlisstributeShipment.php';
 
 use \Shopware\CustomModels\Blisstribute\BlisstributeCoupon;
 use \Shopware\CustomModels\Blisstribute\BlisstributeOrder;
 use Doctrine\Common\Collections\ArrayCollection;
-use Shopware\CustomModels\Blisstribute\BlisstributeShipment;
 use Shopware\ExitBBlisstribute\Subscribers\ControllerSubscriber;
 use Shopware\ExitBBlisstribute\Subscribers\ModelSubscriber;
 use Shopware\ExitBBlisstribute\Subscribers\ServiceSubscriber;
