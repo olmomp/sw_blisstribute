@@ -35,6 +35,8 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
      */
     private $plugin;
 
+    protected $filterFields = ['qqqqqqqq'];
+
     /**
      * {@inheritdoc}
      */
