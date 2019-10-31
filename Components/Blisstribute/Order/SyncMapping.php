@@ -214,9 +214,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         foreach ($this->orderData['items'] as $currentItem) {
             if ($this->orderData['isB2B'] && $this->getConfig()['blisstribute-transfer-b2b-net']) {
                 // Convert to price after VAT.
-                $orderTotal += round((($currentItem['priceNet'] / $currentItem['quantity']) / 100) * (100 + $currentItem['vatRate']), 4);
+                $orderTotal += round((($currentItem['priceNet'] / 100) * (100 + $currentItem['vatRate'])) * $currentItem['quantity'], 4);
             } else {
-                $orderTotal += round($currentItem['price'], 4);
+                $orderTotal += round($currentItem['price'] * $currentItem['quantity'], 4);
             }
         }
 

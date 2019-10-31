@@ -152,7 +152,7 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
     public function resetOrderSyncAction()
     {
         $blisstributeOrderId = $this->Request()->getParam('id');
-        $sql = 'UPDATE s_plugin_blisstribute_orders set transfer_status = 1 AND transfer_tries = 0 AND transfer_error_comment = NULL WHERE id = :btOrderId';
+        $sql = 'UPDATE s_plugin_blisstribute_orders SET transfer_status = 1, transfer_tries = 0, transfer_error_comment = NULL WHERE id = :btOrderId';
         Shopware()->Db()->query($sql, array('btOrderId' => $blisstributeOrderId));
 
         $this->View()->assign(array(
