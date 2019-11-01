@@ -140,7 +140,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                         continue;
                     }
 
-                    $articleDataCollection[] = $articleData;
+                    $articleDataCollection = $articleData;
                     $articleSyncCollection[] = $currentArticle;
 
                     if (count($articleDataCollection) >= static::TRANSFER_LIMIT) {
