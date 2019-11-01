@@ -147,11 +147,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     {
         return [
             [
-                'identificationType' => 'external-key',
-                'identification'     => $this->getArticleVhsNumber($articleDetail),
-            ],
-
-            [
                 'identificationType' => 'article_number',
                 'identification'     => $articleDetail->getNumber(),
             ],
