@@ -145,22 +145,34 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     private function getIdentifications(Detail $articleDetail)
     {
-        return [
-            [
+        $identifications = [];
+
+        $articleNumber              = $articleDetail->getNumber();
+        $ean13                      = $articleDetail->getNumber();
+        $manufacturerArticleNumber  = $this->getManufacturerArticleNumber($articleDetail);
+
+        if (!empty($articleNumber)) {
+            $identifications[] = [
                 'identificationType' => 'article_number',
-                'identification'     => $articleDetail->getNumber(),
-            ],
+                'identification'     => $articleNumber,
+            ];
+        }
 
-            [
+        if (!empty($ean13)) {
+            $identifications[] = [
                 'identificationType' => 'ean13',
-                'identification'     => $articleDetail->getEan(),
-            ],
+                'identification'     => $ean13,
+            ];
+        }
 
-            [
+        if (!empty($manufacturerArticleNumber)) {
+            $identifications[] = [
                 'identificationType' => 'manufacturer_article_number',
-                'identification'     => $this->getManufacturerArticleNumber($articleDetail),
-            ],
-        ];
+                'identification'     => $manufacturerArticleNumber,
+            ];
+        }
+
+        return $identifications;
     }
 
     /**
