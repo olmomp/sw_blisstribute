@@ -148,7 +148,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $identifications = [];
 
         $articleNumber              = $articleDetail->getNumber();
-        $ean13                      = $articleDetail->getNumber();
+        $ean13                      = $articleDetail->getEan();
         $manufacturerArticleNumber  = $this->getManufacturerArticleNumber($articleDetail);
 
         if (!empty($articleNumber)) {
