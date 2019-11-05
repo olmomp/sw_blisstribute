@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.0.3",
+    "currentVersion": "1.0.4",
     "isUpdateImportant": true,
 
     "changelog": {
         "de": {
+            "1.0.4": "Fixing article identification number sync",
             "1.0.3": "Fixing batch article sync",
             "1.0.1": "Fixing some issues",
             "1.0.0": "Major plugin change"
