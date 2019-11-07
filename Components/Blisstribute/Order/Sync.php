@@ -210,6 +210,14 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                 Logger::ERROR
             );
 
+            if (!empty($orderData)) {
+                $this->logMessage(
+                    'payload dump::' . var_export($orderData, true),
+                    __FUNCTION__,
+                    Logger::ERROR
+                );
+            }
+
             $blisstributeOrder->setStatus(BlisstributeOrder::EXPORT_STATUS_VALIDATION_ERROR)
                 ->setErrorComment($ex->getMessage())
                 ->setTries($blisstributeOrder->getTries() + 1)
