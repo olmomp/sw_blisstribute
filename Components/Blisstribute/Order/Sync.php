@@ -219,7 +219,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
 
         } catch (Exception $ex) {
             $this->logMessage(
-                'general sync error::' . $blisstributeOrder->getOrder()->getNumber() . $ex->getMessage() . $ex->getTraceAsString(),
+                'general sync error::' . $blisstributeOrder->getOrder()->getNumber() . json_last_error_msg() . $ex->getMessage() . $ex->getTraceAsString(),
                 __FUNCTION__,
                 Logger::ERROR
             );
