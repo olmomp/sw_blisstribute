@@ -138,7 +138,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $this->orderData = $this->buildBasicOrderData();
 
-        // Required fields...
         $this->orderData['payment']           = $this->buildPaymentData();
         $this->orderData['advertisingMedium'] = $this->buildAdvertisingMediumData();
 
@@ -164,44 +163,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         return $this->orderData;
     }
-
-    /**
-     * @inheritdoc
-     * @throws NonUniqueResultException
-     * @throws Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException
-     * @throws Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException
-     * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
-     */
-//    protected function buildBaseData()
-//    {
-//        $this->logDebug('orderSyncMapping::buildBaseData::start');
-//        // determine used vouchers
-//        $this->determineVoucherDiscount();
-//
-//        $this->orderData = $this->buildBasicOrderData();
-//        $this->orderData['payment'] = $this->buildPaymentData();
-//        $this->orderData['advertisingMedium'] = $this->buildAdvertisingMediumData();
-//        $this->orderData['billAddressData'] = $this->buildInvoiceAddressData();
-//        $this->orderData['deliveryAddressData'] = $this->buildDeliveryAddressData();
-//        $this->orderData['orderLines'] = $this->buildArticleData();
-//        $this->orderData['orderCoupons'] = $this->buildCouponData();
-//
-//        $this->logDebug('orderSyncMapping::buildBaseData::done');
-//        $this->logDebug('orderSyncMapping::buildBaseData::result:' . json_encode($this->orderData));
-//
-//        $order = $this->getModelEntity()->getOrder();
-//        $originalTotal = round($order->getInvoiceAmount(), 2);
-//        $newOrderTotal = round($this->getOrderTotal(), 2);
-//        $orderTotalDeviation = $originalTotal - $newOrderTotal;
-//        $deviationWatermark = round($this->getConfig()['blisstribute-discount-difference-watermark'], 2);
-//
-//        if (abs($orderTotalDeviation) > abs($deviationWatermark)) {
-//            $this->logDebug(sprintf('orderSyncMapping::buildBaseData::amount differs %s to %s', $originalTotal, $newOrderTotal));
-//            $this->orderData['orderRemark'] .= 'RABATT PRÜFEN! (ORIG ' . $originalTotal .')';
-//        }
-//
-//        return $this->orderData;
-//    }
 
     /**
      * @return float
