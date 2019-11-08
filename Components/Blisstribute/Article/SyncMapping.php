@@ -66,7 +66,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $articleData = [];
 
         foreach ($articleDetails as $articleDetail) {
-            $classifications = $this->buildClassificationData();
+            $classifications = $this->buildClassificationData($articleDetail);
 
             $data = [
                 // Required fields.
@@ -383,29 +383,29 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
-     * @param Article $article
-     *
+     * @param Detail $articleDetail
      * @return string
      * @throws Exception
      */
-    protected function getClassification3($article)
+    protected function getClassification3(Detail $articleDetail)
     {
         $fieldName = $this->getConfig()['blisstribute-article-mapping-classification3'];
         $this->logDebug('articleSyncMapping::classification3::fieldName ' . $fieldName);
-        return $this->getClassification($article, $fieldName);
+
+        return $this->getClassification($articleDetail, $fieldName);
     }
 
     /**
-     * @param Article $article
-     *
+     * @param Detail $articleDetail
      * @return string
      * @throws Exception
      */
-    protected function getClassification4($article)
+    protected function getClassification4(Detail $articleDetail)
     {
         $fieldName = $this->getConfig()['blisstribute-article-mapping-classification4'];
         $this->logDebug('articleSyncMapping::classification4::fieldName ' . $fieldName);
-        return $this->getClassification($article, $fieldName);
+
+        return $this->getClassification($articleDetail, $fieldName);
     }
 
     /**
@@ -436,44 +436,24 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
-     * @param Article $article
+     * @param Detail $articleDetail
      * @param string $fieldName
      * @return string
      */
-    protected function getClassification($article, $fieldName)
+    protected function getClassification(Detail $articleDetail, $fieldName)
     {
         if (trim($fieldName) == '') {
             return null;
         }
 
-        $value = '';
         $method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', $fieldName)));
 
-        if (method_exists($article->getAttribute(), $method)) {
-            $value = $article->getAttribute()->$method();
-        }
+        $attribute = $articleDetail->getAttribute();
+        $this->logDebug('articleSyncMapping::getClassification::detail attribute ' . $method);
 
-        if (trim($value) != '') {
-            return $value;
+        if (method_exists($attribute, $method)) {
+            return $attribute->$method();
         }
-
-        $mainDetail = $this->_getMainDetail($article);
-        if ($mainDetail != null) {
-            $this->logDebug('articleSyncMapping::getClassification::got mainDetail ' . $mainDetail->getId());
-            $attribute = $mainDetail->getAttribute();
-            $this->logDebug('articleSyncMapping::getClassification::got attribute ' . $attribute->getId());
-            if ($mainDetail) {
-                $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute ' . $method);
-                if (method_exists($mainDetail->getAttribute(), $method)) {
-                    $value = $mainDetail->getAttribute()->$method();
-                }
-                $this->logDebug('articleSyncMapping::getClassification::mainDetail attribute value ' . $value);
-            }
-        } else {
-            $this->logDebug('articleSyncMapping::getClassification::main detail not found.');
-        }
-
-        return $value;
     }
 
     /**
@@ -496,25 +476,26 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
-     * build base classification data
+     * Build base classification data.
      *
+     * @param Detail $articleDetail
      * @return array
      * @throws Exception
      */
-    protected function buildClassificationData()
+    protected function buildClassificationData(Detail $articleDetail)
     {
-        $data = array(
-            'classification1' => $this->getArticle()->getName(),
-            'classification2' => $this->getArticle()->getSupplier()->getName(),
-            'classification3' => $this->getClassification3($this->getArticle()),
-            'classification4' => $this->getClassification4($this->getArticle()),
+        $data = [
+            'classification1' => $articleDetail->getArticle()->getName(),
+            'classification2' => $articleDetail->getArticle()->getSupplier()->getName(),
+            'classification3' => $this->getClassification3($articleDetail),
+            'classification4' => $this->getClassification4($articleDetail),
             'classification5' => '',
             'classification6' => '',
             'classification7' => '',
             'classification8' => '',
             'classification9' => '', // material
-            'classification10' => $this->getArticle()->getMainDetail()->getWeight(), // weight
-        );
+            'classification10' => $articleDetail->getArticle()->getMainDetail()->getWeight(), // weight
+        ];
 
         $key = 5;
         $categoryCollection = $this->getCategoryCollection();
