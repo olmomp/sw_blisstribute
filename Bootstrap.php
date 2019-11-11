@@ -995,11 +995,11 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeArticleType'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\TaskLock'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeOrder'),
-            $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShipment'),
+//            $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShipment'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributePayment'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems'),
-            $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShop'),
+//            $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShop'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeCoupon'),
         ];
 
