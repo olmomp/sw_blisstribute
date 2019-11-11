@@ -161,6 +161,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $this->orderData['customerRemark'] .= 'RABATT PRÜFEN! (ORIG ' . $originalTotal .')';
         }
 
+        // Remove legacy field from items.
+        foreach($this->orderData['items'] as &$it) {
+            unset($it['legacy']);
+        }
+
         return $this->orderData;
     }
 
@@ -603,10 +608,18 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
 //                'originalPriceAmount' => $price,
 //                'originalPrice' => $price * $orderDetail->getQuantity(),
-//                'promoQuantity' => $quantity,
 //                'price' => round(($price * $quantity), 4),
 //                'priceNet' => round(($priceNet * $quantity), 4),
 //                'discountTotal' => 0,
+
+                'legacy' => [
+                    'promoQuantity' => $quantity,
+                    'customerGroupId' => $swOrder->getCustomer()->getGroup()->getId(),
+                    'shopId'          => $swOrder->getShop()->getId(),
+                    'supplierId'      => $article->getSupplier()->getId(),
+                    'articleNumber'   => $orderDetail->getArticleNumber(),
+                    'originalPrice'   => $price,
+                ],
             ];
 
             $articleData = $this->applyCustomProducts($articleData, $orderDetail, $basketItems);
@@ -826,9 +839,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                         if ($discountTotal > 0) {
                             $quantity = $articleData['quantity'];
                             $newPriceSingle = round($articleData['price'] - ($discountTotal / $quantity), 4);
-                            $newPrice = round($articleData['priceAmount'] - $discountTotal, 4);
+                            $newPrice = round($articleData['legacy']['priceAmount'] - $discountTotal, 4);
                             $items[$key]['price'] = $newPriceSingle;
-                            $items[$key]['priceAmount'] = $newPrice;
+                            $items[$key]['legacy']['priceAmount'] = $newPrice;
                             $items[$key]['discount'] = $discountTotal / $quantity;
                             $items[$key]['discountNet'] = $discountTotal / $quantity / (100 + $articleData['vatRate']) * 100;
                         }
@@ -908,25 +921,25 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     {
         $totalProductAmount = 0;
         foreach ($articleDataCollection as $product) {
-            if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
+            if ($product['legacy']['promoQuantity'] == 0 || $product['price'] <= 0) {
                 continue;
             }
 
-            $totalProductAmount += round($product['price'] * $product['promoQuantity'], 4);
+            $totalProductAmount += round($product['price'] * $product['legacy']['promoQuantity'], 4);
         }
 
         foreach ($articleDataCollection as &$product) {
-            if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
+            if ($product['legacy']['promoQuantity'] == 0 || $product['price'] <= 0) {
                 continue;
             }
 
             $weight = $product['price'] / $totalProductAmount;
 
-            $singleDiscount = (abs($shopwareDiscountsAmount) * $weight) / $product['promoQuantity'];
+            $singleDiscount = (abs($shopwareDiscountsAmount) * $weight) / $product['legacy']['promoQuantity'];
 
-            $product['discount'] += round($singleDiscount, 4);
-            $product['priceAmount'] -= round($singleDiscount * $product['promoQuantity'], 4);
-            $product['price'] -= round($singleDiscount, 4);
+            $product['discount']              += round($singleDiscount, 4);
+            $product['legacy']['priceAmount'] -= round($singleDiscount, 4);
+            $product['price']                 -= round($singleDiscount, 4);
         }
 
         return $articleDataCollection;
@@ -1015,11 +1028,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     $product, $currentVoucher, $vouchersData, $price, $articleDataCollection
                 ), 4);
 
-                $voucherDiscountPerQuantity = round($voucherDiscount / $product['promoQuantity'], 4);
+                $voucherDiscountPerQuantity = round($voucherDiscount / $product['legacy']['promoQuantity'], 4);
 
-                $product['priceAmount'] -= $voucherDiscountPerQuantity;
-                $product['price'] -= $voucherDiscountPerQuantity * $product['promoQuantity'];
-                $product['discountTotal'] += $voucherDiscountPerQuantity;
+                $product['legacy']['priceAmount']   -= $voucherDiscountPerQuantity;
+                $product['price']         -= $voucherDiscountPerQuantity;
+                $product['discount'] += $voucherDiscountPerQuantity;
             }
         }
 
@@ -1175,30 +1188,30 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         // check if article is valid for voucher
         $restrictedArticles = explode(';', $voucher->getRestrictArticles());
-        if (count($restrictedArticles) > 0 && in_array($product['articleNumber'], $restrictedArticles)) {
+        if (count($restrictedArticles) > 0 && in_array($product['legacy']['articleNumber'], $restrictedArticles)) {
             return true;
         }
 
         // check if article manufacturer is valid for voucher
-        if ($voucher->getBindToSupplier() > 0 && $voucher->getBindToSupplier() != $product['supplierId']) {
+        if ($voucher->getBindToSupplier() > 0 && $voucher->getBindToSupplier() != $product['legacy']['supplierId']) {
             return true;
         }
 
         // check if customer group is valid for voucher
         if ($voucher->getCustomerGroup() > 0
-            && $voucher->getCustomerGroup() != $product['customerGroupId']
+            && $voucher->getCustomerGroup() != $product['legacy']['customerGroupId']
         ) {
             return true;
         }
 
         // check if shop is valid for voucher
-        if ($voucher->getShopId() > 0 && $voucher->getShopId() != $product['shopId']) {
+        if ($voucher->getShopId() > 0 && $voucher->getShopId() != $product['legacy']['shopId']) {
             return true;
         }
 
         $voucherId = $voucher->getId();
 
-        if (in_array($product['supplierId'], $vouchersData[$voucherId]['coeExcludeSuppliers'])) {
+        if (in_array($product['legacy']['supplierId'], $vouchersData[$voucherId]['coeExcludeSuppliers'])) {
             return true;
         }
 
@@ -1229,7 +1242,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         //todo: use price or originalPrice?
         foreach ($items as $product) {
-            if ($product['promoQuantity'] == 0 || $product['originalPrice'] <= 0) {
+            if ($product['legacy']['promoQuantity'] == 0 || $product['legacy']['originalPrice'] <= 0) {
                 continue;
             }
 
@@ -1237,7 +1250,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $totalAmount += $product['originalPrice'];
+            $totalAmount += $product['legacy']['originalPrice'];
         }
 
         return $totalAmount;
