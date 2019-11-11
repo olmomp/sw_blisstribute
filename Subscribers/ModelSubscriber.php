@@ -343,41 +343,41 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function postPersistShop(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $modelManager = $this->container->get('models');
-
-        /** @var \Shopware\Models\Shop\Shop $shop */
-        $shop = $eventArgs->get('entity');
-
-        $blisstributeShop = new \Shopware\CustomModels\Blisstribute\BlisstributeShop();
-        $blisstributeShop->setShop($shop)->setAdvertisingMediumCode('');
-
-        $modelManager->persist($blisstributeShop);
-        $modelManager->flush();
-    }
+//    public function postPersistShop(\Enlight_Event_EventArgs $eventArgs)
+//    {
+//        $modelManager = $this->container->get('models');
+//
+//        /** @var \Shopware\Models\Shop\Shop $shop */
+//        $shop = $eventArgs->get('entity');
+//
+//        $blisstributeShop = new \Shopware\CustomModels\Blisstribute\BlisstributeShop();
+//        $blisstributeShop->setShop($shop)->setAdvertisingMediumCode('');
+//
+//        $modelManager->persist($blisstributeShop);
+//        $modelManager->flush();
+//    }
 
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
      *
      * @return void
      */
-    public function preRemoveShop(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $modelManager = $this->container->get('models');
-
-        /** @var Shopware\Models\Shop\ $blisstributeShop */
-        $shop = $eventArgs->get('entity');
-
-        $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeShop');
-        $blisstributeShop = $repository->findOneByShop($shop->getId());
-        if ($blisstributeShop === null) {
-            return;
-        }
-
-        $modelManager->remove($blisstributeShop);
-        $modelManager->flush();
-    }
+//    public function preRemoveShop(\Enlight_Event_EventArgs $eventArgs)
+//    {
+//        $modelManager = $this->container->get('models');
+//
+//        /** @var Shopware\Models\Shop\ $blisstributeShop */
+//        $shop = $eventArgs->get('entity');
+//
+//        $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeShop');
+//        $blisstributeShop = $repository->findOneByShop($shop->getId());
+//        if ($blisstributeShop === null) {
+//            return;
+//        }
+//
+//        $modelManager->remove($blisstributeShop);
+//        $modelManager->flush();
+//    }
 
     /**
      * @param \Enlight_Event_EventArgs $eventArgs
@@ -466,41 +466,41 @@ class ModelSubscriber implements SubscriberInterface
      *
      * @return void
      */
-    public function postPersistDispatch(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $modelManager = $this->container->get('models');
+//    public function postPersistDispatch(\Enlight_Event_EventArgs $eventArgs)
+//    {
+//        $modelManager = $this->container->get('models');
+//
+//        /** @var \Shopware\Models\Dispatch\Dispatch $dispatch */
+//        $dispatch = $eventArgs->get('entity');
+//
+//        $blisstributeShipment = new \Shopware\CustomModels\Blisstribute\BlisstributeShipment();
+//        $blisstributeShipment->setShipment($dispatch);
+//
+//        $modelManager->persist($blisstributeShipment);
+//        $modelManager->flush();
+//    }
 
-        /** @var \Shopware\Models\Dispatch\Dispatch $dispatch */
-        $dispatch = $eventArgs->get('entity');
-
-        $blisstributeShipment = new \Shopware\CustomModels\Blisstribute\BlisstributeShipment();
-        $blisstributeShipment->setShipment($dispatch);
-
-        $modelManager->persist($blisstributeShipment);
-        $modelManager->flush();
-    }
-
-    /**
-     * @param \Enlight_Event_EventArgs $eventArgs
-     *
-     * @return void
-     */
-    public function preRemoveDispatch(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $modelManager = $this->container->get('models');
-
-        /** @var \Shopware\Models\Dispatch\Dispatch $dispatch */
-        $dispatch = $eventArgs->get('entity');
-
-        $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeShipment');
-        $blisstributeShipment = $repository->findOneByShipment($dispatch->getId());
-        if ($blisstributeShipment === null) {
-            return;
-        }
-
-        $modelManager->remove($blisstributeShipment);
-        $modelManager->flush();
-    }
+//    /**
+//     * @param \Enlight_Event_EventArgs $eventArgs
+//     *
+//     * @return void
+//     */
+//    public function preRemoveDispatch(\Enlight_Event_EventArgs $eventArgs)
+//    {
+//        $modelManager = $this->container->get('models');
+//
+//        /** @var \Shopware\Models\Dispatch\Dispatch $dispatch */
+//        $dispatch = $eventArgs->get('entity');
+//
+//        $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeShipment');
+//        $blisstributeShipment = $repository->findOneByShipment($dispatch->getId());
+//        if ($blisstributeShipment === null) {
+//            return;
+//        }
+//
+//        $modelManager->remove($blisstributeShipment);
+//        $modelManager->flush();
+//    }
 
     /**
      * blisstribute order event fired before db insert
