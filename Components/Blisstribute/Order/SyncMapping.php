@@ -933,7 +933,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $weight = $product['price'] / $totalProductAmount;
+            $weight = $product['price'] * $product['legacy']['promoQuantity'] / $totalProductAmount;
 
             $singleDiscount = (abs($shopwareDiscountsAmount) * $weight) / $product['legacy']['promoQuantity'];
 
@@ -1028,7 +1028,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     $product, $currentVoucher, $vouchersData, $price, $articleDataCollection
                 ), 4);
 
-                $voucherDiscountPerQuantity = round($voucherDiscount / $product['legacy']['promoQuantity'], 4);
+                $voucherDiscountPerQuantity = round($voucherDiscount, 4);
 
                 $product['legacy']['priceAmount']   -= $voucherDiscountPerQuantity;
                 $product['price']         -= $voucherDiscountPerQuantity;
