@@ -147,9 +147,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $this->orderData['vouchers']          = $this->buildVouchersData();
 
-        $this->logDebug('orderSyncMapping::buildBaseData::done');
-        $this->logDebug('orderSyncMapping::buildBaseData::result:' . json_encode($this->orderData));
-
         $order               = $this->getModelEntity()->getOrder();
         $originalTotal       = round($order->getInvoiceAmount(), 2);
         $newOrderTotal       = round($this->getOrderTotal(), 2);
@@ -165,6 +162,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         foreach($this->orderData['items'] as &$it) {
             unset($it['legacy']);
         }
+
+        $this->logDebug('orderSyncMapping::buildBaseData::done');
+        $this->logDebug('orderSyncMapping::buildBaseData::result:' . json_encode($this->orderData));
 
         return $this->orderData;
     }
