@@ -1307,7 +1307,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $voucherData[] = [
                     'code'               => $currentDetail->getArticleName(),
                     'discount'           => abs(round($currentDetail->getPrice(), 4)),
-                    'discountPercentage' => false,
+                    'discountPercentage' => 0,
                     'isMoneyVoucher'     => false,
                 ];
             }

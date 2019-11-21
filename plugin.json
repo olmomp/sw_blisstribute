@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.0.10",
+    "currentVersion": "1.0.11",
     "isUpdateImportant": true,
 
     "changelog": {
         "de": {
+            "1.0.11": "Fix voucher discount.",
             "1.0.10": "Fix voucher discount.",
             "1.0.5": "Improving error logs.",
             "1.0.4": "Fixing article identification number sync",
@@ -25,6 +26,6 @@
     },
 
     "compatibility": {
-        "minimumVersion": "5.6.0"
+        "minimumVersion": "5.2.0"
     }
 }
