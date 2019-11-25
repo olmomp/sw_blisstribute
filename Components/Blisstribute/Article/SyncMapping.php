@@ -485,7 +485,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     protected function buildClassificationData(Detail $articleDetail)
     {
         $data = [
-            'classification1' => $articleDetail->getArticle()->getName(),
+            'classification1' => $this->determineDetailArticleName($articleDetail),
             'classification2' => $articleDetail->getArticle()->getSupplier()->getName(),
             'classification3' => $this->getClassification3($articleDetail),
             'classification4' => $this->getClassification4($articleDetail),
