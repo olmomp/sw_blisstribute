@@ -9,6 +9,7 @@ require_once __DIR__ . '/../Domain/LoggerTrait.php';
 
 use Shopware\Models\Order\Detail;
 use Shopware\Models\Article\Article;
+use Shopware\Models\Order\Order;
 use Shopware\Models\Voucher\Voucher;
 use Shopware\Models\Article\Repository as ArticleRepository;
 use Shopware\Models\Voucher\Repository as VoucherRepository;
@@ -17,7 +18,7 @@ use Doctrine\ORM\NonUniqueResultException;
 
 use Shopware\CustomModels\Blisstribute\BlisstributeOrder;
 use Shopware\CustomModels\Blisstribute\BlisstributePaymentRepository;
-use Shopware\CustomModels\Blisstribute\BlisstributeShipmentRepository;
+//use Shopware\CustomModels\Blisstribute\BlisstributeShipmentRepository;
 use VIISON\AddressSplitter\AddressSplitter;
 
 /**
@@ -60,7 +61,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected $voucherCollection = [];
 
-    private $container = null;
+    private $container;
+
+    public function __construct()
+    {
+        $this->container = Shopware()->Container();
+    }
 
     /**
      * @return array
@@ -89,16 +95,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * get blisstribute shipment mapping database repository
-     *
-     * @return BlisstributeShipmentRepository
-     */
-    protected function getShipmentMappingRepository()
-    {
-        return Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeShipment');
-    }
-
-    /**
      * return blisstribute payment mapping database repository
      *
      * @return BlisstributePaymentRepository
@@ -106,16 +102,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     protected function getPaymentMappingRepository()
     {
         return Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributePayment');
-    }
-
-    /**
-     * return blisstribute shop mapping database repository
-     *
-     * @return \Shopware\CustomModels\Blisstribute\BlisstributeShopRepository
-     */
-    protected function getShopMappingRepository()
-    {
-        return Shopware()->Models()->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeShop');
     }
 
     /**
@@ -131,7 +117,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     /**
      * return shopware plugin repository
      *
-     * @return \Shopware\Models\Plugin\Plugin
+     * @return \Doctrine\ORM\EntityRepository|\Shopware\Models\Plugin\Plugin
      */
     protected function getPluginRepository()
     {
@@ -139,65 +125,76 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * @inheritdoc
+     * @throws Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException
+     * @throws Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException
+     * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
+     * @throws NonUniqueResultException
      */
     protected function buildBaseData()
     {
         $this->logDebug('orderSyncMapping::buildBaseData::start');
-        // determine used vouchers
+
         $this->determineVoucherDiscount();
 
         $this->orderData = $this->buildBasicOrderData();
-        $this->orderData['payment'] = $this->buildPaymentData();
+
+        $this->orderData['payment']           = $this->buildPaymentData();
         $this->orderData['advertisingMedium'] = $this->buildAdvertisingMediumData();
-        $this->orderData['billAddressData'] = $this->buildInvoiceAddressData();
-        $this->orderData['deliveryAddressData'] = $this->buildDeliveryAddressData();
-        $this->orderData['orderLines'] = $this->buildArticleData();
-        $this->orderData['orderCoupons'] = $this->buildCouponData();
+
+        $this->orderData['invoiceAddress']    = $this->buildAddressData('billing');
+        $this->orderData['deliveryAddress']   = $this->buildAddressData('shipping');
+        $this->orderData['items']             = $this->buildItemsData();
+
+        $this->orderData['vouchers']          = $this->buildVouchersData();
+
+        $order               = $this->getModelEntity()->getOrder();
+        $originalTotal       = round($order->getInvoiceAmount(), 2);
+        $newOrderTotal       = round($this->getOrderTotal(), 2);
+        $orderTotalDeviation = $originalTotal - $newOrderTotal;
+        $deviationWatermark  = round($this->getConfig()['blisstribute-discount-difference-watermark'], 2);
+
+        if (abs($orderTotalDeviation) > abs($deviationWatermark)) {
+            $this->logDebug(sprintf('orderSyncMapping::buildBaseData::amount differs %s to %s', $originalTotal, $newOrderTotal));
+            $this->orderData['customerRemark'] .= 'RABATT PRÜFEN! (ORIG ' . $originalTotal .')';
+        }
+
+        // Remove legacy field from items.
+        foreach($this->orderData['items'] as &$it) {
+            unset($it['legacy']);
+        }
 
         $this->logDebug('orderSyncMapping::buildBaseData::done');
         $this->logDebug('orderSyncMapping::buildBaseData::result:' . json_encode($this->orderData));
 
-        $order = $this->getModelEntity()->getOrder();
-        $originalTotal = round($order->getInvoiceAmount(), 2);
-        $newOrderTotal = round($this->_getOrderTotal(), 2);
-        $orderTotalDeviation = $originalTotal - $newOrderTotal;
-        $deviationWatermark = round($this->getConfig()['blisstribute-discount-difference-watermark'], 2);
-
-        if (abs($orderTotalDeviation) > abs($deviationWatermark)) {
-            $this->logDebug(sprintf('orderSyncMapping::buildBaseData::amount differs %s to %s', $originalTotal, $newOrderTotal));
-            $this->orderData['orderRemark'] .= 'RABATT PRÜFEN! (ORIG ' . $originalTotal .')';
-        }
-
         return $this->orderData;
     }
 
-    protected function _getOrderTotal()
+    /**
+     * @return float
+     */
+    private function getOrderTotal()
     {
-        $orderTotal = round($this->orderData['payment']['total'], 4);
-        $orderTotal += round($this->orderData['shipmentTotal'], 4);
-        foreach ($this->orderData['orderLines'] as $currentOrderLine) {
-            if ($currentOrderLine['isB2BOrder'] && $this->getConfig()['blisstribute-transfer-b2b-net']) {
-                $orderTotal += round((($currentOrderLine['priceNet'] / $currentOrderLine['quantity']) / 100) * (100 + $currentOrderLine['vatRate']), 4);
+        $orderTotal  = round($this->orderData['payment']['total'], 4);
+        $orderTotal += round($this->orderData['shipment']['total'], 4);
+
+        foreach ($this->orderData['items'] as $currentItem) {
+            if ($this->orderData['isB2B'] && $this->getConfig()['blisstribute-transfer-b2b-net']) {
+                // Convert to price after VAT.
+                $orderTotal += round((($currentItem['priceNet'] / 100) * (100 + $currentItem['vatRate'])) * $currentItem['quantity'], 4);
             } else {
-                $orderTotal += round($currentOrderLine['price'], 4);
+                $orderTotal += round($currentItem['price'] * $currentItem['quantity'], 4);
             }
         }
 
-        foreach ($this->orderData['orderCoupons'] as $currentCoupon) {
-            if (!$currentCoupon['isMoneyVoucher']) {
+        foreach ($this->orderData['vouchers'] as $currentVoucher) {
+            if (!$currentVoucher['isMoneyVoucher']) {
                 continue;
             }
 
-            $orderTotal -= round($currentCoupon['couponDiscount'], 4);
+            $orderTotal -= round($currentVoucher['discount'], 4);
         }
 
         return $orderTotal;
-    }
-
-    public function __construct()
-    {
-        $this->container = Shopware()->Container();
     }
 
     /**
@@ -206,21 +203,26 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * @return array
      *
      * @throws Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException
+     * @throws NonUniqueResultException
+     * @throws Exception
      */
-    protected function buildBasicOrderData()
+    private function buildBasicOrderData()
     {
-        $order = $this->getModelEntity()->getOrder();
-        $customer = $order->getCustomer();
+        $order          = $this->getModelEntity()->getOrder();
+        $customer       = $order->getCustomer();
         $billingAddress = $order->getBilling();
+
         if ($billingAddress == null) {
             throw new Exception('invalid billing address data');
         }
+
         if ($order->getShipping() == null) {
             throw new Exception('invalid shipping address data');
         }
 
-        $orderShipLock = false;
-        $orderHold = false;
+        // Transfer the order as locked or on hold if the mapped order attribute contains any value.
+        $orderShipLock = $this->getOrderLock($order);
+        $orderHold     = $this->getOrderHold($order);
 
         $orderRemark = [];
         if (trim($order->getCustomerComment()) != '') {
@@ -259,11 +261,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $customerNumber = $customer->getEmail();
         }
 
-        $isB2BOrder = false;
         $company = trim($billingAddress->getCompany());
-        if ($company != '' && $company != 'x' && $company != '*' && $company != '/' && $company != '-') {
-            $isB2BOrder = true;
-        }
+        $isB2B   = !in_array($company, ['', 'x', '*', '/', '-']);
 
         if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
             $customerBirthday = $customer->getBirthday();
@@ -287,25 +286,33 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $customerPhone = $this->getAlternativePhoneNumber($order);
         }
 
+        $isPriority = $order->getDispatch()->getAttribute()->getBlisstributeShipmentIsPriority();
+
         return [
-            'externalCustomerNumber' => $customerNumber,
-            'externalCustomerEmail' => $customer->getEmail(),
-            'externalCustomerPhoneNumber' => $customerPhone,
-            'externalCustomerMobilePhoneNumber' => '',
-            'externalCustomerFaxNumber' => '',
-            'customerBirthdate' => $customerBirthday,
-            'externalOrderNumber' => $order->getNumber(),
-            'customerOrderNumber' => '',
-            'isAnonymousCustomer' => false,
-            'orderDate' => $order->getOrderTime()->format('Y-m-d H:i:s'),
-            'orderShipLock' => $orderShipLock,
-            'orderHold' => $orderHold,
-            'orderCurrency' => $order->getCurrency(),
-            'orderRemark' => implode(' - ', $orderRemark),
-            'isB2BOrder' => $isB2BOrder,
-            'advertisingMediumCode' => '',
-            'shipmentType' => $this->determineShippingType(),
-            'shipmentTotal' => $order->getInvoiceShipping(),
+            'number'         => $order->getNumber(),
+            'date'           => $order->getOrderTime()->format('Y-m-d H:i:s'),
+            'currency'       => $order->getCurrency(),
+            'isB2B'          => $isB2B,
+            'customerRemark' => implode(' - ', $orderRemark),
+            'hold'           => $orderHold,
+            'lock'           => $orderShipLock,
+            'isPriority'     => (bool)$isPriority,
+
+            'customer' => [
+                'number'      => $customerNumber,
+                'email'       => $customer->getEmail(),
+                'phone'       => $customerPhone,
+                'birthday'    => $customerBirthday,
+                'isB2B'       => $isB2B,
+                'taxIdNumber' => trim($billingAddress->getVatId()),
+            ],
+
+            'shipment' => [
+                'code'                 => $this->determineShippingType($order),
+                'total'                => $order->getInvoiceShipping(),
+                'totalIsNet'           => false,
+                'allowPartialDelivery' => true,
+            ],
         ];
     }
 
@@ -323,21 +330,50 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     /**
      * @param \Shopware\Models\Order\Order $order
-     * @param string $fieldName
+     *
+     * @return boolean
+     */
+    private function getOrderHold($order)
+    {
+        $fieldName = $this->getConfig()['blisstribute-order-hold-mapping'];
+        $this->logDebug('orderSyncMapping::orderHold::fieldName ' . $fieldName);
+
+        return !empty($this->getAttribute($order, $fieldName));
+    }
+
+    /**
+     * @param \Shopware\Models\Order\Order $order
+     *
+     * @return boolean
+     */
+    private function getOrderLock($order)
+    {
+        $fieldName = $this->getConfig()['blisstribute-order-lock-mapping'];
+        $this->logDebug('orderSyncMapping::orderLock::fieldName ' . $fieldName);
+
+        return !empty($this->getAttribute($order, $fieldName));
+    }
+
+    /**
+     * @param \Shopware\Models\Order\Order $order
+     * @param string $attrName
      * @return string
      */
-    protected function getAttribute($order, $fieldName)
+    private function getAttribute($order, $attrName)
     {
-        if (trim($fieldName) == '') {
+        if (trim($attrName) == '') {
             return null;
         }
 
+        // Shopware converts field names like shipment_type to getShipmentType.
+        // Build the method name of $fieldNames getter.
         $value = '';
-        $method = 'get' . ucfirst($fieldName);
+        $method = 'get' . str_replace(' ', '', ucwords(str_replace('_', ' ', $attrName)));
 
         $attribute = $order->getAttribute();
         $this->logDebug('orderSyncMapping::getAttribute::got attribute ' . $attribute->getId());
 
+        // Get the $fieldName by calling the getter using the build method name.
         if (method_exists($attribute, $method)) {
             $value = $attribute->$method();
         }
@@ -350,67 +386,47 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     /**
      * determine blisstribute shipping code
      *
+     * @param Order $order
      * @return string
      *
      * @throws Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException
      */
-    protected function determineShippingType()
+    protected function determineShippingType(Order $order)
     {
-        $shipmentRepository = $this->getShipmentMappingRepository();
-        $shipment = $shipmentRepository->findOneByShipment($this->getModelEntity()->getOrder()->getDispatch()->getId());
-        if ($shipment === null) {
-            throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
-                'no shipment mapping given for order ' . $this->getModelEntity()->getOrder()->getNumber()
-            );
-        }
+        $shipmentCode = $order->getDispatch()->getAttribute()->getBlisstributeShipmentCode();
 
-        if (trim($shipment->getClassName()) == '') {
+        if (empty(trim($shipmentCode))) {
             throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
                 'no shipment mapping class found for order ' . $this->getModelEntity()->getOrder()->getNumber()
             );
         }
 
-        $shipmentClassFileName = str_replace(' ', '', ucwords(str_replace('_', ' ', $shipment->getClassName())));
-        $shipmentClass = 'Shopware_Components_Blisstribute_Order_Shipment_'
-            . $shipmentClassFileName;
-
-        /** @noinspection PhpIncludeInspection */
-        include_once __DIR__ . '/Shipment/' . $shipmentClassFileName . '.php';
-        if (!class_exists($shipmentClass)) {
-            throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
-                'no shipment mapping class found for order ' . $this->getModelEntity()->getOrder()->getNumber()
-            );
-        }
-
-        /** @var Shopware_Components_Blisstribute_Order_Shipment_Abstract $orderShipment */
-        $orderShipment = new $shipmentClass;
-        return $orderShipment->getCode();
+        return $shipmentCode;
     }
 
     /**
-     * build advertising medium data
+     * Build advertising medium data.
      *
      * @return array
      */
     protected function buildAdvertisingMediumData()
     {
         $advertisingMediumCode = $this->getConfig()['blisstribute-default-advertising-medium'];
-        $advertisingMediumData = [
-            'origin' => 'O',
-            'medium' => 'O',
-            'code' => $advertisingMediumCode,
+
+        return [
+            'code'            => $advertisingMediumCode,
+            'origin'          => 'O',
+            'medium'          => 'O',
             'affiliateSource' => '',
         ];
-
-        return $advertisingMediumData;
     }
 
     /**
-     * build payment data
+     * Build payment data.
      *
      * @return array
-     *
      * @throws Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException
+     * @throws NonUniqueResultException
      */
     protected function buildPaymentData()
     {
@@ -445,73 +461,70 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * build invoice address data
+     * Returns the data for the billing or shipping address.
      *
+     * @param $addrType string Either 'billing' or 'shipping'.
      * @return array
-     *
      * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
      */
-    protected function buildInvoiceAddressData()
+    private function buildAddressData($addrType)
     {
-        $billing = $this->getModelEntity()->getOrder()->getBilling();
-        if ($billing == null) {
+        $ent = null;
+        if ($addrType == 'billing') {
+            $ent = $this->getModelEntity()->getOrder()->getBilling();
+        }
+        elseif ($addrType == 'shipping') {
+            $ent = $this->getModelEntity()->getOrder()->getShipping();
+        }
+
+        if ($ent == null) {
             throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException(
-                'no billing address given for order ' . $this->getModelEntity()->getOrder()->getNumber()
+                'no ' . $addrType . ' address given for order ' . $this->getModelEntity()->getOrder()->getNumber()
             );
         }
 
-        $gender = '';
         $salutation = '';
-        if ($billing->getSalutation() == 'mr') {
-            $gender = 'm';
-            $salutation = base64_encode('Herr');
-        } elseif ($billing->getSalutation() == 'ms') {
-            $gender = 'f';
-            $salutation = base64_encode('Frau');
+        if ($ent->getSalutation() == 'mr') {
+            $salutation = 'Herr';
+        }
+        elseif ($ent->getSalutation() == 'ms') {
+            $salutation = 'Frau';
         }
 
-        $country = $billing->getCountry();
+        $country = $ent->getCountry();
         if ($country == null) {
             throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('no country given');
         }
 
-        $street = $billing->getStreet();
+        $street      = $ent->getStreet();
         $houseNumber = '';
         try {
-            $disableAddressSplitting = $this->getConfig()['blisstribute-disable-address-splitting'];
-            if (!$disableAddressSplitting) {
-                $match = AddressSplitter::splitAddress($street);
-                $street = $match['streetName'];
+            if (!$this->getConfig()['blisstribute-disable-address-splitting']) {
+                $match       = AddressSplitter::splitAddress($street);
+                $street      = $match['streetName'];
                 $houseNumber = $match['houseNumber'];
             }
-        } catch (Exception $e) {
-        }
+        } catch (Exception $e) {}
 
-        $invoiceAddressData = [
-            'addressType' => 'BILL',
-            'salutation' => $salutation,
-            'title' => '',
-            'firstName' => base64_encode($this->_processAddressDataMatching($billing->getFirstName())),
-            'addName' => base64_encode($this->_processAddressDataMatching($billing->getDepartment())),
-            'lastName' => base64_encode($this->_processAddressDataMatching($billing->getLastName())),
-            'company' => base64_encode($this->_processAddressDataMatching($billing->getCompany())),
-            'gender' => $gender,
-            'street' => base64_encode($this->_processAddressDataMatching($street)),
-            'houseNumber' => base64_encode($this->_processAddressDataMatching($houseNumber)),
-            'addressAddition' => base64_encode($this->_processAddressDataMatching($billing->getAdditionalAddressLine1())),
-            'zipCode' => base64_encode($this->_processAddressDataMatching($billing->getZipCode())),
-            'city' => base64_encode($this->_processAddressDataMatching($billing->getCity())),
-            'countryCode' => $country->getIso(),
-            'isTaxFree' => (((bool)$this->getModelEntity()->getOrder()->getTaxFree()) ? true : false),
-            'taxIdNumber' => trim($billing->getVatId()),
-            'remark' => '',
-            'stateCode' => '',
+        $addrData = [
+            'salutation'      => $salutation,
+            'title'           => '',
+            'firstName'       => $this->processAddressDataMatching($ent->getFirstName()),
+            'lastName'        => $this->processAddressDataMatching($ent->getLastName()),
+            'nameAddition'    => $this->processAddressDataMatching($ent->getDepartment()),
+            'company'         => $this->processAddressDataMatching($ent->getCompany()),
+            'street'          => $this->processAddressDataMatching($street),
+            'houseNumber'     => $this->processAddressDataMatching($houseNumber),
+            'addressAddition' => $this->processAddressDataMatching($ent->getAdditionalAddressLine1()),
+            'zip'             => $this->processAddressDataMatching($ent->getZipCode()),
+            'city'            => $this->processAddressDataMatching($ent->getCity()),
+            'countryCode'     => $country->getIso(),
         ];
 
-        return $invoiceAddressData;
+        return $addrData;
     }
 
-    private function _processAddressDataMatching($addressString)
+    private function processAddressDataMatching($addressString)
     {
         $blackListPattern = $this->getConfig()['blisstribute-hold-order-address-pattern'];
         if (trim($blackListPattern) == '') {
@@ -519,9 +532,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         if (preg_match('/' . $blackListPattern . '/i', $addressString)) {
-            $this->orderData['orderHold'] = true;
-            if (!preg_match('/Bestellung prüfen/i', $this->orderData['orderRemark'])) {
-                $this->orderData['orderRemark'] = 'Bestellung prüfen (SW Blacklist) - ' . $this->orderData['orderRemark'];
+            $this->orderData['hold'] = true;
+            if (!preg_match('/Bestellung prüfen/i', $this->orderData['customerRemark'])) {
+                $this->orderData['customerRemark'] = 'Bestellung prüfen (SW Blacklist) - ' . $this->orderData['customerRemark'];
             }
         }
 
@@ -529,90 +542,21 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * build delivery address data
+     * Build article list.
      *
      * @return array
-     *
+     * @throws NonUniqueResultException
      * @throws Shopware_Components_Blisstribute_Exception_ValidationMappingException
      */
-    protected function buildDeliveryAddressData()
+    protected function buildItemsData()
     {
-        $shipping = $this->getModelEntity()->getOrder()->getShipping();
-        if ($shipping == null) {
-            throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException(
-                'no shipping address given for order ' . $this->getModelEntity()->getOrder()->getNumber()
-            );
-        }
+        $items = [];
 
-        $gender = '';
-        $salutation = '';
-        if ($shipping->getSalutation() == 'mr') {
-            $gender = 'm';
-            $salutation = base64_encode('Herr');
-        } elseif ($shipping->getSalutation() == 'ms') {
-            $gender = 'f';
-            $salutation = base64_encode('Frau');
-        }
-
-        $country = $shipping->getCountry();
-        if ($country == null) {
-            throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('no country given');
-        }
-
-        $street = $shipping->getStreet();
-        $houseNumber = '';
-        try {
-            $disableAddressSplitting = $this->getConfig()['blisstribute-disable-address-splitting'];
-            if (!$disableAddressSplitting) {
-                $match = AddressSplitter::splitAddress($street);
-                $street = $match['streetName'];
-                $houseNumber = $match['houseNumber'];
-            }
-        } catch (Exception $e) {
-        }
-
-        $deliveryAddressData = [
-            'addressType' => 'DELIVERY',
-            'salutation' => $salutation,
-            'title' => '',
-            'firstName' => base64_encode($this->_processAddressDataMatching($shipping->getFirstName())),
-            'addName' => base64_encode($this->_processAddressDataMatching($shipping->getDepartment())),
-            'lastName' => base64_encode($this->_processAddressDataMatching($shipping->getLastName())),
-            'company' => base64_encode($this->_processAddressDataMatching($shipping->getCompany())),
-            'gender' => $gender,
-            'street' => base64_encode($this->_processAddressDataMatching($street)),
-            'houseNumber' => base64_encode($this->_processAddressDataMatching($houseNumber)),
-            'addressAddition' => base64_encode($this->_processAddressDataMatching($shipping->getAdditionalAddressLine1())),
-            'zipCode' => base64_encode($this->_processAddressDataMatching($shipping->getZipCode())),
-            'city' => base64_encode($this->_processAddressDataMatching($shipping->getCity())),
-            'countryCode' => $country->getIso(),
-            'isTaxFree' => (((bool)$this->getModelEntity()->getOrder()->getTaxFree()) ? true : false),
-            'taxIdNumber' => '',
-            'remark' => '',
-            'stateCode' => '',
-        ];
-
-        return $deliveryAddressData;
-    }
-
-    /**
-     * build article list
-     *
-     * @return array
-     */
-    protected function buildArticleData()
-    {
-        $articleDataCollection = [];
-
-        $swOrder = $this->getModelEntity()->getOrder();
+        $swOrder     = $this->getModelEntity()->getOrder();
         $basketItems = $swOrder->getDetails();
-        $orderId = $swOrder->getId();
 
-        $isB2BOrder = false;
         $company = trim($swOrder->getBilling()->getCompany());
-        if ($company != '' && $company != 'x' && $company != '*' && $company != '/' && $company != '-') {
-            $isB2BOrder = true;
-        }
+        $isB2B   = !in_array($company, ['', 'x', '*', '/', '-']);
 
         $promotions = [];
         $shopwareDiscountsAmount = 0;
@@ -620,20 +564,18 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         /** @var ArticleRepository $articleRepository */
         $articleRepository = $this->container->get('models')->getRepository('Shopware\Models\Article\Article');
 
-        $customerGroupId = $swOrder->getCustomer()->getGroup()->getId();
-        $shopId =  $swOrder->getShop()->getId();
-
         /** @var Shopware\Models\Order\Detail $orderDetail */
         foreach ($basketItems as $orderDetail) {
             $priceNet = $price = 0;
-            if ($isB2BOrder && $this->getConfig()['blisstribute-transfer-b2b-net']) {
+
+            if ($isB2B && $this->getConfig()['blisstribute-transfer-b2b-net']) {
                 $priceNet = ($orderDetail->getPrice() / (100 + $orderDetail->getTaxRate())) * 100;
             } else {
                 $price = $orderDetail->getPrice();
             }
 
-            $quantity = $orderDetail->getQuantity();
-            $mode = $orderDetail->getMode();
+            $quantity      = $orderDetail->getQuantity();
+            $mode          = $orderDetail->getMode();
             $articleNumber = $orderDetail->getArticleNumber();
 
             if (in_array($mode, [3, 4]) && $price <= 0) {
@@ -652,233 +594,88 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $article = $articleRepository->find($orderDetail->getArticleId());
 
             $articleData = [
-                'articleId' => $orderDetail->getArticleId(),
-                'lineId' => count($articleDataCollection) + 1,
-                'externalKey' => $orderDetail->getId(),
-                'erpArticleNumber' => $this->getArticleDetail($orderDetail)->getAttribute()->getBlisstributeVhsNumber(),
-                'ean13' => $orderDetail->getEan(),
-                'articleNumber' => $orderDetail->getArticleNumber(),
-                'mode' => $mode,
-                'supplierId' => $article->getSupplier()->getId(),
-                'customerGroupId' => $customerGroupId,
-                'shopId' => $shopId,
-                'originalPriceAmount' => $price,
-                'originalPrice' => $price * $orderDetail->getQuantity(),
-                'promoQuantity' => $quantity,
-                'quantity' => $quantity,
-                'priceAmount' => round($price, 4), // single article price
-                'priceAmountNet' => round($priceNet, 4), // single article price
-                'price' => round(($price * $quantity), 4),
-                'priceNet' => round(($priceNet * $quantity), 4),
-                'vatRate' => $this->getModelEntity()->getOrder()->getTaxFree() ? 0.0 : round($orderDetail->getTaxRate(), 2),
-                'title' => $orderDetail->getArticleName(),
-                'discountTotal' => 0,
-                'configuration' => '',
+                'externalNumber'   => (string) $orderDetail->getId(),
+                'vhsArticleNumber' => $this->getArticleDetail($orderDetail)->getAttribute()->getBlisstributeVhsNumber(),
+                'ean13'            => $orderDetail->getEan(),
+                'articleTitle'     => $orderDetail->getArticleName(),
+                'quantity'         => $quantity,
+                'price'            => round($price, 4), // single article price
+                'priceNet'         => round($priceNet, 4), // single article price
+                'discount'         => 0,
+                'discountNet'      => 0,
+                'vatRate'          => $this->getModelEntity()->getOrder()->getTaxFree() ? 0.0 : round($orderDetail->getTaxRate(), 2),
+                'configuration'    => [],
+
+//                'originalPriceAmount' => $price,
+//                'originalPrice' => $price * $orderDetail->getQuantity(),
+//                'price' => round(($price * $quantity), 4),
+//                'priceNet' => round(($priceNet * $quantity), 4),
+//                'discountTotal' => 0,
+
+                'legacy' => [
+                    'promoQuantity' => $quantity,
+                    'customerGroupId' => $swOrder->getCustomer()->getGroup()->getId(),
+                    'shopId'          => $swOrder->getShop()->getId(),
+                    'supplierId'      => $article->getSupplier()->getId(),
+                    'articleNumber'   => $orderDetail->getArticleNumber(),
+                    'originalPrice'   => $price,
+                ],
             ];
 
             $articleData = $this->applyCustomProducts($articleData, $orderDetail, $basketItems);
             $articleData = $this->applyStaticAttributeData($articleData, $article);
 
-            $articleDataCollection[] = $articleData;
+            $items[] = $articleData;
         }
 
-        $articleDataCollection = $this->applyPromoDiscounts($articleDataCollection, $promotions, $shopwareDiscountsAmount);
+        $items = $this->applyPromoDiscounts($items, $promotions, $shopwareDiscountsAmount);
 
-        return $articleDataCollection;
-    }
-
-    /**
-     * Read out product data
-     *
-     * @param array $orderNumbers
-     * @param integer $orderId
-     * @return array
-     */
-    private function getProductContext(array $orderNumbers, $orderId)
-    {
-        $products = $this->getBaseProducts($orderNumbers, $orderId);
-        $lookup = [];
-        foreach ($products as $idx => $product) {
-            $lookup[$product['articleID']][] = $idx;
-        }
-
-        $categories = $this->getProductCategories(array_column($products, 'articleID'));
-
-        foreach ($this->getBasketAttributes($orderId) as $attributes) {
-            foreach ($attributes as $key => $attribute) {
-                foreach ($lookup[$attributes['articleID']] as $idx) {
-                    $products[$idx]['basketAttribute::' . $key] = $attribute;
-                }
+        if (!$this->getConfig()['blisstribute-order-include-vatrate']) {
+            foreach ($items as &$item) {
+                $item['vatRate'] = 0;
             }
         }
 
-        // set categories into base product
-        foreach ($categories as $row) {
-            foreach ($lookup[$row['articleID']] as $idx) {
-                $products[$idx]['categories'][] = $row;
-            }
-        }
-
-        return $products;
+        return $items;
     }
 
     /**
-     * Return the base product information
-     *
-     * @param array $orderNumbers
-     * @param integer $orderId
-     * @return array
-     */
-    private function getBaseProducts(array $orderNumbers, $orderId)
-    {
-        if (class_exists('\Shopware\SwagPromotion\Components\MetaData\FieldInfo')) {
-            $info = new \Shopware\SwagPromotion\Components\MetaData\FieldInfo();
-        } elseif (class_exists('SwagPromotion\Components\MetaData\FieldInfo')) {
-            $info = new SwagPromotion\Components\MetaData\FieldInfo();
-        } else {
-            $this->logWarn('orderSyncMapping::could not load promostionsuite field info class');
-            return array();
-        }
-        $info = array_keys($info->get()['product']);
-
-        $mapping = [
-            'product' => 'articles',
-            'detail' => 'details',
-            'productAttribute' => 'attributes',
-            'price' => 'prices',
-            'supplier' => 'supplier'
-        ];
-
-        $fields = implode(
-            ', ',
-            array_map(
-                function ($field) use ($mapping) {
-                    list($type, $rest) = explode('::', $field, 2);
-
-                    $table = $mapping[$type];
-
-                    return "{$table}.{$rest} as \"{$field}\"";
-                },
-                // sort out categories
-                array_filter(
-                    $info,
-                    function ($field) {
-                        return strpos($field, 'categories') !== 0;
-                    }
-                )
-            )
-        );
-
-        $sql = "SELECT details.ordernumber, {$fields}, o.quantity, o.price, details.articleID
-
-        FROM s_order_details o
-        
-        LEFT JOIN s_articles_details details 
-        ON details.ordernumber = o.articleordernumber
-
-        LEFT JOIN s_articles_attributes attributes
-        ON attributes.articledetailsID = details.id
-
-        LEFT JOIN s_articles articles
-        ON articles.id = details.articleID
-
-        LEFT JOIN s_articles_prices prices
-        ON prices.articledetailsID = details.id
-
-        LEFT JOIN s_articles_supplier supplier
-        ON supplier.id = articles.supplierID
-
-        WHERE o.orderID = ?
-        AND o.modus = 0";
-
-        $data = $this->container->get('db')->fetchAssoc(
-            $sql, [$orderId]
-        );
-
-        foreach ($data as $orderNumber => $product) {
-            $data[$orderNumber]['quantity'] = $orderNumbers[$orderNumber];
-        }
-
-        return $data;
-    }
-
-    /**
-     * Enrich the product data with basket attributes, if possible
-     *
-     * @param integer $orderId
-     * @return array
-     */
-    private function getBasketAttributes($orderId)
-    {
-        $sql = "SELECT o.articleID, attributes.*
-                FROM s_order_details o
-                LEFT JOIN s_order_details_attributes attributes ON attributes.detailID = o.id
-                WHERE o.orderId = :orderId
-                  AND o.modus = 0";
-
-        return $this->container->get('db')->fetchAll($sql, ['orderId' => $orderId]);
-    }
-
-    /**
-     * Return categories for the given articleIds
-     *
-     * @param array $articleIds
-     * @return array
-     */
-    private function getProductCategories(array $articleIds)
-    {
-        return $this->container->get('db')->fetchAll(
-            "SELECT ro.articleID, attributes.*, categories.*
-            FROM s_articles_categories_ro ro
-
-            INNER JOIN s_categories categories
-            ON categories.id = ro.categoryID
-
-            INNER JOIN s_categories_attributes attributes
-            ON attributes.categoryID = ro.categoryID
-
-            WHERE articleID IN (" . implode(', ', $articleIds) . ")"
-        );
-    }
-
-    /**
-     * @param array $configurationData
+     * @param array $articleData
      * @param \Shopware\Models\Article\Article $article
-     *
      * @return array
      */
-    public function applyStaticAttributeData($configurationData, $article)
+    public function applyStaticAttributeData($articleData, $article)
     {
         $this->logDebug('orderSyncMapping::applyStaticAttributeData::start');
-        $configuration = array();
-        if (trim($configurationData['configuration']) != '') {
-            $configuration = json_decode($configurationData['configuration'], true);
+        $configuration = [];
+        if (!empty($articleData['configuration'])) {
+            $configuration = $articleData['configuration'];
         }
 
         if (!empty($article->getMainDetail()->getAttribute()) && trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleShipmentCode()) != '') {
-            $configuration[] = array(
-                'category_type' => 'shipmentType',
-                'category' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleShipmentCode())
-            );
+            $configuration[] = [
+                'key'   => 'shipmentType',
+                'value' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleShipmentCode())
+            ];
         }
 
         if (!empty($article->getMainDetail()->getAttribute()) && trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleAdvertisingMediumCode()) != '') {
-            $configuration[] = array(
-                'category_type' => 'advertisingMedium',
-                'category' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleAdvertisingMediumCode())
-            );
+            $configuration[] = [
+                'key'   => 'advertisingMedium',
+                'value' => trim($article->getMainDetail()->getAttribute()->getBlisstributeArticleAdvertisingMediumCode())
+            ];
         }
         else if ($advertisingMedium = $this->getAdvertisingMediumFromCategory($article)) {
-            $configuration[] = array(
-                'category_type' => 'advertisingMedium',
-                'category' => trim($advertisingMedium)
-            );
+            $configuration[] = [
+                'key'   => 'advertisingMedium',
+                'value' => trim($advertisingMedium)
+            ];
         }
 
-        $configurationData['configuration'] = json_encode($configuration);
+        $articleData['configuration'] = $configuration;
         $this->logDebug('orderSyncMapping::applyStaticAttributeData::done ' . json_encode($configuration));
 
-        return $configurationData;
+        return $articleData;
     }
 
     /**
@@ -892,7 +689,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     {
         /** @var Shopware\Models\Category\Category $category */
         foreach ($article->getAllCategories() as $category) {
-
             if ($category->getAttribute() && $category->getAttribute()->getBlisstributeCategoryAdvertisingMediumCode()) {
                 return $category->getAttribute()->getBlisstributeCategoryAdvertisingMediumCode();
             }
@@ -911,7 +707,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     {
         // check if plugin SwagCustomProducts is installed
         $plugin = $this->getPluginRepository()->findOneBy([
-            'name' => 'SwagCustomProducts',
+            'name'   => 'SwagCustomProducts',
             'active' => true
         ]);
 
@@ -933,8 +729,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $this->logDebug('customProduct::load configuration by hash %s', $hash);
             $row = $this->container->get('db')->fetchRow(
                 "SELECT configuration, template
-                          FROM s_plugin_custom_products_configuration_hash
-                          WHERE hash = :hash", array('hash' => $hash)
+                     FROM s_plugin_custom_products_configuration_hash
+                     WHERE hash = :hash", ['hash' => $hash]
             );
 
             if (empty($configurationArticles) || !$row) {
@@ -950,12 +746,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $this->logDebug('customProduct::got configuration articles ' . count($configurationArticles));
             foreach ($configurationArticles as $configurationArticle) {
                 $price = $configurationArticle->getPrice();
-                $quantity = $configurationArticle->getQuantity();
 
-                $articleData['originalPriceAmount'] += $price;
-                $articleData['originalPrice'] += $price * $quantity;
-                $articleData['priceAmount'] += round($price, 6);
-                $articleData['price'] += round(($price * $quantity), 6);
+
+                if ($this->orderData['isB2B'] && $this->getConfig()['blisstribute-transfer-b2b-net']) {
+                    $articleData['priceNet'] += ($price / (100 + $articleData['vatRate'])) * 100;
+                } else {
+                    $articleData['price'] += round($price, 6);
+                }
+
 
                 if ($configurationArticle->getAttribute()->getSwagCustomProductsMode() == 2) {
                     foreach ($templateCollection as $currentTemplate) {
@@ -965,14 +763,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
                         $value = trim($currentConfigurationData[$currentTemplate['id']][0]);
                         if ($value != '') {
-                            $orderLineConfiguration[] = array('category_type' => $currentTemplate['name'], 'category' => $value);
+                            $orderLineConfiguration[] = ['key' => $currentTemplate['name'], 'value' => $value];
                         }
                     }
                 }
             }
 
             if (!empty($orderLineConfiguration)) {
-                $articleData['configuration'] = json_encode($orderLineConfiguration);
+                $articleData['configuration'] = $orderLineConfiguration;
             }
 
             return $articleData;
@@ -982,9 +780,16 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
 
-    public function applyPromoDiscounts($articleDataCollection, $promotions, $shopwareDiscountsAmount)
+    /**
+     * @param $items
+     * @param $promotions
+     * @param $shopwareDiscountsAmount
+     * @return mixed
+     * @throws NonUniqueResultException
+     */
+    public function applyPromoDiscounts($items, $promotions, $shopwareDiscountsAmount)
     {
-        // check if Intedia Promotion Recorder plugin is installed
+        // Try to get the Intedia Promotion Recorder.
         $intediaPromoPlugin = $this->getPluginRepository()->findOneBy([
             'name' => 'IntediaPromotionRecorder',
             'active' => true
@@ -992,37 +797,53 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $this->logDebug('apply promo discounts');
 
-        $handledPromotionIds = [];
-        $handledVoucherIds = [];
+        $appliedPromotionIds = [];
+        $appliedVoucherIds = [];
+
+        // If the Intedia Promotion Recorder is available, we first apply all article-specific discounts, like a 15%
+        // discount on a specific shirt brand. After that, the remaining discounts are applied cart-wide, weighted by
+        // the price of the article.
+        // In case the plugin is not available, all discounts will be applied cart-wide, weighted by the price.
         if ($intediaPromoPlugin) {
             $this->logDebug('apply promo discounts via intedia plugin');
             //1a. handle non-default discounts, most vouchers (Promotion suite etc) by intedia plugin
-            $orderDetailIds = array_column($articleDataCollection, 'externalKey');
 
+            // We begin by filtering out the IDs of the articles in this order, because they're required by
+            // getPromotionDiscountsFromRecorderPlugin. Calling getPromotionDiscountsFromRecorderPlugin returns the
+            // promotion ID, promotion value, and voucher ID. The promotion value is the monetary discount that will be
+            // deducted from the price of each article. The discount data either refers to a promotion or voucher
+            // depending on which ID is set.
+            $orderDetailIds     = array_column($items, 'externalNumber');
             $promotionDiscounts = $this->getPromotionDiscountsFromRecorderPlugin($orderDetailIds);
 
-            foreach ($articleDataCollection as $key => $articleData) {
-                $detailId = $articleData['externalKey'];
+            foreach ($items as $key => $articleData) {
+                $detailId = $articleData['externalNumber'];
 
                 if (isset($promotionDiscounts[$detailId])) {
+                    // A discount for this specific article exists...
 
                     foreach ($promotionDiscounts[$detailId] as $discount) {
 
+                        // Mark the discount as applied.
+                        // TODO: Can a discount be a promotion *and* voucher discount? If not attach the second if with
+                        //       elseif.
                         if ($discount['promotionId']) {
-                            $handledPromotionIds[] = $discount['promotionId']; //remember promotion as handled by plugin
+                            $appliedPromotionIds[] = $discount['promotionId'];
                         }
+
                         if ($discount['voucherId']) {
-                            $handledVoucherIds[] = $discount['voucherId'];
+                            $appliedVoucherIds[] = $discount['voucherId'];
                         }
 
                         $discountTotal = $discount['promotionValue'];
                         if ($discountTotal > 0) {
                             $quantity = $articleData['quantity'];
-                            $newPrice = round($articleData['price'] - $discountTotal, 4);
-                            $newPriceSingle = round($articleData['priceAmount'] - ($discountTotal / $quantity), 4);
-                            $articleDataCollection[$key]['price'] = $newPrice;
-                            $articleDataCollection[$key]['priceAmount'] = $newPriceSingle;
-                            $articleDataCollection[$key]['discountTotal'] = $discountTotal;
+                            $newPriceSingle = round($articleData['price'] - ($discountTotal / $quantity), 4);
+                            $newPrice = round($articleData['legacy']['priceAmount'] - $discountTotal, 4);
+                            $items[$key]['price'] = $newPriceSingle;
+                            $items[$key]['legacy']['priceAmount'] = $newPrice;
+                            $items[$key]['discount'] = $discountTotal / $quantity;
+                            $items[$key]['discountNet'] = $discountTotal / $quantity / (100 + $articleData['vatRate']) * 100;
                         }
                     }
                 }
@@ -1032,10 +853,10 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             /** @var Detail $promotion */
             foreach ($promotions as $promotion) {
                 $promotionId = $promotion->getAttribute()->getIntediaPromotionRecorderPromotionId();
-                if (in_array($promotionId, $handledPromotionIds)) { //handled above
+                if (in_array($promotionId, $appliedPromotionIds)) { //handled above
                     continue;
                 }
-                $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $promotion->getPrice());
+                $items = $this->applyShopwareDiscount($items, $promotion->getPrice());
             }
 
         }
@@ -1043,7 +864,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             //1c. without plugin: split all promotions to all products, weighted by price
             /** @var Detail $promotion */
             foreach ($promotions as $promotion) {
-                $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $promotion->getPrice());
+                $items = $this->applyShopwareDiscount($items, $promotion->getPrice());
             }
         }
 
@@ -1053,11 +874,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
          * However: Absolute discount vouchers not specific to certain products/suppliers
          * still need to be split by weight over all articles
          */
-        $articleDataCollection = $this->applyVouchers($articleDataCollection, $handledVoucherIds);
+        $items = $this->applyVouchers($items, $appliedVoucherIds);
         //3. split shopware default discounts to all products, weighted by price (not handled by intedia Plugin)
-        $articleDataCollection = $this->applyShopwareDiscount($articleDataCollection, $shopwareDiscountsAmount);
+        $items = $this->applyShopwareDiscount($items, $shopwareDiscountsAmount);
 
-        return $articleDataCollection;
+        return $items;
     }
 
     /**
@@ -1100,30 +921,36 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     {
         $totalProductAmount = 0;
         foreach ($articleDataCollection as $product) {
-            if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
+            if ($product['legacy']['promoQuantity'] == 0 || $product['price'] <= 0) {
                 continue;
             }
 
-            $totalProductAmount += round($product['price'], 4);
+            $totalProductAmount += round($product['price'] * $product['legacy']['promoQuantity'], 4);
         }
 
         foreach ($articleDataCollection as &$product) {
-            if ($product['promoQuantity'] == 0 || $product['price'] <= 0) {
+            if ($product['legacy']['promoQuantity'] == 0 || $product['price'] <= 0) {
                 continue;
             }
 
-            $weight = $product['price'] / $totalProductAmount;
+            $weight = $product['price'] * $product['legacy']['promoQuantity'] / $totalProductAmount;
 
-            $countedAmountToDiscountPerQuantity = (abs($shopwareDiscountsAmount) * $weight) / $product['promoQuantity'];
+            $singleDiscount = (abs($shopwareDiscountsAmount) * $weight) / $product['legacy']['promoQuantity'];
 
-            $product['discountTotal'] += round($countedAmountToDiscountPerQuantity, 4);
-            $product['price'] -= round($countedAmountToDiscountPerQuantity * $product['promoQuantity'], 4);
-            $product['priceAmount'] -= round($countedAmountToDiscountPerQuantity, 4);
+            $product['discount']              += round($singleDiscount, 4);
+            $product['legacy']['priceAmount'] -= round($singleDiscount, 4);
+            $product['price']                 -= round($singleDiscount, 4);
         }
 
         return $articleDataCollection;
     }
 
+    /**
+     * @param $articleDataCollection
+     * @param array $excludedVoucherIds
+     * @return mixed
+     * @throws NonUniqueResultException
+     */
     public function applyVouchers($articleDataCollection, $excludedVoucherIds = [])
     {
         $couponMappingRepository = $this->getCouponMappingRepository();
@@ -1201,74 +1028,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     $product, $currentVoucher, $vouchersData, $price, $articleDataCollection
                 ), 4);
 
-                $voucherDiscountPerQuantity = round($voucherDiscount / $product['promoQuantity'], 4);
+                $voucherDiscountPerQuantity = round($voucherDiscount, 4);
 
-                $product['priceAmount'] -= $voucherDiscountPerQuantity;
-                $product['price'] -= $voucherDiscountPerQuantity * $product['promoQuantity'];
-                $product['discountTotal'] += $voucherDiscountPerQuantity;
+                $product['legacy']['priceAmount']   -= $voucherDiscountPerQuantity;
+                $product['price']         -= $voucherDiscountPerQuantity;
+                $product['discount'] += $voucherDiscountPerQuantity;
             }
         }
 
         return $articleDataCollection;
-    }
-
-    /**
-     * If there is a discount applied to an order, this function makes sure to
-     * apply the discount to all products in the order equally, in order to guarantee
-     * that refunds do not exceed the amount the customer paid
-     *
-     * @param Detail $item
-     * @param $totalPriceNoDiscount
-     * @param $totalPaymentDiscount
-     * @param $totalDiscountUsed
-     * @return float|int
-     */
-    protected function getPaymentDiscountForBasketItem($item, $totalPriceNoDiscount, $totalPaymentDiscount, $totalDiscountUsed)
-    {
-        // is pixup supplier payment discount installed ?
-        $plugin = $this->getPluginRepository()->findOneBy([
-            'name' => 'PixupMarkenZahlartenRabattsteuerung',
-            'active' => true
-        ]);
-
-        $price = $item->getPrice();
-        $quantity = $item->getQuantity();
-
-        $discount = 0;
-
-        if ($plugin) {
-            // apply weighed discount per supplier
-            $paymentMean = $item->getOrder()->getPayment();
-            $article = Shopware()->Models()->getRepository('Shopware\Models\Article\Article')->find($item->getArticleId());
-            $supplier = $article->getSupplier();
-
-            $discountMapping = Shopware()->Models()->getRepository('Shopware\CustomModels\PixupMarkenZahlartenRabattsteuerung\MarkenZahlartenRabattModel')->findOneBy([
-                'supplier' => $supplier,
-                'paymentMean' => $paymentMean
-            ]);
-
-            if ($discountMapping->isActive()) {
-                $discount = $discountMapping->getDiscount();
-                $amountToDiscount = $price * ($discount / 100);
-
-                $discount = $amountToDiscount;
-            }
-        } else {
-            // apply weighed discount simple
-
-            // current price weighed against total
-            $weight = ($price * $quantity) / $totalPriceNoDiscount;
-            $weighedDiscount = ($weight * $totalPaymentDiscount);
-            $leftOver = $totalPaymentDiscount - $totalDiscountUsed;
-
-            if ($leftOver < $weighedDiscount) { // errors through rounding might occur
-                $weighedDiscount = $leftOver;
-            }
-
-            $discount = $weighedDiscount;
-        }
-
-        return $discount;
     }
 
     /**
@@ -1384,77 +1152,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * check voucher discount used and voucher discount totals
-     *
-     * @param array $articleDataCollection
-     *
-     * @return array
-     */
-    protected function checkVoucherDiscountUsed(array $articleDataCollection)
-    {
-        $diff = round(($this->voucherDiscountValue - $this->voucherDiscountUsed) / count($articleDataCollection), 4);
-
-        if (abs($diff) > 0.01) {
-            $orderRemark = $this->orderData['orderRemark'];
-            if (trim($orderRemark) != '') {
-                $orderRemark .= ' | ';
-            }
-
-            $orderRemark .= sprintf(
-                'Manuelle Gutscheinüberprüfung notwendig. Gutscheinwert: %s / Verteilt: %s',
-                $this->voucherDiscountValue,
-                $this->voucherDiscountUsed
-            );
-
-            $this->orderData['orderRemark'] = $orderRemark;
-
-            return $articleDataCollection;
-        }
-
-        foreach ($articleDataCollection as $key => $articleData) {
-            if ($diff == 0.00) {
-                break;
-            }
-
-            if ($articleData['discountTotal'] >= 0.00) {
-                continue;
-            }
-
-            if (round($articleData['quantity'] * 0.01, 4) > abs($diff)) {
-                continue;
-            }
-
-            if ($diff > 0) {
-                $articleData['discountTotal'] -= 0.01;
-                $diff -= 0.01;
-            } elseif ($diff < 0) {
-                $articleData['discountTotal'] += 0.01;
-                $diff += 0.01;
-            }
-
-            $articleDataCollection[$key] = $articleData;
-        }
-
-        if ($diff != 0) {
-            $orderRemark = $this->orderData['orderRemark'];
-            if (trim($orderRemark) != '') {
-                $orderRemark .= ' | ';
-            }
-
-            $orderRemark .= sprintf(
-                'Manuelle Gutscheinüberprüfung notwendig. Gutscheinwert: %s / Verteilt: %s',
-                $this->voucherDiscountValue,
-                $this->voucherDiscountUsed
-            );
-
-            $this->orderData['orderRemark'] = $orderRemark;
-            return $articleDataCollection;
-        }
-
-        return $articleDataCollection;
-    }
-
-    /**
      * determine article discount for voucher
      *
      * @param array $product
@@ -1483,37 +1180,38 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
 
-    public function isProductBlockedForVoucher($product, Voucher $voucher, $vouchersData) {
+    public function isProductBlockedForVoucher($product, Voucher $voucher, $vouchersData)
+    {
         if ($voucher == null) {
             return true;
         }
 
         // check if article is valid for voucher
         $restrictedArticles = explode(';', $voucher->getRestrictArticles());
-        if (count($restrictedArticles) > 0 && in_array($product['articleNumber'], $restrictedArticles)) {
+        if (count($restrictedArticles) > 0 && in_array($product['legacy']['articleNumber'], $restrictedArticles)) {
             return true;
         }
 
         // check if article manufacturer is valid for voucher
-        if ($voucher->getBindToSupplier() > 0 && $voucher->getBindToSupplier() != $product['supplierId']) {
+        if ($voucher->getBindToSupplier() > 0 && $voucher->getBindToSupplier() != $product['legacy']['supplierId']) {
             return true;
         }
 
         // check if customer group is valid for voucher
         if ($voucher->getCustomerGroup() > 0
-            && $voucher->getCustomerGroup() != $product['customerGroupId']
+            && $voucher->getCustomerGroup() != $product['legacy']['customerGroupId']
         ) {
             return true;
         }
 
         // check if shop is valid for voucher
-        if ($voucher->getShopId() > 0 && $voucher->getShopId() != $product['shopId']) {
+        if ($voucher->getShopId() > 0 && $voucher->getShopId() != $product['legacy']['shopId']) {
             return true;
         }
 
         $voucherId = $voucher->getId();
 
-        if (in_array($product['supplierId'], $vouchersData[$voucherId]['coeExcludeSuppliers'])) {
+        if (in_array($product['legacy']['supplierId'], $vouchersData[$voucherId]['coeExcludeSuppliers'])) {
             return true;
         }
 
@@ -1521,7 +1219,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $customer = $this->getModelEntity()->getOrder()->getCustomer();
 
             if ($customer) {
-                $hasPseudoPrice = $this->container->get('db')->fetchOne("SELECT sap.pseudoprice FROM s_articles_prices sap LEFT JOIN s_articles_details sad ON sap.articleDetailsID = sad.id WHERE sad.ordernumber = ? AND sap.pricegroup = ? AND sap.pseudoprice > 0", array($product['articleNumber'], $customer->getGroupKey()));
+                $hasPseudoPrice = $this->container->get('db')->fetchOne("SELECT sap.pseudoprice FROM s_articles_prices sap LEFT JOIN s_articles_details sad ON sap.articleDetailsID = sad.id WHERE sad.ordernumber = ? AND sap.pricegroup = ? AND sap.pseudoprice > 0", [$product['articleNumber'], $customer->getGroupKey()]);
 
                 if ($hasPseudoPrice) {
                     return true;
@@ -1532,20 +1230,19 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         return false;
     }
 
-    /***
-     * @param array $articleDataCollection
+    /**
+     * @param array $items
      * @param Voucher $voucher
-     * @param integer $supplierId
-     *
+     * @param $vouchersData
      * @return int
      */
-    public function getBasketTotal($articleDataCollection, Voucher $voucher, $vouchersData)
+    public function getBasketTotal($items, Voucher $voucher, $vouchersData)
     {
         $totalAmount = 0;
 
         //todo: use price or originalPrice?
-        foreach ($articleDataCollection as $product) {
-            if ($product['promoQuantity'] == 0 || $product['originalPrice'] <= 0) {
+        foreach ($items as $product) {
+            if ($product['legacy']['promoQuantity'] == 0 || $product['legacy']['originalPrice'] <= 0) {
                 continue;
             }
 
@@ -1553,7 +1250,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $totalAmount += $product['originalPrice'];
+            $totalAmount += $product['legacy']['originalPrice'];
         }
 
         return $totalAmount;
@@ -1563,7 +1260,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * calculate the voucher discount for current article price for a absolute value coupon
      *
      * @param float $price
-     * @param int $quantity
      * @param float $orderSubtotal
      * @param float $discount
      *
@@ -1588,10 +1284,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      * calculate the voucher discount for current article price for a percentage coupon
      *
      * @param float $price
-     * @param float $basketAmount
-     * @param float $productBasketAmount
      * @param float $discount
-     *
      * @return float
      */
     protected function calculateDiscountForPercentVoucher($price, $discount)
@@ -1600,28 +1293,29 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     }
 
     /**
-     * build order voucher data
+     * Build order voucher data.
      *
      * @return array
+     * @throws NonUniqueResultException
      */
-    protected function buildCouponData()
+    protected function buildVouchersData()
     {
         $voucherData = [];
 
         foreach ($this->getModelEntity()->getOrder()->getDetails() as $currentDetail) {
             if (($currentDetail->getMode() == 4 || $currentDetail->getMode() == 3) && $currentDetail->getPrice() < 0) {
-                $voucherData[] = array(
-                    'couponCode' => $currentDetail->getArticleName(),
-                    'couponDiscount' => abs(round($currentDetail->getPrice(), 4)),
-                    'couponDiscountPercentage' => false,
-                    'isMoneyVoucher' => false,
-                );
+                $voucherData[] = [
+                    'code'               => $currentDetail->getArticleName(),
+                    'discount'           => abs(round($currentDetail->getPrice(), 4)),
+                    'discountPercentage' => 0,
+                    'isMoneyVoucher'     => false,
+                ];
             }
         }
 
         foreach ($this->voucherCollection as $currentVoucher) {
             $voucherPercentage = 0.00;
-            $voucherDiscount = $currentVoucher->getValue();
+            $voucherDiscount   = $currentVoucher->getValue();
 
             if ((bool)$currentVoucher->getPercental()) {
                 $voucherPercentage = round($currentVoucher->getValue(), 4);
@@ -1635,7 +1329,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             }
 
             $couponMappingRepository = $this->getCouponMappingRepository();
-            $couponMapping = $couponMappingRepository->findByCoupon($currentVoucher->getId());
+            $couponMapping           = $couponMappingRepository->findByCoupon($currentVoucher->getId());
 
             $isMoneyVoucher = false;
             if ($couponMapping != null && $couponMapping->getIsMoneyVoucher()) {
@@ -1648,12 +1342,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 $voucherCode = $currentVoucher->getVoucherCode();
             }
 
-            $voucherData[] = array(
-                'couponCode' => $voucherCode,
-                'couponDiscount' => round($voucherDiscount, 4),
-                'couponDiscountPercentage' => $voucherPercentage,
-                'isMoneyVoucher' => $isMoneyVoucher,
-            );
+            $voucherData[] = [
+                'code'               => $voucherCode,
+                'discount'           => round($voucherDiscount, 4),
+                'discountPercentage' => $voucherPercentage,
+                'isMoneyVoucher'     => $isMoneyVoucher,
+            ];
         }
 
         return $voucherData;

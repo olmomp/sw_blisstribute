@@ -33,7 +33,7 @@ abstract class Shopware_Components_Blisstribute_Order_Payment_AbstractExternalPa
     protected function getAdditionalPaymentInformation()
     {
         return array(
-            'resToken' => $this->order->getTransactionId(),
+            'token' => $this->order->getTransactionId(),
         );
     }
 }

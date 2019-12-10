@@ -153,13 +153,6 @@ class Btorder extends Resource
     {
         $details = $params['details'];
         foreach ($details as $detail) {
-            $articleNumber = $detail['articleNumber'];
-            if (empty($articleNumber)) {
-                throw new ApiException\CustomValidationException(
-                    'You need to specify the articleNumber of the order positions you want to modify'
-                );
-            }
-
             if (!empty($detail['externalKey'])) {
                 $detailModels = $this->getOrderDetailRepository()
                     ->createQueryBuilder('details')
@@ -174,6 +167,15 @@ class Btorder extends Resource
                     )
                     ->getQuery()
                     ->getResult();
+            }
+
+            if (empty($detailModels)) {
+                $articleNumber = $detail['articleNumber'];
+                if (empty($articleNumber)) {
+                    throw new ApiException\CustomValidationException(
+                        'You need to specify the articleNumber of the order positions you want to modify'
+                    );
+                }
             }
 
             if (empty($detailModels)) {
