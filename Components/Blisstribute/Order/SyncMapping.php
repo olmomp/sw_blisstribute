@@ -569,7 +569,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $priceNet = $price = 0;
 
             if ($isB2B && $this->getConfig()['blisstribute-transfer-b2b-net']) {
-                $priceNet = ($orderDetail->getPrice() / (100 + $orderDetail->getTaxRate())) * 100;
+                if ($swOrder->getNet()) {
+                    $priceNet = $orderDetail->getPrice();
+                } else {
+                    $priceNet = ($orderDetail->getPrice() / (100 + $orderDetail->getTaxRate())) * 100;
+                }
             } else {
                 $price = $orderDetail->getPrice();
             }
@@ -746,10 +750,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $this->logDebug('customProduct::got configuration articles ' . count($configurationArticles));
             foreach ($configurationArticles as $configurationArticle) {
                 $price = $configurationArticle->getPrice();
-
-
                 if ($this->orderData['isB2B'] && $this->getConfig()['blisstribute-transfer-b2b-net']) {
-                    $articleData['priceNet'] += ($price / (100 + $articleData['vatRate'])) * 100;
+                    if ($product->getOrder()->getNet()) {
+                        $articleData['priceNet'] += $price;
+                    } else {
+                        $articleData['priceNet'] += ($price / (100 + $articleData['vatRate'])) * 100;
+                    }
+
                 } else {
                     $articleData['price'] += round($price, 6);
                 }

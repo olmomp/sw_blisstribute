@@ -13,6 +13,7 @@
 
     "changelog": {
         "de": {
+            "1.0.14": "Fix net flag handling on order.",
             "1.0.13": "Bump version.",
             "1.0.12": "Fix article sync field mapping.",
             "1.0.11": "Fix voucher discount.",
