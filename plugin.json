@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.0.14",
+    "currentVersion": "1.0.15",
     "isUpdateImportant": true,
 
     "changelog": {
         "de": {
+            "1.0.15": "php 7.0 compatibility.",
             "1.0.14": "Fix net flag handling on order.",
             "1.0.13": "Bump version.",
             "1.0.12": "Fix article sync field mapping.",

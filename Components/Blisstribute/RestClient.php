@@ -12,7 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 class Shopware_Components_Blisstribute_RestClient
 {
     private $httpClient;
-    private const API_VERSION = 'v1';
+    const API_VERSION = 'v1';
 
     /**
      * Construct a new Blisstribute REST client.
