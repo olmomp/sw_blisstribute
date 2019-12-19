@@ -223,7 +223,6 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
 
         try {
             $articleData = $this->initializeModelMapping($bsArticle);
-
             if (empty($articleData)) {
                 $bsArticle
                     ->setTriggerSync(true)
@@ -234,7 +233,8 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                 $bsArticle
                     ->setTriggerSync(false)
                     ->setTries(0)
-                    ->setComment(null);
+                    ->setComment(null)
+                    ->setSyncHash(trim(sha1(json_encode($articleData))));
 
                 $this->transferBatchCollection($articleData, [$bsArticle]);
             }
@@ -305,6 +305,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
      * @param ModelEntity $modelEntity
      * @return array
      * @throws Exception
+     * @throws Shopware_Components_Blisstribute_Exception_ArticleNotChangedException
      */
     protected function initializeModelMapping(ModelEntity $modelEntity)
     {
@@ -322,6 +323,8 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
             if (trim($modelEntity->getSyncHash()) == $checksum) {
                 throw new Shopware_Components_Blisstribute_Exception_ArticleNotChangedException('article not changed');
             }
+        } catch (Shopware_Components_Blisstribute_Exception_ArticleNotChangedException $ex) {
+            throw $ex;
         } catch (Exception $ex) {
             $this->logWarn($ex->getMessage() . $ex->getTraceAsString());
             throw $ex;
