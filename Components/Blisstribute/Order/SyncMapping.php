@@ -623,6 +623,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     'supplierId'      => $article->getSupplier()->getId(),
                     'articleNumber'   => $orderDetail->getArticleNumber(),
                     'originalPrice'   => $price,
+                    'originalPriceAmount' => round(($price * $quantity), 4),
                 ],
             ];
 
@@ -845,12 +846,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                         $discountTotal = $discount['promotionValue'];
                         if ($discountTotal > 0) {
                             $quantity = $articleData['quantity'];
-                            $newPriceSingle = round($articleData['price'] - ($discountTotal / $quantity), 4);
-                            $newPrice = round($articleData['legacy']['priceAmount'] - $discountTotal, 4);
+                            $discountSingle = $discountTotal / $quantity;
+                            $newPriceSingle = round($articleData['price'] - $discountSingle, 4);
                             $items[$key]['price'] = $newPriceSingle;
-                            $items[$key]['legacy']['priceAmount'] = $newPrice;
-                            $items[$key]['discount'] = $discountTotal / $quantity;
-                            $items[$key]['discountNet'] = $discountTotal / $quantity / (100 + $articleData['vatRate']) * 100;
+                            $items[$key]['discount'] += $discountSingle;
+                            $items[$key]['discountNet'] += $discountSingle / (100 + $articleData['vatRate']) * 100;
                         }
                     }
                 }
@@ -928,24 +928,22 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     {
         $totalProductAmount = 0;
         foreach ($articleDataCollection as $product) {
-            if ($product['legacy']['promoQuantity'] == 0 || $product['price'] <= 0) {
+            if ($product['quantity'] == 0 || $product['legacy']['originalPrice'] <= 0) {
                 continue;
             }
 
-            $totalProductAmount += round($product['price'] * $product['legacy']['promoQuantity'], 4);
+            $totalProductAmount += $product['legacy']['originalPriceAmount'];
         }
 
         foreach ($articleDataCollection as &$product) {
-            if ($product['legacy']['promoQuantity'] == 0 || $product['price'] <= 0) {
+            if ($product['quantity'] == 0 || $product['legacy']['originalPrice'] <= 0) {
                 continue;
             }
 
-            $weight = $product['price'] * $product['legacy']['promoQuantity'] / $totalProductAmount;
-
-            $singleDiscount = (abs($shopwareDiscountsAmount) * $weight) / $product['legacy']['promoQuantity'];
+            $weight = $product['legacy']['originalPriceAmount'] / $totalProductAmount;
+            $singleDiscount = abs($shopwareDiscountsAmount * $weight) / $product['quantity'];
 
             $product['discount']              += round($singleDiscount, 4);
-            $product['legacy']['priceAmount'] -= round($singleDiscount, 4);
             $product['price']                 -= round($singleDiscount, 4);
         }
 
@@ -1037,9 +1035,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
                 $voucherDiscountPerQuantity = round($voucherDiscount, 4);
 
-                $product['legacy']['priceAmount']   -= $voucherDiscountPerQuantity;
-                $product['price']         -= $voucherDiscountPerQuantity;
-                $product['discount'] += $voucherDiscountPerQuantity;
+                $product['price']       -= $voucherDiscountPerQuantity;
+                $product['discount']    += $voucherDiscountPerQuantity;
             }
         }
 
@@ -1247,9 +1244,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
     {
         $totalAmount = 0;
 
-        //todo: use price or originalPrice?
         foreach ($items as $product) {
-            if ($product['legacy']['promoQuantity'] == 0 || $product['legacy']['originalPrice'] <= 0) {
+            if ($product['quantity'] == 0 || $product['legacy']['originalPrice'] <= 0) {
                 continue;
             }
 
@@ -1257,7 +1253,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $totalAmount += $product['legacy']['originalPrice'];
+            $totalAmount += $product['legacy']['originalPriceAmount'];
         }
 
         return $totalAmount;
