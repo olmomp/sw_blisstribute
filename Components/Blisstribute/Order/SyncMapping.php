@@ -600,7 +600,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $articleData = [
                 'externalNumber'   => (string) $orderDetail->getId(),
                 'vhsArticleNumber' => $this->getArticleDetail($orderDetail)->getAttribute()->getBlisstributeVhsNumber(),
-                'ean13'            => $orderDetail->getEan(),
+                'ean13'            => $this->getArticleDetail($orderDetail)->getEan(),
                 'articleTitle'     => $orderDetail->getArticleName(),
                 'quantity'         => $quantity,
                 'price'            => round($price, 4), // single article price
@@ -609,12 +609,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'discountNet'      => 0,
                 'vatRate'          => $this->getModelEntity()->getOrder()->getTaxFree() ? 0.0 : round($orderDetail->getTaxRate(), 2),
                 'configuration'    => [],
-
-//                'originalPriceAmount' => $price,
-//                'originalPrice' => $price * $orderDetail->getQuantity(),
-//                'price' => round(($price * $quantity), 4),
-//                'priceNet' => round(($priceNet * $quantity), 4),
-//                'discountTotal' => 0,
 
                 'legacy' => [
                     'promoQuantity' => $quantity,

@@ -24,7 +24,7 @@ class Shopware_Components_Blisstribute_RestClient
         $this->httpClient = new Client([
             'base_url' => sprintf('%s/%s/', $baseUrl, self::API_VERSION),
             'defaults' => [
-                'timeout' => 5,
+                'timeout' => 30,
                 'headers' => [
                     'Accept'       => 'application/json',
                     'Content-Type' => 'application/json',

@@ -399,6 +399,15 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                     continue;
                 }
 
+                $articleNumber = trim($currentProduct['articleNumber']);
+                if (trim($articleNumber) == '') {
+                    $this->logWarn('could not load article number from response');
+                    continue;
+                }
+
+                $vhsArticleNumber = trim($currentProduct['vhsArticleNumber']);
+                $ean = trim($currentProduct['ean13']);
+
                 $sql = '
                     UPDATE s_articles_attributes
                     SET    blisstribute_vhs_number = :vhsArticleNumber
@@ -409,11 +418,23 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                     )
                 ';
                 Shopware()->Db()->query($sql, [
-                    'vhsArticleNumber' => trim($currentProduct['vhsArticleNumber']),
-                    'articleNumber'    => trim($currentProduct['articleNumber'])
+                    'vhsArticleNumber' => $vhsArticleNumber,
+                    'articleNumber'    => $articleNumber
                 ]);
+                $this->logDebug('processing done for vhs article number ' . $vhsArticleNumber);
 
-                $this->logDebug('processing done for vhs article number ' . trim($currentProduct['erpArticleNumber']));
+                $sql = '
+                    UPDATE s_articles_details
+                    SET ean = :vhsBarcode
+                    WHERE ordernumber = :articleNumber
+                ';
+                Shopware()->Db()->query($sql, [
+                    'vhsBarcode'       => $ean,
+                    'articleNumber'    => $articleNumber
+                ]);
+                $this->logDebug('processing done for ean ' . $ean);
+
+
             } catch (Exception $ex) {
                 $this->logDebug('failed for ' . trim($currentProduct['erpArticleNumber']));
                 $this->logWarn($ex->getMessage());
