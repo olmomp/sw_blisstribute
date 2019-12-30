@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.1.0",
+    "currentVersion": "1.1.1",
     "isUpdateImportant": true,
 
     "changelog": {
         "de": {
+            "1.1.1": "fixing some sync mapping",
             "1.1.0": "fixing some sync mapping",
             "1.0.17": "fixing article sync hash.",
             "1.0.16": "version bump.",
