@@ -414,7 +414,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $advertisingMediumCode = $this->getConfig()['blisstribute-default-advertising-medium'];
 
         return [
-            'code'            => $advertisingMediumCode,
+            'code'            => strtoupper($advertisingMediumCode),
             'origin'          => 'O',
             'medium'          => 'O',
             'affiliateSource' => '',
