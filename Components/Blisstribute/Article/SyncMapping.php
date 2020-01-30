@@ -632,37 +632,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     }
 
     /**
-     * build series mapping
-     *
-     * @return array
-     * @throws Exception
-     */
-    protected function buildSeriesCollection()
-    {
-        if ($this->getArticle()->getMainDetail()->getConfiguratorOptions()->count() == 0) {
-            return array();
-        }
-
-        /** @var \Shopware\Models\Article\Configurator\Option $configuratorOption */
-        $configuratorOption = $this->getArticle()->getMainDetail()->getConfiguratorOptions()->first();
-
-        $aSeriesData = array(
-            'seriesType' => $configuratorOption->getGroup()->getName(),
-            'seriesCollection' => array(),
-            'specificationCollection' => array(),
-        );
-
-        $specificationCollection = array();
-        /** @var Detail $currentArticleDetail */
-        foreach ($this->getArticle()->getDetails() as $currentArticleDetail) {
-            $specificationCollection[] = $this->buildSpecificationCollection($currentArticleDetail);
-        }
-
-        $aSeriesData['specificationCollection'] = $specificationCollection;
-        return $aSeriesData;
-    }
-
-    /**
      * build series correlation
      *
      * @param Detail $articleDetail
@@ -723,42 +692,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $mediaService = $this->container->get('shopware_media.media_service');
 
         return $mediaService->getUrl('media/image/' . $image['path'] . '.' . $image['extension']);
-    }
-
-    /**
-     * Build collection for SW variants
-     *
-     * @param Detail $articleDetail
-     *
-     * @return array
-     * @throws Exception
-     */
-    protected function buildSpecificationCollection(Detail $articleDetail)
-    {
-        $specificationData = array(
-            'erpArticleNumber' => $this->getArticleVhsNumber($articleDetail),
-            'articleNumber' => $articleDetail->getNumber(),
-            'classification1' => $this->determineDetailArticleName($articleDetail),
-            'imageUrl' => $this->getImageUrl($articleDetail),
-            'releaseState' => (bool)$this->determineArticleActiveState($articleDetail),
-            'setCount' => 1,
-            'reorder' => true,
-            'noticeStockLevel' => (int)$articleDetail->getStockMin(),
-            'reorderStockLevel' => (int)$articleDetail->getStockMin(),
-            'vendorCollection' => array(
-                array(
-                    'code' => $this->getSupplierCode($articleDetail),
-                    'articleNumber' => $articleDetail->getSupplierNumber(),
-                    'purchasePrice' => $this->getMainDetailBasePrice($articleDetail),
-                    'isPreferred' => true
-                )
-            ),
-            'priceCollection' => $this->getPrices($articleDetail),
-            'seriesCorrelation' => array($this->buildSeriesCorrelation($articleDetail)),
-            'tagCollection' => $this->getTags($articleDetail),
-        );
-
-        return $specificationData;
     }
 
     /**
