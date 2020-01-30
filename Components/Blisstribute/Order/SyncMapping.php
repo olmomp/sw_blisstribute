@@ -515,7 +515,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'company'         => $this->processAddressDataMatching($ent->getCompany()),
             'street'          => $this->processAddressDataMatching($street),
             'houseNumber'     => $this->processAddressDataMatching($houseNumber),
-            'addressAddition' => $this->processAddressDataMatching($ent->getAdditionalAddressLine1()),
+            'addressAddition' => $this->processAddressDataMatching($ent->getAdditionalAddressLine1() . ', ' . $ent->getAdditionalAddressLine2()),
             'zip'             => $this->processAddressDataMatching($ent->getZipCode()),
             'city'            => $this->processAddressDataMatching($ent->getCity()),
             'countryCode'     => $country->getIso(),
