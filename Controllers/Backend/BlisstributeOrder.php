@@ -89,7 +89,7 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
                 }
 
                 if ($filter['property'] == 'status') {
-                    $builder->andWhere('blisstribute_order.transfer_status = ' . (int)$filter['value']);
+                    $builder->andWhere('blisstribute_order.status = ' . (int)$filter['value']);
                 }
             }
         }
