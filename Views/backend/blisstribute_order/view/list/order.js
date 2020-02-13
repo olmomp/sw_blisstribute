@@ -99,7 +99,6 @@ Ext.define('Shopware.apps.BlisstributeOrder.view.list.Order', {
                     header: me.snippets.errorComment,
                     flex: 3,
                     sortable: false,
-                    editor: null,
                     dataIndex: 'errorComment'
                 },
             },
