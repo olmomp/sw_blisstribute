@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.1.4",
+    "currentVersion": "1.1.5",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.1.5": "fixing order transfer status filter, order transfer error message is now an editable field",
             "1.1.4": "changes in address addition from address line 2",
             "1.1.3": "append additional address line 2 to address addition field",
             "1.1.2": "upper case advertising medium code in order sync mapping",

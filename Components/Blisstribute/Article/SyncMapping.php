@@ -358,8 +358,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'minOrder'             => 1,
             'maxOrder'             => 0,
             'articleNumber'        => $articleDetail->getSupplierNumber(),
-            'unitType'             => 'STK',
-            'isPurchasable'        => !$articleDetail->getLastStock()
+            'isPurchasable'        => true
             // 'priceForeignCurrency' => $this->getArticle()->getSupplier()->...,
         ]];
     }
