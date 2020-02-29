@@ -54,23 +54,17 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
         }
 
         try {
-            $startDate = new DateTime();
+            $startDate = new \DateTime();
             $articleRepository = $this->modelManager->getRepository('Shopware\CustomModels\Blisstribute\BlisstributeArticle');
             $articleCollection = $articleRepository->findTransferableArticles($startDate);
 
-            $page = 1;
-            $articleDataCollection = array();
-            $articleSyncCollection = array();
-
             $status = true;
             while (count($articleCollection) > 0) {
-                $this->logMessage('start::page ' . $page, __FUNCTION__);
-
                 foreach ($articleCollection as $currentArticle) {
-                    $this->logMessage('start worker with article::' . $currentArticle->getId(), __FUNCTION__, Logger::DEBUG);
+                    $this->logMessage('start worker with article::' . $currentArticle->getId(), __FUNCTION__, Logger::INFO);
 
                     if ($currentArticle->getArticle() == null) {
-                        $this->logMessage('article invalid - skipping::' . $currentArticle->getId(), __FUNCTION__, Logger::DEBUG);
+                        $this->logMessage('article invalid - skipping::' . $currentArticle->getId(), __FUNCTION__, Logger::ERROR);
                         $currentArticle->setDeleted(true);
                         $currentArticle->setTries(0);
                         $currentArticle->setComment(null);
@@ -93,14 +87,6 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                                 $this->modelManager->persist($currentArticle);
                                 continue;
                             }
-
-                            $currentArticle->setTries(0)
-                                ->setTriggerSync(false)
-                                ->setComment(null)
-                                ->setLastCronAt(new DateTime())
-                                ->setSyncHash(trim(sha1(json_encode($articleData))));
-
-                            $this->modelManager->persist($currentArticle);
                         } catch (Shopware_Components_Blisstribute_Exception_ArticleNotChangedException $ex) {
                             $this->logMessage(
                                 'no change detected::' . $currentArticle->getId(),
@@ -140,27 +126,21 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                         continue;
                     }
 
-                    $articleDataCollection = $articleData;
-                    $articleSyncCollection[] = $currentArticle;
 
-                    if (count($articleDataCollection) >= static::TRANSFER_LIMIT) {
-                        $this->transferBatchCollection($articleDataCollection, $articleSyncCollection);
-                        $articleDataCollection = array();
-                        $articleSyncCollection = array();
-                    }
+                    $this->transferBatchCollection($articleData, [$currentArticle]);
 
+                    $currentArticle->setTries(0)
+                        ->setTriggerSync(false)
+                        ->setComment(null)
+                        ->setLastCronAt(new DateTime())
+                        ->setSyncHash(trim(sha1(json_encode($articleData))));
+
+                    $this->modelManager->persist($currentArticle);
                 }
 
                 $this->modelManager->flush();
 
-                $page++;
                 $articleCollection = $articleRepository->findTransferableArticles($startDate);
-
-                $this->logMessage('end::page ' . $page, __FUNCTION__);
-            }
-
-            if (count($articleDataCollection) > 0) {
-                $this->transferBatchCollection($articleDataCollection, $articleSyncCollection);
             }
 
             $this->logMessage('end batch sync', __FUNCTION__);
@@ -390,7 +370,7 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
      */
     protected function setBlisstributeArticleNumber(array $createdProductCollection)
     {
-        $this->logDebug('start updating confirmation data ' . json_encode($createdProductCollection));
+        $this->logInfo('start updating confirmation data ' . json_encode($createdProductCollection));
 
         foreach ($createdProductCollection as $currentProduct) {
             try {
@@ -432,11 +412,11 @@ class Shopware_Components_Blisstribute_Article_Sync extends Shopware_Components_
                     'vhsBarcode'       => $ean,
                     'articleNumber'    => $articleNumber
                 ]);
-                $this->logDebug('processing done for ean ' . $ean);
+                $this->logInfo('processing done for ean ' . $ean);
 
 
             } catch (Exception $ex) {
-                $this->logDebug('failed for ' . trim($currentProduct['erpArticleNumber']));
+                $this->logWarn('failed for ' . trim($currentProduct['erpArticleNumber']));
                 $this->logWarn($ex->getMessage());
             }
         }

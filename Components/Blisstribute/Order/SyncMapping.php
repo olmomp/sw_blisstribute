@@ -1135,7 +1135,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 /** @var $voucher Voucher */
                 $this->voucherCollection[] = $voucher;
 
-                $couponMapping = $couponMappingRepository->findByCoupon($voucher);
+                $couponMapping = $couponMappingRepository->findByCoupon($voucher->getId());
                 if ($couponMapping != null && $couponMapping->getIsMoneyVoucher()) {
                     $this->logDebug(sprintf(
                         'order line id %s / is money voucher! %s',
