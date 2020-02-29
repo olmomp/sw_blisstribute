@@ -61,6 +61,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected $voucherCollection = [];
 
+    /**
+     * all used money vouchers
+     *
+     * @var array[]
+     */
+    protected $moneyVoucherCollection = [];
+
     private $container;
 
     public function __construct()
@@ -187,7 +194,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         foreach ($this->orderData['vouchers'] as $currentVoucher) {
-            if (!$currentVoucher['isMoneyVoucher']) {
+            if ($currentVoucher['isMoneyVoucher']) {
+                $orderTotal -= round(min($currentVoucher['discount'], $orderTotal), 4);
                 continue;
             }
 
@@ -928,6 +936,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
     public function applyShopwareDiscount($articleDataCollection, $shopwareDiscountsAmount)
     {
+        $this->logDebug('orderSyncMapping::applyShopwareDiscount::start');
         $totalProductAmount = 0;
         foreach ($articleDataCollection as $product) {
             if ($product['quantity'] == 0 || $product['legacy']['originalPrice'] <= 0) {
@@ -949,6 +958,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $product['price']                 -= round($singleDiscount, 4);
         }
 
+        $this->logDebug('orderSyncMapping::applyShopwareDiscount::done');
         return $articleDataCollection;
     }
 
@@ -960,6 +970,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     public function applyVouchers($articleDataCollection, $excludedVoucherIds = [])
     {
+        $this->logDebug('orderSyncMapping::applyVouchers::start');
         $couponMappingRepository = $this->getCouponMappingRepository();
 
         $vouchersData = [];
@@ -969,12 +980,14 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'name' => 'CoeExcludeProducerOnVoucher',
             'active' => true
         ]);
+        $this->logDebug('orderSyncMapping::applyVouchers::CoeExcludeProducerOnVoucher active:' . (int)($coeExcludePlugin === null));
 
         // check if plugin CoeVoucherOnReducedArticle is installed
         $coeReducedPlugin = $this->getPluginRepository()->findOneBy([
             'name' => 'CoeVoucherOnReducedArticle',
             'active' => true
         ]);
+        $this->logDebug('orderSyncMapping::applyVouchers::CoeVoucherOnReducedArticle active:' . (int)($coeReducedPlugin === null));
 
         foreach ($this->voucherCollection as $currentVoucher) {
             $couponMapping = $couponMappingRepository->findByCoupon($currentVoucher->getId());
@@ -1042,6 +1055,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             }
         }
 
+        $this->logDebug('orderSyncMapping::applyVouchers::done');
         return $articleDataCollection;
     }
 
@@ -1090,7 +1104,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected function determineVoucherDiscount()
     {
-        $this->logDebug('determineVoucherDiscount start');
+        $this->logDebug('orderSyncMapping::determineVoucherDiscount::start');
 
         $this->voucherDiscountValue = 0.00;
         $this->voucherDiscountUsed = 0.00;
@@ -1103,7 +1117,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         /** @var Detail $currentOrderLine */
         foreach ($this->getModelEntity()->getOrder()->getDetails() as $currentOrderLine) {
             $this->logDebug(sprintf(
-                'process order line id %s / article number %s / price %s',
+                'orderSyncMapping::determineVoucherDiscount::process order line id %s / article number %s / price %s',
                 $currentOrderLine->getId(),
                 $currentOrderLine->getArticleNumber(),
                 $currentOrderLine->getPrice()
@@ -1116,45 +1130,80 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             $voucher = null;
             $voucherCollection = $voucherRepository->getValidateOrderCodeQuery($currentOrderLine->getArticleNumber())->getResult();
-            if (count($voucherCollection) > 1) {
-                /** @var Voucher $currentVoucher */
-                foreach ($voucherCollection as $currentVoucher) {
-                    if (abs(round($currentVoucher->getValue(), 4, PHP_ROUND_HALF_UP)) != abs(round($currentOrderLine->getPrice(), 4, PHP_ROUND_HALF_UP))) {
-                        continue;
-                    }
-
-                    $voucher = $currentVoucher;
-                    break;
-                }
-
-            } elseif (count($voucherCollection) == 1) {
-                $voucher = $voucherCollection[0];
-            }
-
-            if ($voucher != null) {
-                /** @var $voucher Voucher */
-                $this->voucherCollection[] = $voucher;
-
-                $couponMapping = $couponMappingRepository->findByCoupon($voucher->getId());
-                if ($couponMapping != null && $couponMapping->getIsMoneyVoucher()) {
-                    $this->logDebug(sprintf(
-                        'order line id %s / is money voucher! %s',
-                        $currentOrderLine->getId(),
-                        $couponMapping->getId()
-                    ));
-
+            foreach ($voucherCollection as $currentVoucher) {
+                // we'll handle easycoupon separately
+                if (strtolower($currentVoucher->getDescription()) === 'netieasycoupon') {
                     continue;
                 }
-            }
 
-            $this->voucherDiscountValue += abs(round($currentOrderLine->getPrice(), 4, PHP_ROUND_HALF_UP));
+                $this->voucherCollection[] = $currentVoucher;
+                $this->voucherDiscountValue += abs(round($currentOrderLine->getPrice(), 4, PHP_ROUND_HALF_UP));
+            }
         }
 
-        $this->logDebug('voucherDiscountValue: ' . $this->voucherDiscountValue);
-        $this->logDebug('voucherDiscountUsed: ' . $this->voucherDiscountUsed);
-        $this->logDebug('voucherDiscountCollection: ' . count($this->voucherCollection));
+        $this->logDebug('orderSyncMapping::determineVoucherDiscount::voucherDiscountValue: ' . $this->voucherDiscountValue);
+        $this->logDebug('orderSyncMapping::determineVoucherDiscount::voucherDiscountUsed: ' . $this->voucherDiscountUsed);
+        $this->logDebug('orderSyncMapping::determineVoucherDiscount::voucherDiscountCollection: ' . count($this->voucherCollection));
 
-        $this->logDebug('determineVoucherDiscount done');
+        $easyCoupons = $this->getEasyCouponsByOrderId($this->getModelEntity()->getOrder()->getId());
+        foreach ($easyCoupons as $easyCoupon) {
+            $this->logDebug('orderSyncMapping::determineVoucherDiscount::processing money voucher: ' . json_encode($easyCoupon));
+            $sql = '
+                SELECT `voucherId`, `code`
+                FROM `s_emarketing_voucher_codes`
+                WHERE `id` = ?
+            ';
+            $result = Shopware()->Db()->fetchRow($sql, [(int)$easyCoupon['couponId']]);
+            $voucherId = (int)$result['voucherId'];
+            $code = trim($result['code']);
+
+            $couponMapping = $couponMappingRepository->findByCoupon($voucherId);
+            if ($couponMapping != null && $couponMapping->getIsMoneyVoucher()) {
+                $moneyVoucher = [
+                    'code' => $code,
+                    'discount' => abs(round($couponMapping->getVoucher()->getValue(), 4)),
+                    'discountPercentage' => 0,
+                    'isMoneyVoucher' => true,
+                ];
+
+                $this->logInfo('orderSyncMapping::determineVoucherDiscount::adding money voucher: ' . json_encode($moneyVoucher));
+                $this->moneyVoucherCollection[] = $moneyVoucher;
+            }
+        }
+    }
+
+    protected function getEasyCouponsByOrderId($orderId)
+    {
+        if (!$this->isEasyCouponPluginAvailable()) {
+            return [];
+        }
+
+        $sql = '
+            SELECT `cashValue`, `couponId`, `Id`
+            FROM `s_neti_easycoupon_cashed`
+            WHERE `orderID` = ?
+        ';
+        $result = Shopware()->Db()->fetchAll($sql, [$orderId]);
+        return $result;
+    }
+
+    /**
+     * checks if netifoundation easy coupon plugin is available
+     *
+     * @return bool
+     */
+    protected function isEasyCouponPluginAvailable()
+    {
+        $plugin = Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy([
+            'name' => 'NetiEasyCoupon',
+            'active' => true
+        ]);
+
+        if (!$plugin) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -1333,14 +1382,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 }
             }
 
-            $couponMappingRepository = $this->getCouponMappingRepository();
-            $couponMapping           = $couponMappingRepository->findByCoupon($currentVoucher->getId());
-
-            $isMoneyVoucher = false;
-            if ($couponMapping != null && $couponMapping->getIsMoneyVoucher()) {
-                $isMoneyVoucher = true;
-            }
-
             if ($currentVoucher->getModus() == 1) {
                 $voucherCode = $currentVoucher->getOrderCode();
             } else {
@@ -1351,8 +1392,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'code'               => $voucherCode,
                 'discount'           => round($voucherDiscount, 4),
                 'discountPercentage' => $voucherPercentage,
-                'isMoneyVoucher'     => $isMoneyVoucher,
+                'isMoneyVoucher'     => false,
             ];
+        }
+
+        foreach ($this->moneyVoucherCollection as $currentMoneyVoucher) {
+            $voucherData[] = $currentMoneyVoucher;
         }
 
         return $voucherData;

@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.1.6",
+    "currentVersion": "1.1.7",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.1.7": "another way to determine netifoundation easy coupons",
             "1.1.6": "fixing article sync",
             "1.1.5": "fixing order transfer status filter, order transfer error message is now an editable field",
             "1.1.4": "changes in address addition from address line 2",
