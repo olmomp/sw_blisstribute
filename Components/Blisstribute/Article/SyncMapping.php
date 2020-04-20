@@ -77,6 +77,8 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 'vatRates'         => $this->getVatRates(),
                 'prices'           => $this->getPrices($articleDetail),
 
+                'stockLevel'       => $this->getStockLevel($articleDetail),
+
                 // Unavailable fields in Shopware.
                 // 'unitType'            => Not used, because it would override on each sync.
                 // 'stockLevel'          => Not used, because it would override on each sync.
@@ -241,9 +243,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     private function getStockLevel(Detail $articleDetail)
     {
         return [
-            // 'noticeStockLevel'  => (int) $articleDetail->getStockMin(),
-            // 'reorderStockLevel' => (int) $articleDetail->getStockMin(),
-            'minimumStockLevel' => (int) $articleDetail->getStockMin(),
+            'minimum' => (int) $articleDetail->getStockMin(),
         ];
     }
 
