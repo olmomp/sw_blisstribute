@@ -78,6 +78,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
                 'prices'           => $this->getPrices($articleDetail),
 
                 'stockLevel'       => $this->getStockLevel($articleDetail),
+                'retailPrice'      => $this->getMainDetailBasePrice($articleDetail),
 
                 // Unavailable fields in Shopware.
                 // 'unitType'            => Not used, because it would override on each sync.
@@ -132,7 +133,6 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     private function getReleaseDate(Detail $articleDetail)
     {
         $releaseDate = $articleDetail->getReleaseDate() ?? false;
-
         if (!$releaseDate) {
             return date('Y-m-d');
         }
