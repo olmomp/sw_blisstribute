@@ -134,7 +134,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     {
         $releaseDate = $articleDetail->getReleaseDate() ?? false;
         if (!$releaseDate) {
-            return date('Y-m-d');
+            return $this->getModelEntity()->getCreatedAt()->format('Y-m-d');
         }
 
         return $releaseDate->format('Y-m-d');

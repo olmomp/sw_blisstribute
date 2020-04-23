@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.1.9",
+    "currentVersion": "1.1.10",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.1.10": "use article release date from blisstribute article creation date",
             "1.1.9": "fixing HAP synchronization",
             "1.1.8": "bump version",
             "1.1.7": "another way to determine netifoundation easy coupons",
