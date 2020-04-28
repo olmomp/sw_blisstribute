@@ -54,8 +54,8 @@ class Shopware_Components_Blisstribute_Order_Payment_Payolution
         }
 
         return array(
-            'resToken' => trim($orderAttribute->getPayolutionUniqueId()),
-            'cardAlias' => trim($orderAttribute->getPayolutionPaymentReferenceId()),
+            'token' => trim($orderAttribute->getPayolutionUniqueId()),
+            'tokenReference' => trim($orderAttribute->getPayolutionPaymentReferenceId()),
         );
     }
 }

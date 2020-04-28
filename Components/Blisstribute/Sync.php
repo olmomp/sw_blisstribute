@@ -140,6 +140,8 @@ abstract class Shopware_Components_Blisstribute_Sync
 
         $this->modelManager->remove($taskLock);
         $this->modelManager->flush();
+
+        $this->logMessage('task unlocked::' . $this->taskName, __FUNCTION__);
     }
 
     /**

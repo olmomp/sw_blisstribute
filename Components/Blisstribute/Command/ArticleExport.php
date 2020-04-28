@@ -30,6 +30,7 @@ EOF
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        // The free text field / attribute "identification" contains the unique ID of the article.
         $identification = $input->getArgument('identification');
         $output->writeln('<info>blisstribute article export started for article(s) identified by ' . $identification . '</info>');
 

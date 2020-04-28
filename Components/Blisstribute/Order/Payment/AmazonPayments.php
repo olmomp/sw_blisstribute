@@ -40,8 +40,8 @@ class Shopware_Components_Blisstribute_Order_Payment_AmazonPayments
         }
 
         return array(
-            'resToken' => $resToken,
-            'cardAlias' => trim($this->order->getTransactionId()),
+            'token' => $resToken,
+            'tokenReference' => trim($this->order->getTransactionId()),
         );
     }
 }

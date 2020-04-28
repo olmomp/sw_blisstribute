@@ -370,6 +370,128 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
         }
 
+        if (version_compare($version, '0.16.1', '<')) {
+            $pluginConfig = Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config();
+
+            // Migrate the SOAP Host to REST Host, if it's set.
+            $form            = $this->Form();
+            $soapHostElement = $form->getElement('blisstribute-soap-host');
+            $soapHost        = $pluginConfig->get('blisstribute-soap-host');
+            $restHost        = '';
+
+            if (trim($soapHost) != '') {
+                $restHost = str_replace('soap', 'rest', $soapHost);
+            }
+
+            // Add REST Host.
+            $form->setElement(
+                'text',
+                'blisstribute-rest-host',
+                [
+                    'label'       => 'REST Host',
+                    'description' => 'REST-Hostname für den Verbindungsaufbau zum Blisstribute-System',
+                    'maxLength'   => 255,
+                    'value'       => $restHost
+                ]
+            );
+
+            // Change SOAP Host label to "SOAP Host" for clarity.
+            $soapHostElement->setLabel('SOAP Host');
+        }
+
+        if (version_compare($version, '0.16.3', '<')) {
+            // Migrate the SOAP Host to REST Host, if it's set.
+            // $pluginConfig->get('blisstribute-article-sync-enabled')
+            $form = $this->Form();
+
+            // Add option to disable article sync.
+            $form->setElement(
+                'checkbox',
+                'blisstribute-article-sync-enabled',
+                [
+                    'label' => 'Artikel synchronisieren',
+                    'description' => 'Wenn deaktiviert werden keine Artikel zwischen diesem Shop und Blisstribute synchronisiert.',
+                    'value' => 1,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+
+            // Add option to always send vatRate = 0.
+            $form->setElement(
+                'checkbox',
+                'blisstribute-order-include-vatrate',
+                [
+                    'label' => 'Steuersatz übertragen',
+                    'description' => 'Wenn deaktiviert wird der Steuersatz bei Bestellungen nicht übertragen und im Blisstribute ermittelt.',
+                    'value' => 1,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+
+            $form->setElement(
+                'text',
+                'blisstribute-order-lock-mapping',
+                array(
+                    'label' => 'Bestellsperre Verknüpfung',
+                    'description' => '',
+                    'value' => '',
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                )
+            );
+
+            $form->setElement(
+                'text',
+                'blisstribute-order-hold-mapping',
+                array(
+                    'label' => 'Bestellhalt Verknüpfung',
+                    'description' => '',
+                    'value' => '',
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                )
+            );
+
+            $form->setElement(
+                'text',
+                'blisstribute-article-stock-mapping',
+                array(
+                    'label' => 'Artikelbestand Verknüpfung',
+                    'description' => '',
+                    'value' => ''
+                )
+            );
+
+            $this->get('db')->query(
+                "INSERT INTO s_premium_dispatch_attributes (blisstribute_shipment_code, dispatchID, blisstribute_shipment_is_priority)
+                    SELECT
+                    CASE mapping_class_name
+                        WHEN 'Dhl' THEN 'DHL'
+                        WHEN 'Dhlexpress' THEN 'DHLEXPRESS'
+                        WHEN 'Dpd' THEN 'DPD'
+                        WHEN 'Dpde12' THEN 'DPDE12'
+                        WHEN 'Dpde18' THEN 'DPDE18'
+                        WHEN 'Dpds12' THEN 'DPDS12'
+                        WHEN 'Dtpg' THEN 'DTPG'
+                        WHEN 'Dtpm' THEN 'DTPM'
+                        WHEN 'Fba' THEN 'FBA'
+                        WHEN 'Fedex' THEN 'FEDEX'
+                        WHEN 'Gls' THEN 'GLS'
+                        WHEN 'Gww' THEN 'GWW'
+                        WHEN 'Hermes' THEN 'HERMES'
+                        WHEN 'Lettershipment' THEN 'LSH'
+                        WHEN 'Pat' THEN 'PAT'
+                        WHEN 'Patexpress' THEN 'PATEXPRESS'
+                        WHEN 'Selfcollector' THEN 'SEL'
+                        WHEN 'Sevensenders' THEN '7SENDERS'
+                        WHEN 'Skr' THEN 'SKR'
+                    END AS ext_blisstribute_shipment_code, s_premium_dispatch_id, 0 AS blisstribute_shipment_is_priority
+                    FROM s_plugin_blisstribute_shipment temp
+                ON DUPLICATE KEY UPDATE    
+                    s_premium_dispatch_attributes.blisstribute_shipment_code = values(s_premium_dispatch_attributes.blisstribute_shipment_code), blisstribute_shipment_is_priority=0"
+            );
+
+            $this->get('db')->query("DROP TABLE IF EXISTS s_plugin_blisstribute_shipment");
+        }
+
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
@@ -472,6 +594,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         $crud->update('s_order_basket_attributes', 'blisstribute_swag_promotion_is_free_good', 'string');
         $crud->update('s_order_basket_attributes', 'blisstribute_swag_is_free_good_by_promotion_id', 'string');
 
+        $crud->update('s_premium_dispatch_attributes', 'blisstribute_shipment_code', 'string', [
+            'custom'           => 1,
+            'displayInBackend' => true,
+            'label'            => 'VHS - Shipment Code',
+            'supportText'      => 'Der Shipment Code für diese Bestellung.',
+        ]);
+        $crud->update('s_premium_dispatch_attributes', 'blisstribute_shipment_is_priority', 'boolean', [
+            'custom' => 1,
+            'displayInBackend' => true,
+            'label' => 'VHS - Priorisierter Versand'
+        ]);
+
         $this->get('db')->query(
             "INSERT IGNORE INTO `s_core_engine_elements` (`groupID`, `type`, `label`, `required`, `position`, " .
             "`name`, `variantable`, `translatable`) VALUES  (7, 'text', 'VHS Nummer', 0, 101, " .
@@ -481,7 +615,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         $metaDataCache = Shopware()->Models()->getConfiguration()->getMetadataCacheImpl();
         $metaDataCache->deleteAll();
-        Shopware()->Models()->generateAttributeModels(['s_articles_attributes', 's_categories_attributes', 's_order_details_attributes', 's_order_basket_attributes']);
+        Shopware()->Models()->generateAttributeModels(['s_articles_attributes', 's_categories_attributes', 's_order_details_attributes', 's_order_basket_attributes', 's_premium_dispatch_attributes']);
     }
 
     /**
@@ -545,10 +679,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {
         if(is_null($job)) return;
 
+        $pluginConfig = Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config();
+
+        // If the user disabled article synchronization, stop here.
+        if (!$pluginConfig->get('blisstribute-article-sync-enabled')) {
+            echo date('r') . ' - BLISSTRIBUTE article sync is disabled' . PHP_EOL;
+            return;
+        }
+
         try {
-            $controller = new \Shopware_Components_Blisstribute_Article_Sync(
-                Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config()
-            );
+            $controller = new \Shopware_Components_Blisstribute_Article_Sync($pluginConfig);
 
             $controller->processBatchArticleSync();
         } catch (\Exception $ex) {
@@ -567,7 +707,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if(is_null($job)) return;
 
         try {
-            // check if plugin SwagPromotion is installed
             $plugin = Shopware()->Models()->getRepository('Shopware\Models\Plugin\Plugin')->findOneBy([
                 'name' => 'NetiEasyCoupon',
                 'active' => true
@@ -855,11 +994,11 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeArticleType'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\TaskLock'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeOrder'),
-            $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShipment'),
+//            $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShipment'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributePayment'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems'),
-            $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShop'),
+//            $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeShop'),
             $modelManager->getClassMetadata('Shopware\CustomModels\Blisstribute\BlisstributeCoupon'),
         ];
 
@@ -1010,16 +1149,11 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a",
                 "INSERT IGNORE INTO s_plugin_blisstribute_article_type (created_at, modified_at, s_filter_id, "
                 . "article_type) SELECT CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, id, 4 FROM s_filter",
-                "INSERT IGNORE INTO s_plugin_blisstribute_shipment (mapping_class_name, s_premium_dispatch_id) "
-                . "SELECT NULL, pd.id FROM s_premium_dispatch AS pd",
                 "INSERT IGNORE INTO s_plugin_blisstribute_payment (mapping_class_name, flag_payed, "
                 . "s_core_paymentmeans_id) SELECT NULL, 0, cp.id FROM s_core_paymentmeans AS cp",
-                "INSERT IGNORE INTO s_plugin_blisstribute_shop (s_shop_id, advertising_medium_code) "
-                . "SELECT s.id, '' FROM s_core_shops AS s",
                 "INSERT IGNORE INTO s_plugin_blisstribute_coupon (s_voucher_id, flag_money_voucher) "
                 . "SELECT v.id, 0 FROM s_emarketing_vouchers AS v",
                 "DELETE FROM s_plugin_blisstribute_payment WHERE s_core_paymentmeans_id NOT IN (SELECT id FROM s_core_paymentmeans)",
-                "DELETE FROM s_plugin_blisstribute_shipment WHERE s_premium_dispatch_id NOT IN (SELECT id FROM s_premium_dispatch)",
             ];
 
             foreach ($defaultTableData as $currentDataSet) {
@@ -1087,8 +1221,18 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'text',
             'blisstribute-soap-host',
             [
-                'label' => 'Host',
+                'label' => 'Host', // SOAP
                 'description' => 'SOAP-Hostname für den Verbindungsaufbau zum Blisstribute-System',
+                'maxLength' => 255,
+                'value' => ''
+            ]
+        );
+        $form->setElement(
+            'text',
+            'blisstribute-rest-host',
+            [
+                'label' => 'REST Host',
+                'description' => 'REST-Hostname für den Verbindungsaufbau zum Blisstribute-System',
                 'maxLength' => 255,
                 'value' => ''
             ]
@@ -1392,6 +1536,62 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'description' => 'Order-Attribut (Freitextfeld) für Kunden-Telefonnummer'
             ]
         );
+
+        // Add option to disable article sync.
+        $form->setElement(
+            'checkbox',
+            'blisstribute-article-sync-enabled',
+            [
+                'label' => 'Artikel synchronisieren',
+                'description' => 'Wenn deaktiviert werden keine Artikel zwischen diesem Shop und Blisstribute synchronisiert.',
+                'value' => 1,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+
+        // Add option to always send vatRate = 0.
+        $form->setElement(
+            'checkbox',
+            'blisstribute-order-include-vatrate',
+            [
+                'label' => 'Steuersatz übertragen',
+                'description' => 'Wenn deaktiviert wird der Steuersatz bei Bestellungen nicht übertragen und im Blisstribute ermittelt.',
+                'value' => 1,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+
+        $form->setElement(
+            'text',
+            'blisstribute-order-lock-mapping',
+            array(
+                'label' => 'Bestellsperre Verknüpfung',
+                'description' => '',
+                'value' => '',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+
+        $form->setElement(
+            'text',
+            'blisstribute-order-hold-mapping',
+            array(
+                'label' => 'Bestellhalt Verknüpfung',
+                'description' => '',
+                'value' => '',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            )
+        );
+
+        $form->setElement(
+            'text',
+            'blisstribute-article-stock-mapping',
+            array(
+                'label' => 'Artikelbestand Verknüpfung',
+                'description' => '',
+                'value' => '',
+            )
+        );
     }
 
     /**
@@ -1527,33 +1727,13 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         ]);
 
         $this->createMenuItem([
-            'label' => 'Versandarten',
-            'controller' => 'BlisstributeShipmentMapping',
-            'class' => 'sprite-envelope--arrow settings--delivery-charges',
-            'action' => 'Index',
-            'active' => 1,
-            'position' => 1,
-            'parent' => $mappingItem
-        ]);
-
-        $this->createMenuItem([
             'label' => 'Zahlarten',
             'controller' => 'BlisstributePaymentMapping',
             'class' => 'sprite-credit-cards settings--payment-methods',
             'action' => 'Index',
             'active' => 1,
-            'position' => 2,
+            'position' => 1,
             'parent' => $mappingItem
-        ]);
-
-        $this->createMenuItem([
-            'label' => 'Shops',
-            'controller' => 'BlisstributeShopMapping',
-            'class' => 'sprite-store-share',
-            'action' => 'Index',
-            'active' => 1,
-            'position' => 3,
-            'parent' => $mappingItem,
         ]);
 
         $this->createMenuItem([
@@ -1562,7 +1742,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             'class' => 'sprite-money--pencil',
             'action' => 'Index',
             'active' => 1,
-            'position' => 4,
+            'position' => 2,
             'parent' => $mappingItem,
         ]);
     }
