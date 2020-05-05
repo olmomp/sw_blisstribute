@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . '/../Sync.php';
-require_once __DIR__ . '/SoapClient.php';
 require_once __DIR__ . '/../RestClient.php';
 require_once __DIR__ . '/SyncMapping.php';
 require_once __DIR__ . '/../Exception/ArticleNotChangedException.php';
