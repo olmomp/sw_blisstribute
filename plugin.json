@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.1.11",
+    "currentVersion": "1.1.12",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.1.12": "send purchase price for vendors",
             "1.1.11": "fixing article mapping cron",
             "1.1.10": "use article release date from blisstribute article creation date",
             "1.1.9": "fixing HAP synchronization",

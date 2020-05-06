@@ -352,7 +352,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         return [[
             'supplierCode'         => $supplierCode,
-            'price'                => (float) $this->getMainDetailBasePrice($articleDetail),
+            'price'                => (float) $this->getPurchasePrice($articleDetail),
             'packingUnit'          => 1,
             'orderUnit'            => 1,
             'minOrder'             => 1,
@@ -405,6 +405,19 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
         $this->logDebug('articleSyncMapping::classification4::fieldName ' . $fieldName);
 
         return $this->getClassification($articleDetail, $fieldName);
+    }
+
+    /**
+     * @param Detail $articleDetail
+     * @return float|int
+     */
+    protected function getPurchasePrice(Detail $articleDetail)
+    {
+        if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
+            return $articleDetail->getPurchasePrice();
+        }
+
+        return $articleDetail->getPrices()->first()->getBasePrice();
     }
 
     /**
