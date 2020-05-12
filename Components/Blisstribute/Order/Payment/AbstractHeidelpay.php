@@ -37,8 +37,8 @@ class Shopware_Components_Blisstribute_Order_Payment_AbstractHeidelpay
     protected function getAdditionalPaymentInformation()
     {
         return array(
-            'resToken' => trim($this->order->getTemporaryId()),
-            'cardAlias' => trim($this->order->getTransactionId()),
+            'token' => trim($this->order->getTemporaryId()),
+            'tokenReference' => trim($this->order->getTransactionId()),
         );
     }
 }

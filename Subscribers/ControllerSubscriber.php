@@ -19,7 +19,7 @@ class ControllerSubscriber implements SubscriberInterface
     {
         $this->container = Shopware()->Container();
     }
-    
+
     /**
      * @inheritdoc
      */
@@ -32,22 +32,20 @@ class ControllerSubscriber implements SubscriberInterface
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeOrder' => 'getOrderController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeCore' => 'getCoreController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeOrderSyncCron' => 'getOrderSyncCronController',
-            'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeShipmentMapping' => 'getShipmentMappingController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributePaymentMapping' => 'getPaymentMappingController',
-            'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeShopMapping' => 'getShopMappingController',
             'Enlight_Controller_Dispatcher_ControllerPath_Backend_BlisstributeCouponMapping' => 'getCouponMappingController',
 
             // api controllers
             'Enlight_Controller_Dispatcher_ControllerPath_Api_Btorders' => 'getBtordersApiController',
             'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticles' => 'getBtarticlesApiController',
             'Enlight_Controller_Dispatcher_ControllerPath_Api_Btarticlestock' => 'getBtarticlestockApiController',
-            
+
             // others
             'Enlight_Controller_Action_PostDispatchSecure_Backend_Index' => 'onActionPostDispatchSecureBackendIndex',
             'Enlight_Controller_Action_PostDispatch_Backend_Article' => 'onActionPostDispatchBackendArticle'
         ];
     }
-    
+
     /**
      * register directories
      *
@@ -146,19 +144,6 @@ class ControllerSubscriber implements SubscriberInterface
     }
 
     /**
-     * return shipment mapping controller path
-     *
-     * @param \Enlight_Event_EventArgs $eventArgs
-     *
-     * @return string
-     */
-    public function getShipmentMappingController(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $this->registerDirs();
-        return __DIR__ . '/../Controllers/Backend/BlisstributeShipmentMapping.php';
-    }
-
-    /**
      * return payment mapping controller path
      *
      * @param \Enlight_Event_EventArgs $eventArgs
@@ -178,25 +163,12 @@ class ControllerSubscriber implements SubscriberInterface
      *
      * @return string
      */
-    public function getShopMappingController(\Enlight_Event_EventArgs $eventArgs)
-    {
-        $this->registerDirs();
-        return __DIR__ . '/../Controllers/Backend/BlisstributeShopMapping.php';
-    }
-
-    /**
-     * return payment mapping controller path
-     *
-     * @param \Enlight_Event_EventArgs $eventArgs
-     *
-     * @return string
-     */
     public function getCouponMappingController(\Enlight_Event_EventArgs $eventArgs)
     {
         $this->registerDirs();
         return __DIR__ . '/../Controllers/Backend/BlisstributeCouponMapping.php';
     }
-    
+
     /**
      * @return string
      */
@@ -204,7 +176,7 @@ class ControllerSubscriber implements SubscriberInterface
     {
         return __DIR__ . '/../Controllers/Api/Btorders.php';
     }
-    
+
     /**
      * @return string
      */
@@ -220,7 +192,7 @@ class ControllerSubscriber implements SubscriberInterface
     {
         return __DIR__ . '/../Controllers/Api/Btarticlestock.php';
     }
-    
+
     /**
      * add plugin menu to backend
      */
@@ -242,7 +214,7 @@ class ControllerSubscriber implements SubscriberInterface
             $view->extendsTemplate('backend/index/view/exitb_blisstribute/menu.js');
         }
     }
-    
+
     /**
      * add attribute to article
      *

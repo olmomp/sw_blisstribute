@@ -55,14 +55,21 @@ class Shopware_Controllers_Backend_BlisstributeArticleSyncCron extends Enlight_C
 
         echo date('r') . ' - Processing BLISSTRIBUTE article sync cron' . PHP_EOL;
 
+        $pluginConfig = Shopware()->Plugins()->Backend()->ExitBBlisstribute()->Config();
+
+        // If the user disabled article synchronization, stop here.
+        if (!$pluginConfig->get('blisstribute-article-sync-enabled')) {
+            echo date('r') . ' - BLISSTRIBUTE article sync is disabled' . PHP_EOL;
+            echo date('r') . ' - Done BLISSTRIBUTE article sync cron' . PHP_EOL;
+            return;
+        }
+
         require_once __DIR__ . '/../../Components/Blisstribute/Article/Sync.php';
 
         $test = Shopware()->Plugins()->Backend()->ExitBBlisstribute()->Config();
 
         try {
-            $controller = new Shopware_Components_Blisstribute_Article_Sync(
-                Shopware()->Plugins()->Backend()->ExitBBlisstribute()->Config()
-            );
+            $controller = new Shopware_Components_Blisstribute_Article_Sync($pluginConfig);
 
             $controller->processBatchArticleSync();
         } catch (Exception $ex) {

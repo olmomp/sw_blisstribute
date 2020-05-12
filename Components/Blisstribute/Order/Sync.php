@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . '/../Sync.php';
-require_once __DIR__ . '/SoapClient.php';
 require_once __DIR__ . '/SyncMapping.php';
 require_once __DIR__ . '/../Exception/MappingException.php';
 require_once __DIR__ . '/../Exception/TransferException.php';
@@ -96,7 +95,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
         $result = $this->processOrderSync($blisstributeOrder);
 
         $this->unlockTask();
-        
+
         return $result;
     }
 
@@ -131,7 +130,7 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
                 /** @var Shopware_Components_Blisstribute_Order_GoogleAddressValidator $addressValidator */
                 $addressValidator = Shopware()->Container()->get('blisstribute.google_address_validator');
                 $addressValidatorResponse = $addressValidator->validateAddress($blisstributeOrder, $this->config);
-                    
+
                 if (!$addressValidatorResponse && !$this->config->get('blisstribute-transfer-orders')) {
                     throw new Exception('could not validate the order address.');
                 }
@@ -140,12 +139,31 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
             Shopware()->Events()->notify('Shopware_Components_Blisstribute_Order_Sync::beforeSyncOrder', [
                 'order' => $blisstributeOrder
             ]);
-        
+
             $orderData = $this->initializeModelMapping($blisstributeOrder);
 
-            $soapClient = new Shopware_Components_Blisstribute_Order_SoapClient($this->config);
-            $orderResponse = $soapClient->syncOrder($orderData);
-            if ($orderResponse === true) {
+            $restClient = new Shopware_Components_Blisstribute_RestClient(
+                sprintf(
+                    '%s://%s',
+                    ($this->config->get('blisstribute-soap-protocol') == 1 ? 'http' : 'https'),
+                    $this->config->get('blisstribute-rest-host')
+                )
+            );
+            $restClient->authenticateWithClientUserPassword(
+                $this->config->get('blisstribute-soap-client'),
+                $this->config->get('blisstribute-soap-username'),
+                $this->config->get('blisstribute-soap-password')
+            );
+            $orderResponse = $restClient->createOrder($orderData);
+
+            // Response must be successful.
+            if ($orderResponse->getStatusCode() < 200 || $orderResponse->getStatusCode() >= 300) {
+                throw new Shopware_Components_Blisstribute_Exception_TransferException(
+                    sprintf('Unexpected status code %d', $orderResponse->getStatusCode()));
+            }
+
+            $syncWasSuccessful = ($orderResponse->json()['success'] ?? false);
+            if ($syncWasSuccessful) {
                 $result = true;
                 $this->logMessage('order transferred::' . $blisstributeOrder->getOrder()->getNumber(), __FUNCTION__);
 
@@ -200,10 +218,18 @@ class Shopware_Components_Blisstribute_Order_Sync extends Shopware_Components_Bl
 
         } catch (Exception $ex) {
             $this->logMessage(
-                'general sync error::' . $blisstributeOrder->getOrder()->getNumber() . $ex->getMessage() . $ex->getTraceAsString(),
+                'general sync error::' . $blisstributeOrder->getOrder()->getNumber() . json_last_error_msg() . $ex->getMessage() . $ex->getTraceAsString(),
                 __FUNCTION__,
                 Logger::ERROR
             );
+
+            if (!empty($orderData)) {
+                $this->logMessage(
+                    'payload dump::' . var_export($orderData, true),
+                    __FUNCTION__,
+                    Logger::ERROR
+                );
+            }
 
             $blisstributeOrder->setStatus(BlisstributeOrder::EXPORT_STATUS_VALIDATION_ERROR)
                 ->setErrorComment($ex->getMessage())
