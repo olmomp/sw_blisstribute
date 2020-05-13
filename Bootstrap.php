@@ -808,9 +808,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->logDebug('onRunBlisstributeArticleMappingCron::cleaning obsolete referenced articles done');
 
             $this->logDebug('onRunBlisstributeArticleMappingCron::create new article references');
-            $blisstributeArticleMappingSql = "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
+            $blisstributeArticleMappingSql = "INSERT INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
                 . "s_article_id, trigger_deleted, trigger_sync, tries, comment) SELECT CURRENT_TIMESTAMP, "
-                . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a";
+                . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a "
+                . "WHERE a.id NOT IN (SELECT DISTINCT s_article_id FROM s_plugin_blisstribute_articles)";
             $this->get('db')->query($blisstributeArticleMappingSql);
 
             $this->logDebug('onRunBlisstributeArticleMappingCron::done');
