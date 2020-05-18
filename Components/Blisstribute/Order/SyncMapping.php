@@ -504,17 +504,27 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             throw new Shopware_Components_Blisstribute_Exception_ValidationMappingException('no country given');
         }
 
-        $street      = $ent->getStreet();
-        $houseNumber = '';
+        $street = $ent->getStreet();
+        $houseNumber = $addition1 = $addition2 = '';
         try {
             if (!$this->getConfig()['blisstribute-disable-address-splitting']) {
                 $match       = AddressSplitter::splitAddress($street);
                 $street      = $match['streetName'];
                 $houseNumber = $match['houseNumber'];
+                $addition1 = $match['additionToAddress1'];
+                $addition2 = $match['additionToAddress2'];
             }
         } catch (Exception $e) {}
 
         $addressAddition = [];
+        if (trim($addition1) != '') {
+            $addressAddition[] = $addition1;
+        }
+
+        if (trim($addition2) != '') {
+            $addressAddition[] = $addition2;
+        }
+
         if (trim($ent->getAdditionalAddressLine1()) !== '') {
             $addressAddition[] = trim($ent->getAdditionalAddressLine1());
         }
@@ -522,7 +532,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $addressAddition[] = trim($ent->getAdditionalAddressLine2());
         }
 
-        $addrData = [
+        return [
             'salutation'      => $salutation,
             'title'           => '',
             'firstName'       => $this->processAddressDataMatching($ent->getFirstName()),
@@ -536,8 +546,6 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'city'            => $this->processAddressDataMatching($ent->getCity()),
             'countryCode'     => $country->getIso(),
         ];
-
-        return $addrData;
     }
 
     private function processAddressDataMatching($addressString)
