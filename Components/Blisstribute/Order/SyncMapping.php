@@ -173,6 +173,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $this->logDebug('orderSyncMapping::buildBaseData::done');
         $this->logDebug('orderSyncMapping::buildBaseData::result:' . json_encode($this->orderData));
 
+
+
         return $this->orderData;
     }
 
@@ -1156,12 +1158,19 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $easyCoupons = $this->getEasyCouponsByOrderId($this->getModelEntity()->getOrder()->getId());
         foreach ($easyCoupons as $easyCoupon) {
             $this->logDebug('orderSyncMapping::determineVoucherDiscount::processing money voucher: ' . json_encode($easyCoupon));
+            $sql = 'SELECT `title`, `voucherCodeID`, `orderId` from `s_neti_easycoupon_details` where `id` = ?';
+            $result = Shopware()->Db()->fetchRow($sql, [(int)$easyCoupon['couponId']]);
+
+            $voucherCodeId = (int)$result['voucherCodeID'];
+            $voucherName = trim($result['title']);
+            $discountUsed = round($easyCoupon['cashValue'], 2);
+
             $sql = '
                 SELECT `voucherId`, `code`
                 FROM `s_emarketing_voucher_codes`
                 WHERE `id` = ?
             ';
-            $result = Shopware()->Db()->fetchRow($sql, [(int)$easyCoupon['couponId']]);
+            $result = Shopware()->Db()->fetchRow($sql, [$voucherCodeId]);
             $voucherId = (int)$result['voucherId'];
             $code = trim($result['code']);
 
@@ -1169,7 +1178,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             if ($couponMapping != null && $couponMapping->getIsMoneyVoucher()) {
                 $moneyVoucher = [
                     'code' => $code,
-                    'discount' => abs(round($couponMapping->getVoucher()->getValue(), 4)),
+                    'discount' => $discountUsed,
                     'discountPercentage' => 0,
                     'isMoneyVoucher' => true,
                 ];
@@ -1191,8 +1200,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             FROM `s_neti_easycoupon_cashed`
             WHERE `orderID` = ?
         ';
-        $result = Shopware()->Db()->fetchAll($sql, [$orderId]);
-        return $result;
+
+        return Shopware()->Db()->fetchAll($sql, [$orderId]);
     }
 
     /**
