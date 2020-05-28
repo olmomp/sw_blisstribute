@@ -6,6 +6,7 @@ use Doctrine\ORM\Query\Expr\Join;
 use Shopware\Components\Api\Exception as ApiException;
 use Shopware\CustomModels\Blisstribute\BlisstributeShippingRequest;
 use Shopware\CustomModels\Blisstribute\BlisstributeShippingRequestItems;
+use Shopware\Models\Order\Status;
 
 /**
  * blisstribute custom api order extension resource
@@ -41,30 +42,54 @@ class Btorder extends Resource
      * @throws \Shopware\Components\Api\Exception\NotFoundException
      * @throws \Shopware\Components\Api\Exception\ParameterMissingException
      */
-    public function getStateIdFromVhsId($params)
+    public function getShopwareOrderStatusFromVhsStatus($params)
     {
         $id = (int)$params["orderStatusId"];
 
         if (in_array($id,array(10,15))) {
-            $state = 0;
+            $state = Status::ORDER_STATE_OPEN;
         } elseif (in_array($id, array(20, 21))) {
-            $state = 1;
+            $state = Status::ORDER_STATE_IN_PROCESS;
         } elseif (in_array($id, array(25, 26, 30, 31))) {
-            $state = 5;
+            $state = Status::ORDER_STATE_READY_FOR_DELIVERY;
         } elseif (in_array($id, array(35))) {
-            $state = 3;
+            $state = Status::ORDER_STATE_PARTIALLY_COMPLETED;
         } elseif (in_array($id, array(40))) {
-            $state = 2;
+            $state = Status::ORDER_STATE_COMPLETED;
         } elseif (in_array($id, array(50))) {
-            $state = 4;
+            $state = Status::ORDER_STATE_CANCELLED;
         } elseif (in_array($id,array(60,61,62))) {
-            $state = 4;
+            $state = Status::ORDER_STATE_CANCELLED_REJECTED;
         } else {
-            $state = 8;
+            $state = Status::ORDER_STATE_CLARIFICATION_REQUIRED;
         }
 
         $params["orderStatusId"] = $state;
 
+        return $params;
+    }
+
+    /**
+     * @param $params array
+     *
+     * @return array
+     *
+     * @throws \Shopware\Components\Api\Exception\NotFoundException
+     * @throws \Shopware\Components\Api\Exception\ParameterMissingException
+     */
+    public function getShopwarePaymentStatusFromVhsStatus($params)
+    {
+        if ($params['completelyPayed']) {
+            $params['paymentStatusId'] = Status::PAYMENT_STATE_COMPLETELY_PAID;
+            return $params;
+        }
+
+        if ($params['partiallyPayed']) {
+            $params['paymentStatusId'] = Status::PAYMENT_STATE_PARTIALLY_PAID;
+            return $params;
+        }
+
+        $params['paymentStatusId'] = Status::PAYMENT_STATE_OPEN;
         return $params;
     }
 
@@ -86,7 +111,8 @@ class Btorder extends Resource
             throw new ApiException\ParameterMissingException();
         }
 
-        $params = $this->getStateIdFromVhsId($params);
+        $params = $this->getShopwareOrderStatusFromVhsStatus($params);
+        $params = $this->getShopwarePaymentStatusFromVhsStatus($params);
 
         /** @var $order \Shopware\Models\Order\Order */
         $filters = array(array('property' => 'orders.number','expression' => '=','value' => $orderNumber));
@@ -99,34 +125,22 @@ class Btorder extends Resource
 
         $this->prepareOrderDetails($params, $orderNumber);
 
-//        $shippingRequest = new BlisstributeShippingRequest();
-//        $shippingRequest->setNumber('test')
-//            ->setCarrierCode('DHL')
-//            ->setTrackingCode('');
-//
-//        foreach (array() as $test) {
-//            $shippingRequestItem = new BlisstributeShippingRequestItems();
-//            $shippingRequestItem->setOrderDetail($detail)
-//                ->setQuantityReturned(0);
-//
-//            $shippingRequest->addShippingRequestItem($shippingRequestItem);
-//        }
-//
-//        $this->getManager()->persist($shippingRequest);
-
-        $statusId = (int)$params['orderStatusId'];
-        $status = Shopware()->Models()->getRepository('Shopware\Models\Order\Status')->findOneBy(
-            array(
-                'id' => $statusId,
-                'group' => 'state'
-            )
-        );
-
-        if (empty($status)) {
-            throw new ApiException\NotFoundException("OrderStatus by id " . $statusId . " not found");
+        $orderStatusId = (int)$params['orderStatusId'];
+        /** @var Status $orderStatus */
+        $orderStatus = Shopware()->Models()->getRepository('Shopware\Models\Order\Status')->findOneBy(array('id' => $orderStatusId, 'group' => 'state'));
+        if (empty($orderStatus)) {
+            throw new ApiException\NotFoundException('OrderStatus by id ' . $orderStatusId . ' not found');
         }
+        $order->setOrderStatus($orderStatus);
 
-        $order->setOrderStatus($status);
+        $paymentStatusId = (int)$params['paymentStatusId'];
+        /** @var Status $paymentStatus */
+        $paymentStatus = Shopware()->Models()->getRepository('Shopware\Models\Order\Status')->findOneBy(array('id' => $paymentStatusId, 'group' => 'payment'));
+        if (empty($paymentStatus)) {
+            throw new ApiException\NotFoundException('PaymentStatus by id ' . $paymentStatusId . ' not found');
+        }
+        $order->setPaymentStatus($paymentStatus);
+
         $order->setTrackingCode(trim($params['trackingCode']));
 
         $violations = $this->getManager()->validate($order);
