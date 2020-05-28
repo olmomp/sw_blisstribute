@@ -44,52 +44,38 @@ class Btorder extends Resource
      */
     public function getShopwareOrderStatusFromVhsStatus($params)
     {
-        $id = (int)$params["orderStatusId"];
-
-        if (in_array($id,array(10,15))) {
-            $state = Status::ORDER_STATE_OPEN;
-        } elseif (in_array($id, array(20, 21))) {
-            $state = Status::ORDER_STATE_IN_PROCESS;
-        } elseif (in_array($id, array(25, 26, 30, 31))) {
-            $state = Status::ORDER_STATE_READY_FOR_DELIVERY;
-        } elseif (in_array($id, array(35))) {
-            $state = Status::ORDER_STATE_PARTIALLY_COMPLETED;
-        } elseif (in_array($id, array(40))) {
-            $state = Status::ORDER_STATE_COMPLETED;
-        } elseif (in_array($id, array(50))) {
-            $state = Status::ORDER_STATE_CANCELLED;
-        } elseif (in_array($id,array(60,61,62))) {
-            $state = Status::ORDER_STATE_CANCELLED_REJECTED;
-        } else {
-            $state = Status::ORDER_STATE_CLARIFICATION_REQUIRED;
-        }
-
-        $params["orderStatusId"] = $state;
-
-        return $params;
-    }
-
-    /**
-     * @param $params array
-     *
-     * @return array
-     *
-     * @throws \Shopware\Components\Api\Exception\NotFoundException
-     * @throws \Shopware\Components\Api\Exception\ParameterMissingException
-     */
-    public function getShopwarePaymentStatusFromVhsStatus($params)
-    {
-        if ($params['completelyPayed']) {
-            $params['paymentStatusId'] = Status::PAYMENT_STATE_COMPLETELY_PAID;
-            return $params;
-        }
-
+        $params['paymentStatusId'] = Status::PAYMENT_STATE_OPEN;
         if ($params['partiallyPayed']) {
             $params['paymentStatusId'] = Status::PAYMENT_STATE_PARTIALLY_PAID;
-            return $params;
         }
 
-        $params['paymentStatusId'] = Status::PAYMENT_STATE_OPEN;
+        if ($params['completelyPayed']) {
+            $params['paymentStatusId'] = Status::PAYMENT_STATE_COMPLETELY_PAID;
+        }
+
+        $vhsOrderStatusId = (int)$params["orderStatusId"];
+        if (in_array($vhsOrderStatusId,array(10,15))) {
+            $swOrderStatusId = Status::ORDER_STATE_OPEN;
+        } elseif (in_array($vhsOrderStatusId, array(20, 21))) {
+            $swOrderStatusId = Status::ORDER_STATE_IN_PROCESS;
+        } elseif (in_array($vhsOrderStatusId, array(25, 26, 30, 31))) {
+            $swOrderStatusId = Status::ORDER_STATE_READY_FOR_DELIVERY;
+        } elseif (in_array($vhsOrderStatusId, array(35))) {
+            $swOrderStatusId = Status::ORDER_STATE_PARTIALLY_COMPLETED;
+        } elseif (in_array($vhsOrderStatusId, array(40))) {
+            $swOrderStatusId = Status::ORDER_STATE_COMPLETED;
+        } elseif (in_array($vhsOrderStatusId, array(50))) {
+            $swOrderStatusId = Status::ORDER_STATE_CANCELLED;
+            $params['paymentStatusId'] = Status::PAYMENT_STATE_RE_CREDITING;
+        } elseif (in_array($vhsOrderStatusId,array(60,61,62))) {
+            $swOrderStatusId = Status::ORDER_STATE_CANCELLED_REJECTED;
+            $params['paymentStatusId'] = Status::PAYMENT_STATE_RE_CREDITING;
+        } else {
+            $swOrderStatusId = Status::ORDER_STATE_CLARIFICATION_REQUIRED;
+        }
+
+        $params["orderStatusId"] = $swOrderStatusId;
+
         return $params;
     }
 
@@ -112,7 +98,6 @@ class Btorder extends Resource
         }
 
         $params = $this->getShopwareOrderStatusFromVhsStatus($params);
-        $params = $this->getShopwarePaymentStatusFromVhsStatus($params);
 
         /** @var $order \Shopware\Models\Order\Order */
         $filters = array(array('property' => 'orders.number','expression' => '=','value' => $orderNumber));
