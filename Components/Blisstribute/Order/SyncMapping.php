@@ -161,7 +161,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $deviationWatermark  = round($this->getConfig()['blisstribute-discount-difference-watermark'], 2);
 
         if (abs($orderTotalDeviation) > abs($deviationWatermark)) {
-            $this->logDebug(sprintf('orderSyncMapping::buildBaseData::amount differs %s to %s', $originalTotal, $newOrderTotal));
+            $this->logWarn(sprintf('orderSyncMapping::buildBaseData::amount differs %s to %s', $originalTotal, $newOrderTotal));
+            $this->logWarn(json_encode($this->orderData));
             $this->orderData['customerRemark'] .= 'RABATT PRÜFEN! (ORIG ' . $originalTotal .')';
         }
 
@@ -196,12 +197,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         foreach ($this->orderData['vouchers'] as $currentVoucher) {
-            if ($currentVoucher['isMoneyVoucher']) {
-                $orderTotal -= round(min($currentVoucher['discount'], $orderTotal), 4);
+            if (!$currentVoucher['isMoneyVoucher']) {
                 continue;
             }
 
-            $orderTotal -= round($currentVoucher['discount'], 4);
+            $orderTotal -= round(min($currentVoucher['discount'], $orderTotal), 4);
         }
 
         return $orderTotal;

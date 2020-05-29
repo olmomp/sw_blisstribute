@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.2.0",
+    "currentVersion": "1.2.1",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.2.1": "fix in discount check",
             "1.2.0": "evaluate order payment status from blisstribute order status update",
             "1.1.15": "save split address chunks to address addition",
             "1.1.13": "fixing article mapping cron",
