@@ -492,6 +492,31 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->get('db')->query("DROP TABLE IF EXISTS s_plugin_blisstribute_shipment");
         }
 
+        if (version_compare($version, '1.2.2', '<')) {
+            $form = $this->Form();
+            $form->setElement(
+                'text',
+                'blisstribute-b2b-blacklist-pattern',
+                [
+                    'label' => 'Blacklist für Firmennamen (B2B Ermittlung, Kommasepatiert)',
+                    'description' => 'Wird dieser Wert als Firmenname angegeben, wird dies nicht als B2B Bestellung gewertet. Es handelt sich NICHT um einen regulärgen Ausdruck.',
+                    'maxLength' => 255,
+                    'value' => 'x,*,/,-',
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+            $form->setElement(
+                'checkbox',
+                'blisstribute-b2b-force',
+                [
+                    'label' => 'B2B Shop',
+                    'description' => 'Wenn aktiviert, werden alle Bestellung aus dem aktuellen Shop als B2B übertragen.',
+                    'value' => 0,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
+
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
@@ -1592,6 +1617,29 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'description' => '',
                 'value' => '',
             )
+        );
+
+        $form->setElement(
+            'text',
+            'blisstribute-b2b-blacklist-pattern',
+            [
+                'label' => 'Blacklist für Firmennamen (B2B Ermittlung, Kommasepatiert)',
+                'description' => 'Wird dieser Wert als Firmenname angegeben, wird dies nicht als B2B Bestellung gewertet. Es handelt sich NICHT um einen regulärgen Ausdruck.',
+                'maxLength' => 255,
+                'value' => 'x,*,/,-',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+
+        $form->setElement(
+            'checkbox',
+            'blisstribute-b2b-force',
+            [
+                'label' => 'B2B Shop',
+                'description' => 'Wenn aktiviert, werden alle Bestellung aus dem aktuellen Shop als B2B übertragen.',
+                'value' => 0,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
         );
     }
 

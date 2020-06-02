@@ -272,7 +272,9 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         $company = trim($billingAddress->getCompany());
-        $isB2B   = !in_array($company, ['', 'x', '*', '/', '-']);
+        $isB2B   = $this->getConfig()['blisstribute-b2b-force'] || (
+            $company != '' && !in_array($company, explode(',', $this->getConfig()['blisstribute-b2b-blacklist-pattern']))
+        );
 
         if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
             $customerBirthday = $customer->getBirthday();
