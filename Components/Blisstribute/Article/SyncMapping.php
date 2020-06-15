@@ -132,9 +132,13 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     private function getReleaseDate(Detail $articleDetail)
     {
-        $releaseDate = $articleDetail->getReleaseDate() ?? false;
+        $releaseDate = $this->getModelEntity()->getCreatedAt() ?? false;
         if (!$releaseDate) {
-            return $this->getModelEntity()->getCreatedAt()->format('Y-m-d');
+            $releaseDate = $articleDetail->getReleaseDate() ?? false;
+        }
+
+        if (!$releaseDate) {
+            $releaseDate = new DateTime();
         }
 
         return $releaseDate->format('Y-m-d');
