@@ -44,6 +44,8 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameAmazonPayments: '{s name=blisstribute/paymentAmazonPayments}Amazon Payments{/s}',
         classNameBillsafe: '{s name=blisstribute/paymentBillsafe}Billsafe{/s}',
         classNameAfterPay: '{s name=blisstribute/paymentAfterPay}AfterPay{/s}',
+        classNameMollie: '{s name=blisstribute/paymentMollie}Mollie{/s}',
+        classNameRatePay: '{s name=blisstribute/paymentRatePay}RatePay{/s}',
     },
 
     configure: function() {
@@ -172,6 +174,12 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
 
                             case 'AfterPay':
                                 return me.snippets.classNameAfterPay;
+
+                            case 'Mollie':
+                                return me.snippets.classNameMollie;
+
+                            case 'RatePay':
+                                return me.snippets.classNameRatePay;
 
                             default:
                                 return me.snippets.classNameNone;
