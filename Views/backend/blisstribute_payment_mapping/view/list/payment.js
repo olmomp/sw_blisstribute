@@ -218,7 +218,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['PayOneELV', me.snippets.classNamePayOneELV],
                                 ['AmazonPayments', me.snippets.classNameAmazonPayments],
                                 ['Billsafe', me.snippets.classNameBillsafe],
-                                ['AfterPay', me.snippets.classNameAfterPay]
+                                ['AfterPay', me.snippets.classNameAfterPay],
+                                ['Mollie', me.snippets.classNameMollie],
+                                ['RatePay', me.snippets.classNameRatePay]
                             ]
                         }),
                         allowBlank: false,
