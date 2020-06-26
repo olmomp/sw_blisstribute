@@ -8,11 +8,15 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.2.6",
+    "currentVersion": "1.3.0",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.3.0": "adding option to transfer scale prices to blisstribute",
+            "1.3.0": "adding option to transfer shop prices without advertising medium code",
+            "1.3.0": "adding option to transfer shop prices as net",
+            "1.3.0": "adding option to disable single sub-shop price transfer",
             "1.2.6": "mollie transaction id validation",
             "1.2.5": "adding mollie and ratepay payment provider",
             "1.2.4": "version bump",

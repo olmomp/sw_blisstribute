@@ -7,6 +7,7 @@ use Shopware\Models\Article\Article;
 use Shopware\Models\Article\Price;
 use Shopware\Models\Category\Category;
 use Shopware\CustomModels\Blisstribute\BlisstributeArticle;
+use Shopware\Models\Shop\Repository as ShopRepository;
 
 /**
  * mapping service to sync article information to blisstribute
@@ -282,61 +283,87 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
      */
     private function getPrices(Detail $articleDetail)
     {
-        $shops = [['currency' => 'EUR', 'currencyFactor' => 1, 'customerGroup' => 'EK']];
+        /** @var ShopRepository $shopRepository */
+        $shopRepository = $this->container->get('models')->getRepository('Shopware\Models\Shop\Shop');
+        $defaultShop = $shopRepository->getDefault();
+
+        $shops = [[
+            'id' => $defaultShop->getId(),
+            'currency' => $defaultShop->getCurrency()->getCurrency(),
+            'currencyFactor' => $defaultShop->getCurrency()->getFactor(),
+            'customerGroup' => $defaultShop->getCustomerGroup()->getKey()
+        ]];
+
+        $this->logDebug('syncMapping::getPrices::got default shop:' . json_encode($shops));
 
         if ($this->getConfig()['blisstribute-transfer-shop-article-prices']) {
             $shops = array_merge(
                 $shops,
                 Shopware()->Db()->fetchAll('
-                    SELECT spbs.advertising_medium_code AS advertisingMediumCode, scc.currency, scc.factor AS currencyFactor, sccg.groupkey AS customerGroup
+                    SELECT 
+                        scs.id,
+                        scc.currency, 
+                        scc.factor AS currencyFactor, 
+                        sccg.groupkey AS customerGroup
                     FROM s_core_shops scs
                     LEFT JOIN s_core_currencies scc ON scs.currency_id = scc.id
                     LEFT JOIN s_core_customergroups sccg ON scs.customer_group_id = sccg.id
-                    LEFT JOIN s_plugin_blisstribute_shop spbs ON scs.id = spbs.s_shop_id
                     WHERE scs.active = 1
                 '));
+
+            $this->logDebug('syncMapping::getPrices::got shops with price transfer:' . json_encode($shops));
         }
 
         $prices = [];
-
         foreach($shops as $shop) {
-            $price = null;
+            $shopModel = $shopRepository->getById($shop['id']);
+            $shopConfig = $this->container->get('shopware.plugin.config_reader')->getByPluginName('ExitBBlisstribute', $shopModel);
+            if ($shopConfig['blisstribute-exclude-price-transfer']) {
+                $this->logDebug('syncMapping::getPrices::skipping price transfer due to config for shop:' . json_encode($shop));
+                continue;
+            }
+
+            $advertisingMediumCode = $shopConfig['blisstribute-default-advertising-medium'];
+            if ($shopConfig['blisstribute-exclude-advertising-medium-from-shop-price']) {
+                $advertisingMediumCode = '';
+            }
+
+            $transferPriceNet = (bool)$shopConfig['blisstribute-transfer-shop-price-net'];
 
             /** @var Price[] $priceCollection */
             $priceCollection = $articleDetail->getPrices()->toArray();
             foreach ($priceCollection as $currentPrice) {
-                if ($currentPrice->getFrom() != '1' || $currentPrice->getCustomerGroup()->getKey() != $shop['customerGroup']) {
+                if ($currentPrice->getCustomerGroup()->getKey() != $shop['customerGroup']) {
                     continue;
                 }
 
-                $price = $currentPrice;
-                break;
-            }
+                if (!$shopConfig['blisstribute-transfer-scale-prices'] && $currentPrice->getFrom() > 1) {
+                    continue;
+                }
 
-            if ($price == null) {
-                continue;
-            }
+                $tax = $articleDetail->getArticle()->getTax()->getTax();
+                if ($currentPrice->getPseudoPrice() > 0) {
+                    $prices[] = $this->formatPricesFromNetToGross(
+                        $currentPrice->getPseudoPrice() * $shop['currencyFactor'],
+                        $tax,
+                        $shop['currency'],
+                        $advertisingMediumCode,
+                        true,
+                        $currentPrice->getFrom(),
+                        $transferPriceNet // depends on customer group?
+                    );
+                }
 
-            $tax = $articleDetail->getArticle()->getTax()->getTax();
-
-            // If a recommended retail price is given, append it to the list of prices separately.
-            if ($price->getPseudoPrice() > 0) {
                 $prices[] = $this->formatPricesFromNetToGross(
-                    $shop['advertisingMediumCode'],
-                    $price->getPseudoPrice() * $shop['currencyFactor'],
+                    $currentPrice->getPrice() * $shop['currencyFactor'],
                     $tax,
                     $shop['currency'],
-                    true
+                    $advertisingMediumCode,
+                    false,
+                    $currentPrice->getFrom(),
+                    $transferPriceNet // depends on customer group?
                 );
             }
-
-            $prices[] = $this->formatPricesFromNetToGross(
-                $shop['advertisingMediumCode'],
-                $price->getPrice() * $shop['currencyFactor'],
-                $tax,
-                $shop['currency'],
-                false
-            );
         }
 
         return $prices;
@@ -621,30 +648,39 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
     /**
      * Internal helper function to convert net prices to gross prices.
      *
-     * @param string $advertisingMediumCode
      * @param float $netPrice
      * @param float $tax
      * @param string $currency
+     * @param string $advertisingMediumCode
      * @param bool $isRecommendedRetailPrice
+     * @param int $scalePriceQuantity
+     * @param bool $transferPriceNet
      *
      * @return array
      */
-    protected function formatPricesFromNetToGross($advertisingMediumCode, $netPrice, $tax, $currency, $isRecommendedRetailPrice = false)
-    {
-        return array_filter(
-            [
-                'countryCode'              => 'DE',
-                'currency'                 => $currency,
-                'price'                    => round($netPrice / 100 * (100 + $tax), 6),
-                'advertisingMediumCode'    => $advertisingMediumCode,
-                'isNet'                    => false,
-                'isRecommendedRetailPrice' => $isRecommendedRetailPrice,
-            ],
+    protected function formatPricesFromNetToGross(
+        $netPrice, $tax, $currency, $advertisingMediumCode = '', $isRecommendedRetailPrice = false, $scalePriceQuantity = 1, $transferPriceNet = false
+    ) {
+        $price = $netPrice;
+        if (!$transferPriceNet) {
+            $price = round($netPrice / 100 * (100 + $tax), 4);
+        }
 
-            function ($v) {
-                return $v != null;
-            }
-        );
+        $price = [
+            'countryCode' => 'DE',
+            'currency' => $currency,
+            'price' => $price,
+            'isNet' => $transferPriceNet,
+            'isRecommendedRetailPrice' => $isRecommendedRetailPrice,
+            'scaleQuantity' => (int)$scalePriceQuantity,
+            'isScalePrice' => (int)$scalePriceQuantity > 1
+        ];
+
+        if (trim($advertisingMediumCode) !== '') {
+            $price['advertisingMediumCode'] = $advertisingMediumCode;
+        }
+
+        return $price;
     }
 
     /**
