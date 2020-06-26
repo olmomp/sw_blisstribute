@@ -8,13 +8,14 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.2.5",
+    "currentVersion": "1.2.6",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.2.6": "mollie transaction id validation",
             "1.2.5": "adding mollie and ratepay payment provider",
-            "1.2.4": "adding mollie and ratepay payment provider",
+            "1.2.4": "version bump",
             "1.2.3": "article release date mapping fix",
             "1.2.2": "B2B evaluation blacklist pattern added",
             "1.2.1": "fix in discount check",
