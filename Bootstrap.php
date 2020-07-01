@@ -505,7 +505,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
         }
 
-        if (version_compare($version, '1.2.6', '<')) {
+        if (version_compare($version, '1.3.0', '<')) {
             $form->setElement(
                 'checkbox',
                 'blisstribute-exclude-price-transfer',
