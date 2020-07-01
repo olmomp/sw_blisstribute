@@ -673,7 +673,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'isNet' => $transferPriceNet,
             'isRecommendedRetailPrice' => $isRecommendedRetailPrice,
             'scaleQuantity' => (int)$scalePriceQuantity,
-            'isScalePrice' => (int)$scalePriceQuantity > 1
+            'isScalePrice' => (bool)$scalePriceQuantity > 1
         ];
 
         if (trim($advertisingMediumCode) !== '') {
