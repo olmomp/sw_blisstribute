@@ -666,6 +666,11 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             $price = round($netPrice / 100 * (100 + $tax), 4);
         }
 
+        $isScalePrice = false;
+        if ($scalePriceQuantity > 1) {
+            $isScalePrice = true;
+        }
+
         $price = [
             'countryCode' => 'DE',
             'currency' => $currency,
@@ -673,7 +678,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
             'isNet' => $transferPriceNet,
             'isRecommendedRetailPrice' => $isRecommendedRetailPrice,
             'scaleQuantity' => (int)$scalePriceQuantity,
-            'isScalePrice' => (bool)$scalePriceQuantity > 1
+            'isScalePrice' => $isScalePrice
         ];
 
         if (trim($advertisingMediumCode) !== '') {
