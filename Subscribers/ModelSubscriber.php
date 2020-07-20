@@ -156,6 +156,7 @@ class ModelSubscriber implements SubscriberInterface
 
         $blisstributeArticle->setLastCronAt(new \DateTime())
             ->setTriggerSync(true)
+            ->setSyncHash('')
             ->setTries(0)
             ->setComment(null);
 

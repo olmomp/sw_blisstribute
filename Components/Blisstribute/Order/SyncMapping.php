@@ -184,15 +184,15 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     private function getOrderTotal()
     {
-        $orderTotal  = round($this->orderData['payment']['total'], 4);
-        $orderTotal += round($this->orderData['shipment']['total'], 4);
+        $orderTotal  = round($this->orderData['payment']['total'], 2);
+        $orderTotal += round($this->orderData['shipment']['total'], 2);
 
         foreach ($this->orderData['items'] as $currentItem) {
             if ($this->orderData['isB2B'] && $this->getConfig()['blisstribute-transfer-b2b-net']) {
                 // Convert to price after VAT.
-                $orderTotal += round((($currentItem['priceNet'] / 100) * (100 + $currentItem['vatRate'])) * $currentItem['quantity'], 4);
+                $orderTotal += round((($currentItem['priceNet'] / 100) * (100 + $currentItem['vatRate'])) * $currentItem['quantity'], 2);
             } else {
-                $orderTotal += round($currentItem['price'] * $currentItem['quantity'], 4);
+                $orderTotal += round($currentItem['price'] * $currentItem['quantity'], 2);
             }
         }
 
@@ -201,7 +201,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 continue;
             }
 
-            $orderTotal -= round(min($currentVoucher['discount'], $orderTotal), 4);
+            $orderTotal -= round(min($currentVoucher['discount'], $orderTotal), 2);
         }
 
         return $orderTotal;
@@ -631,8 +631,8 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                 'ean13'            => $this->getArticleDetail($orderDetail)->getEan(),
                 'articleTitle'     => $orderDetail->getArticleName(),
                 'quantity'         => $quantity,
-                'price'            => round($price, 4), // single article price
-                'priceNet'         => round($priceNet, 4), // single article price
+                'price'            => round($price, 2), // single article price
+                'priceNet'         => round($priceNet, 2), // single article price
                 'discount'         => 0,
                 'discountNet'      => 0,
                 'vatRate'          => $this->getModelEntity()->getOrder()->getTaxFree() ? 0.0 : round($orderDetail->getTaxRate(), 2),
@@ -645,7 +645,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
                     'supplierId'      => $article->getSupplier()->getId(),
                     'articleNumber'   => $orderDetail->getArticleNumber(),
                     'originalPrice'   => $price,
-                    'originalPriceAmount' => round(($price * $quantity), 4),
+                    'originalPriceAmount' => round(($price * $quantity), 2),
                 ],
             ];
 
