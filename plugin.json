@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.3.3",
+    "currentVersion": "1.3.4",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.3.4": "add flag to force b2b",
             "1.3.3": "apply rounding decimal 2 to order sync",
             "1.3.2": "fix in scale price flag evaluation",
             "1.3.1": "deduplication blisstribute article in postPersist event",

@@ -272,9 +272,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         $company = trim($billingAddress->getCompany());
-        $isB2B   = $this->getConfig()['blisstribute-b2b-force'] || (
-            $company != '' && !in_array($company, explode(',', $this->getConfig()['blisstribute-b2b-blacklist-pattern']))
-        );
+        if ($this->getConfig()['blisstribute-b2c-force']) {
+            $isB2B = false;
+        } elseif ($this->getConfig()['blisstribute-b2b-force']) {
+            $isB2B = true;
+        } else {
+            $isB2B = $company != '' && !in_array($company, explode(',', $this->getConfig()['blisstribute-b2b-blacklist-pattern']));
+        }
 
         if (version_compare(Shopware()->Config()->version, '5.2.0', '>=')) {
             $customerBirthday = $customer->getBirthday();
@@ -584,7 +588,13 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         $basketItems = $swOrder->getDetails();
 
         $company = trim($swOrder->getBilling()->getCompany());
-        $isB2B   = !in_array($company, ['', 'x', '*', '/', '-']);
+        if ($this->getConfig()['blisstribute-b2c-force']) {
+            $isB2B = false;
+        } elseif ($this->getConfig()['blisstribute-b2b-force']) {
+            $isB2B = true;
+        } else {
+            $isB2B = $company != '' && !in_array($company, explode(',', $this->getConfig()['blisstribute-b2b-blacklist-pattern']));
+        }
 
         $promotions = [];
         $shopwareDiscountsAmount = 0;
