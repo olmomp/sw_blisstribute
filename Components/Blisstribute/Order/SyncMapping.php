@@ -304,6 +304,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         $isPriority = $order->getDispatch()->getAttribute()->getBlisstributeShipmentIsPriority();
 
+        $shippingTotal = $order->getInvoiceShipping();
+        if ($this->isEasyCouponPluginAvailable()) {
+            $shippingTotal += round($order->getAttribute()->getNetiEasyCouponShippingCostReduction(), 2);
+        }
+
         return [
             'number'         => $order->getNumber(),
             'date'           => $order->getOrderTime()->format('Y-m-d H:i:s'),
@@ -325,7 +330,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
             'shipment' => [
                 'code'                 => $this->determineShippingType($order),
-                'total'                => $order->getInvoiceShipping(),
+                'total'                => round($shippingTotal, 2),
                 'totalIsNet'           => false,
                 'allowPartialDelivery' => true,
             ],
