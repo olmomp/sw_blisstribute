@@ -262,7 +262,7 @@ class Shopware_Components_Blisstribute_Article_SyncMapping extends Shopware_Comp
 
         if ($vatPercentage > 10 || preg_match('/HIGH/i', $tax->getName())) {
             $vatType = 'H';
-        } elseif ($vatPercentage > 5 || preg_match('/LOW/i', $tax->getName())) {
+        } elseif ($vatPercentage >= 5 || preg_match('/LOW/i', $tax->getName())) {
             $vatType = 'L';
         }  else {
             $vatType = 'Z';

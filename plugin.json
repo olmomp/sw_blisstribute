@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.3.6",
+    "currentVersion": "1.3.7",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.3.7": "fixing vat type evaluation",
             "1.3.6": "fixing ratepay integration",
             "1.3.5": "add neti easy coupon shipping cost reduction to shipment cost",
             "1.3.4": "add flag to force b2b",
