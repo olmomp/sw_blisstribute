@@ -545,6 +545,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $addressAddition[] = trim($ent->getAdditionalAddressLine2());
         }
 
+        $stateCode = '';
+        if (!empty($ent->getState())) {
+            $stateCode = $ent->getState()->getShortCode();
+        }
+
         return [
             'salutation'      => $salutation,
             'title'           => '',
@@ -558,6 +563,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             'zip'             => $this->processAddressDataMatching($ent->getZipCode()),
             'city'            => $this->processAddressDataMatching($ent->getCity()),
             'countryCode'     => $country->getIso(),
+            'stateCode'       => $stateCode
         ];
     }
 
