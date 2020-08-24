@@ -546,8 +546,12 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         }
 
         $stateCode = '';
-        if (!empty($ent->getState())) {
-            $stateCode = $ent->getState()->getShortCode();
+        try {
+            if (!empty($ent->getState())) {
+                $stateCode = $ent->getState()->getShortCode();
+            }
+        } catch (Exception $ex) {
+            unset($ex);
         }
 
         return [

@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.3.8",
+    "currentVersion": "1.3.9",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.3.9": "add try-catch to state loading",
             "1.3.8": "transmitting state code in order address data",
             "1.3.7": "fixing vat type evaluation",
             "1.3.6": "fixing ratepay integration",
