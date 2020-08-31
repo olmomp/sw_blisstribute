@@ -1,6 +1,8 @@
 <?php
 
 use Shopware\CustomModels\Blisstribute\BlisstributeOrderRepository;
+use \Shopware\CustomModels\Blisstribute\BlisstributeOrder;
+use \Shopware\Models\Shop\Shop;
 
 /**
  * blisstribute order controller
@@ -14,6 +16,7 @@ use Shopware\CustomModels\Blisstribute\BlisstributeOrderRepository;
  */
 class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controllers_Backend_Application
 {
+    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
     /**
      * model class
      *
@@ -98,6 +101,33 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
     }
 
     /**
+     * @return Enlight_Config
+     */
+    protected function getConfig(BlisstributeOrder $blisstributeOrder)
+    {
+        $shop = $blisstributeOrder->getOrder()->getShop();
+        if (!$shop || $shop == null) {
+            $this->logWarn('orderSync::getConfig::could not get shop from order');
+            $shop = $this->container->get('shop');
+        }
+
+        if (!$shop || $shop == null) {
+            $this->logWarn('orderSync::getConfig::could not get shop from container');
+            $shop = $this->container->get('models')->getRepository(Shop::class)->getActiveDefault();
+        }
+
+        if (!$shop || $shop == null) {
+            $this->logWarn('orderSync::getConfig::could not get active shop; using fallback default config');
+            return $this->container->get('config');
+        }
+
+        $this->logInfo('orderSync::getConfig::using shop ' . $shop->getId() . ' / ' . $shop->getName());
+        $config = $this->container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
+        $this->logInfo('articleSync::getConfig::config' . json_encode($config));
+        return new \Enlight_Config($config);
+    }
+
+    /**
      * starts syncing of selected articles
      *
      * @return void
@@ -119,7 +149,7 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
             require_once __DIR__ . '/../../Components/Blisstribute/Order/Sync.php';
 
             /** @noinspection PhpUndefinedMethodInspection */
-            $orderSync = new Shopware_Components_Blisstribute_Order_Sync($this->plugin->Config());
+            $orderSync = new Shopware_Components_Blisstribute_Order_Sync($this->getConfig($blisstributeOrder));
             $result = $orderSync->processSingleOrderSync($blisstributeOrder);
 
             $this->View()->assign(array(
@@ -206,7 +236,6 @@ class Shopware_Controllers_Backend_BlisstributeOrder extends Shopware_Controller
     public function getOrderByNumberAction()
     {
         $orderNumber = $this->Request()->getParam('orderNumber');
-
         $order = Shopware()->Models()->getRepository('Shopware\Models\Order\Order')->findOneBy(array(
             'number' => $orderNumber
         ));
