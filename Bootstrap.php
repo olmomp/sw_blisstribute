@@ -13,6 +13,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Shopware\ExitBBlisstribute\Subscribers\ControllerSubscriber;
 use Shopware\ExitBBlisstribute\Subscribers\ModelSubscriber;
 use Shopware\ExitBBlisstribute\Subscribers\ServiceSubscriber;
+use Shopware\Models\Shop\Shop;
 
 /**
  * exitb blisstribute plugin bootstrap
@@ -728,9 +729,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if(is_null($job)) return;
 
         try {
-            $controller = new \Shopware_Components_Blisstribute_Order_Sync(
-                Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config()
-            );
+            $container = Shopware()->Container();
+            $shop = $container->get('models')->getRepository(Shop::class)->getActiveDefault();
+            $config = $container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
+            $controller = new \Shopware_Components_Blisstribute_Order_Sync(new Enlight_Config($config));
 
             $controller->processBatchOrderSync();
         } catch (\Exception $ex) {
@@ -748,7 +750,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {
         if(is_null($job)) return;
 
-        $pluginConfig = Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config();
+        $container = Shopware()->Container();
+        $shop = $container->get('models')->getRepository(Shop::class)->getActiveDefault();
+        $config = $container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
+        $pluginConfig = new Enlight_Config($config);
 
         // If the user disabled article synchronization, stop here.
         if (!$pluginConfig->get('blisstribute-article-sync-enabled')) {
