@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.3.11",
+    "currentVersion": "1.3.12",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.3.12": "support mollie authorizations",
             "1.3.11": "default shop config loading in cronjobs",
             "1.3.10": "blisstribute sync jobs load plugin config by shop",
             "1.3.9": "add try-catch to state loading",
