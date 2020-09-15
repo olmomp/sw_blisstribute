@@ -17,7 +17,7 @@ class Shopware_Components_Blisstribute_Order_Payment_Mollie
     {
         $status = parent::checkPaymentStatus();
         $transactionToken = trim($this->order->getTransactionId());
-        if (!preg_match('/^tr_[A-Za-z0-9]{10}$/', $transactionToken)) {
+        if (!preg_match('/^(tr|ord)_[A-Za-z0-9]{6,10}$/', $transactionToken)) {
             throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException('invalid transaction id given');
         }
 
