@@ -17,4 +17,45 @@ class Shopware_Components_Blisstribute_Order_Payment_RatePay
      * @inheritdoc
      */
     protected $code = 'ratepay';
+
+    /**
+     * @inheritdoc
+     */
+    protected function checkPaymentStatus()
+    {
+        $status = parent::checkPaymentStatus();
+
+        $orderAttribute = $this->order->getAttribute();
+        if (trim($orderAttribute->getAttribute6()) == '') {
+            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException(
+                'no transaction id given'
+            );
+        }
+
+        if (trim($orderAttribute->getAttribute5()) == '') {
+            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException(
+                'no payment narrative given'
+            );
+        }
+
+        return $status;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function getAdditionalPaymentInformation()
+    {
+        $orderAttribute = $this->order->getAttribute();
+        if (trim($orderAttribute->getAttribute5()) == '' || trim($orderAttribute->getAttribute6()) == '') {
+            throw new Shopware_Components_Blisstribute_Exception_OrderPaymentMappingException(
+                'no transaction id or payment narrative given'
+            );
+        }
+
+        return array(
+            'token' => trim($orderAttribute->getAttribute6()),
+            'tokenReference' => trim($orderAttribute->getAttribute5()),
+        );
+    }
 }
