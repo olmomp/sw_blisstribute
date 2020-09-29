@@ -736,7 +736,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             $controller->processBatchOrderSync();
         } catch (\Exception $ex) {
-            echo "exception while syncing orders " . $ex->getMessage();
+            $this->_log("exception while syncing orders " . $ex->getMessage());
             return;
         }
     }
@@ -757,7 +757,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
         // If the user disabled article synchronization, stop here.
         if (!$pluginConfig->get('blisstribute-article-sync-enabled')) {
-            echo date('r') . ' - BLISSTRIBUTE article sync is disabled' . PHP_EOL;
+            $this->_log(date('r') . ' - BLISSTRIBUTE article sync is disabled' . PHP_EOL);
             return;
         }
 
@@ -766,7 +766,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             $controller->processBatchArticleSync();
         } catch (\Exception $ex) {
-            echo "exception while syncing articles " . $ex->getMessage();
+            $this->_log("exception while syncing articles " . $ex->getMessage());
             return;
         }
     }
@@ -817,7 +817,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             $modelManager->flush();
         } catch (\Exception $ex) {
-            echo "exception while syncing easy coupon " . $ex->getMessage();
+            $this->_log("exception while syncing easy coupon " . $ex->getMessage());
             return;
         }
     }
@@ -860,7 +860,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             $this->logDebug('onRunBlisstributeOrderMappingCron::done');
         } catch (\Exception $ex) {
-            echo "exception while syncing orders " . $ex->getMessage();
+            $this->_log("exception while syncing orders " . $ex->getMessage());
             return;
         }
     }
@@ -891,7 +891,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->logDebug('onRunBlisstributeArticleMappingCron::done');
             return true;
         } catch (\Exception $ex) {
-            echo "exception while mapping articles " . $ex->getMessage();
+            $this->_log("exception while mapping articles " . $ex->getMessage());
             return false;
         }
     }

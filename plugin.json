@@ -8,11 +8,12 @@
     "link": "http://www.blisstribute.de",
     "author": "exitB GmbH",
 
-    "currentVersion": "1.3.13",
+    "currentVersion": "1.3.14",
     "isUpdateImportant": false,
 
     "changelog": {
         "de": {
+            "1.3.14": "avoid 'echo' calls in cronjobs",
             "1.3.13": "transfer payrate purpose",
             "1.3.12": "support mollie authorizations",
             "1.3.11": "default shop config loading in cronjobs",
