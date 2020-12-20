@@ -89,7 +89,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
         if (!$shop || $shop == null) {
             $this->logWarn('orderSyncMapping::getConfig::could not get shop from container');
             $shop = $this->container->get('models')->getRepository(\Shopware\Models\Shop\Shop::class)->getActiveDefault();
-        }
+        } 
 
         if (!$shop || $shop == null) {
             $this->logWarn('orderSyncMapping::getConfig::could not get active shop; using fallback default config');
@@ -297,13 +297,16 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
             $orderRemark[] = 'BUHA - Bestellung angehalten.';
         }
 
+        $this->logDebug('orderSyncMapping::map phone number');
         $customerPhone = $customer->getDefaultBillingAddress()->getPhone();
         if (trim($customerPhone) == '') {
             $customerPhone = $this->getAlternativePhoneNumber($order);
         }
 
+        $this->logDebug('orderSyncMapping::map priority shipping');
         $isPriority = $order->getDispatch()->getAttribute()->getBlisstributeShipmentIsPriority();
 
+        $this->logDebug('orderSyncMapping::map shipping total');
         $shippingTotal = $order->getInvoiceShipping();
         if ($this->isEasyCouponPluginAvailable()) {
             $shippingTotal += round($order->getAttribute()->getNetiEasyCouponShippingCostReduction(), 2);
@@ -414,9 +417,11 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
      */
     protected function determineShippingType(Order $order)
     {
+        $this->logDebug('orderSyncMapping::determineShippingType');
         $shipmentCode = $order->getDispatch()->getAttribute()->getBlisstributeShipmentCode();
 
         if (empty(trim($shipmentCode))) {
+            $this->logDebug('orderSyncMapping::shipment type code not found');
             throw new Shopware_Components_Blisstribute_Exception_OrderShipmentMappingException(
                 'no shipment mapping class found for order ' . $this->getModelEntity()->getOrder()->getNumber()
             );
@@ -478,7 +483,7 @@ class Shopware_Components_Blisstribute_Order_SyncMapping extends Shopware_Compon
 
         /** @var Shopware_Components_Blisstribute_Order_Payment_Abstract $orderPayment */
         $orderPayment = new $paymentClass($this->getModelEntity()->getOrder(), $payment);
-        return $orderPayment->getPaymentInformation();
+        return $orderPayment->getPaymentInformation($payment);
     }
 
     /**

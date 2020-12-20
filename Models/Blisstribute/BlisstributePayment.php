@@ -59,6 +59,15 @@ class BlisstributePayment extends ModelEntity
     private $isPayed;
 
     /**
+     * blisstribute payment type code override
+     *
+     * @var string
+     *
+     * @ORM\Column(name="payment_type_code", type="string", nullable=true, )
+     */
+    private $paymentTypeCode;
+
+    /**
      * set entity identifier
      *
      * @param int $id
@@ -148,5 +157,24 @@ class BlisstributePayment extends ModelEntity
     public function getIsPayed()
     {
         return $this->isPayed;
+    }
+
+    /**
+     * @param string $paymentTypeCode
+     *
+     * @return $this
+     */
+    public function setPaymentTypeCode($paymentTypeCode)
+    {
+        $this->paymentTypeCode = $paymentTypeCode;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPaymentTypeCode()
+    {
+        return $this->paymentTypeCode;
     }
 }

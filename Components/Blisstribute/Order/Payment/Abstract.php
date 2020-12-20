@@ -68,9 +68,10 @@ class Shopware_Components_Blisstribute_Order_Payment_Abstract
     /**
      * get blisstribute payment information
      *
+     * @param BlisstributePayment $blisstributePayment
      * @return array
      */
-    public function getPaymentInformation()
+    public function getPaymentInformation(BlisstributePayment $blisstributePayment)
     {
         $paymentCosts = 0.00;
 
@@ -85,9 +86,14 @@ class Shopware_Components_Blisstribute_Order_Payment_Abstract
             }
         }
 
+        $paymentTypeCode = $blisstributePayment->getPaymentTypeCode();
+        if (empty($paymentTypeCode)) {
+            $paymentTypeCode = $this->code;
+        }
+
         $payment = array(
             'total' => round($paymentCosts, 6),
-            'code' => $this->code,
+            'code' => $paymentTypeCode,
             'isPayed' => (bool)$this->payment->getIsPayed(),
             'totalIsNet' => false,
         );

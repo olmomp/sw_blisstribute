@@ -14,6 +14,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         paymentIsActive: '{s name=blisstribute/paymentIsActive}Zahlart Aktiv?{/s}',
         isPayed: '{s name=blisstribute/isPayed}Bezahlt{/s}',
         className: '{s name=blisstribute/className}Blisstribute Zuweisung{/s}',
+        paymentTypeCode: '{s name=blisstribute/paymentTypeCode}Blisstribute Code{/s}',
 
         classNameNone: '{s name=blisstribute/none}Bitte wählen{/s}',
         classNamePrePayment: '{s name=blisstribute/paymentPrePayment}Vorkasse{/s}',
@@ -230,6 +231,15 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                         displayField: 'label',
                         valueField: 'id'
                     })
+                },
+                paymentTypeCode: {
+                    header: me.snippets.paymentTypeCode,
+                    tooltip: 'Tragen Sie hier einen Zahlartencode ein, um den Standard zu überschreiben.',
+                    flex: 3,
+                    sortable: false,
+                    dataIndex: 'paymentTypeCode',
+                    align: 'left',
+                    editor: Ext.create('Ext.form.field.Text')
                 }
             },
             rowEditing: true,

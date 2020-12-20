@@ -562,6 +562,10 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
         }
 
+        if (version_compare($version, '1.3.15', '<')) {
+            $this->get('db')->query("ALTER TABLE s_plugin_blisstribute_payment ADD COLUMN payment_type_code varchar(255)");
+        }
+
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
     }
 
