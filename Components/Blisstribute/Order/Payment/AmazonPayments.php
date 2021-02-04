@@ -24,7 +24,6 @@ class Shopware_Components_Blisstribute_Order_Payment_AmazonPayments
     protected function getAdditionalPaymentInformation()
     {
         $orderAttribute = $this->order->getAttribute();
-
         $captureNow = Shopware()->Config()->get('captureNow', false);
 
         if ((bool)$captureNow) {

@@ -1,6 +1,7 @@
 <?php
 
 use Shopware\CustomModels\Blisstribute\BlisstributeArticleRepository;
+use \Shopware\Models\Shop\Shop;
 
 /**
  * blisstribute article controller
@@ -14,6 +15,8 @@ use Shopware\CustomModels\Blisstribute\BlisstributeArticleRepository;
  */
 class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controllers_Backend_Application
 {
+    use Shopware_Components_Blisstribute_Domain_LoggerTrait;
+
     /**
      * model class
      *
@@ -197,6 +200,24 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
     }
 
     /**
+     * @return Enlight_Config
+     */
+    protected function getConfig()
+    {
+        $shop = $this->container->get('models')->getRepository(Shop::class)->getActiveDefault();
+        if (!$shop || $shop == null) {
+            $this->logWarn('orderSyncMapping::getConfig::could not get active shop; using fallback default config');
+            return $this->container->get('config');
+        }
+
+        $this->logInfo('orderSyncMapping::getConfig::using shop ' . $shop->getId() . ' / ' . $shop->getName());
+        $config = $this->container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
+
+        $this->logInfo('articleSync::getConfig::config' . json_encode($config));
+        return new \Enlight_Config($config);
+    }
+
+    /**
      * starts syncing of selected articles
      *
      * @return void
@@ -223,7 +244,7 @@ class Shopware_Controllers_Backend_BlisstributeArticle extends Shopware_Controll
             require_once __DIR__ . '/../../Components/Blisstribute/Article/Sync.php';
 
             /** @noinspection PhpUndefinedMethodInspection */
-            $articleSync = new Shopware_Components_Blisstribute_Article_Sync($this->plugin->Config());
+            $articleSync = new Shopware_Components_Blisstribute_Article_Sync($this->getConfig());
             $result = $articleSync->processSingleArticleSync($blisstributeArticle);
 
             $this->View()->assign(array(

@@ -14,6 +14,7 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         paymentIsActive: '{s name=blisstribute/paymentIsActive}Zahlart Aktiv?{/s}',
         isPayed: '{s name=blisstribute/isPayed}Bezahlt{/s}',
         className: '{s name=blisstribute/className}Blisstribute Zuweisung{/s}',
+        paymentTypeCode: '{s name=blisstribute/paymentTypeCode}Blisstribute Code{/s}',
 
         classNameNone: '{s name=blisstribute/none}Bitte wählen{/s}',
         classNamePrePayment: '{s name=blisstribute/paymentPrePayment}Vorkasse{/s}',
@@ -44,6 +45,8 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
         classNameAmazonPayments: '{s name=blisstribute/paymentAmazonPayments}Amazon Payments{/s}',
         classNameBillsafe: '{s name=blisstribute/paymentBillsafe}Billsafe{/s}',
         classNameAfterPay: '{s name=blisstribute/paymentAfterPay}AfterPay{/s}',
+        classNameMollie: '{s name=blisstribute/paymentMollie}Mollie{/s}',
+        classNameRatePay: '{s name=blisstribute/paymentRatePay}RatePay{/s}',
     },
 
     configure: function() {
@@ -173,6 +176,12 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                             case 'AfterPay':
                                 return me.snippets.classNameAfterPay;
 
+                            case 'Mollie':
+                                return me.snippets.classNameMollie;
+
+                            case 'RatePay':
+                                return me.snippets.classNameRatePay;
+
                             default:
                                 return me.snippets.classNameNone;
                         }
@@ -210,7 +219,9 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                                 ['PayOneELV', me.snippets.classNamePayOneELV],
                                 ['AmazonPayments', me.snippets.classNameAmazonPayments],
                                 ['Billsafe', me.snippets.classNameBillsafe],
-                                ['AfterPay', me.snippets.classNameAfterPay]
+                                ['AfterPay', me.snippets.classNameAfterPay],
+                                ['Mollie', me.snippets.classNameMollie],
+                                ['RatePay', me.snippets.classNameRatePay]
                             ]
                         }),
                         allowBlank: false,
@@ -220,6 +231,15 @@ Ext.define('Shopware.apps.BlisstributePaymentMapping.view.list.Payment', {
                         displayField: 'label',
                         valueField: 'id'
                     })
+                },
+                paymentTypeCode: {
+                    header: me.snippets.paymentTypeCode,
+                    tooltip: 'Tragen Sie hier einen Zahlartencode ein, um den Standard zu überschreiben.',
+                    flex: 3,
+                    sortable: false,
+                    dataIndex: 'paymentTypeCode',
+                    align: 'left',
+                    editor: Ext.create('Ext.form.field.Text')
                 }
             },
             rowEditing: true,

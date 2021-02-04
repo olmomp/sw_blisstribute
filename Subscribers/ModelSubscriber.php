@@ -104,10 +104,18 @@ class ModelSubscriber implements SubscriberInterface
             return;
         }
 
-        $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
-        $blisstributeArticle->setLastCronAt(new \DateTime())
-            ->setArticle($article)
-            ->setTriggerSync(true)
+        $repository = $modelManager->getRepository('\Shopware\CustomModels\Blisstribute\BlisstributeArticle');
+        $blisstributeArticle = $repository->findOneBy(['article' => $article]);
+        if ($blisstributeArticle == null) {
+            $blisstributeArticle = new \Shopware\CustomModels\Blisstribute\BlisstributeArticle();
+            $blisstributeArticle->setLastCronAt(new \DateTime())
+                ->setArticle($article)
+                ->setTriggerSync(true)
+                ->setTries(0)
+                ->setComment(null);
+        }
+
+        $blisstributeArticle->setTriggerSync(true)
             ->setTries(0)
             ->setComment(null);
 
@@ -148,6 +156,7 @@ class ModelSubscriber implements SubscriberInterface
 
         $blisstributeArticle->setLastCronAt(new \DateTime())
             ->setTriggerSync(true)
+            ->setSyncHash('')
             ->setTries(0)
             ->setComment(null);
 

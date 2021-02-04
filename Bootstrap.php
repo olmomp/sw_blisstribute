@@ -13,6 +13,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Shopware\ExitBBlisstribute\Subscribers\ControllerSubscriber;
 use Shopware\ExitBBlisstribute\Subscribers\ModelSubscriber;
 use Shopware\ExitBBlisstribute\Subscribers\ServiceSubscriber;
+use Shopware\Models\Shop\Shop;
 
 /**
  * exitb blisstribute plugin bootstrap
@@ -201,9 +202,9 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     public function update($version)
     {
         $this->createAttributeCollection();
+        $form = $this->Form();
 
         if (version_compare($version, '0.10.3', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'checkbox',
                 'blisstribute-article-sync-sync-last-stock',
@@ -225,7 +226,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.11.2', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'text',
                 'blisstribute-hold-order-address-pattern',
@@ -239,7 +239,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.11.4', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'number',
                 'blisstribute-hold-order-cart-amount',
@@ -253,7 +252,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.12.7', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'select',
                 'blisstribute-order-sync-external-customer-number',
@@ -270,7 +268,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.14.2', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'checkbox',
                 'blisstribute-show-sync-widget',
@@ -283,7 +280,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.14.7', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'checkbox',
                 'blisstribute-transfer-b2b-net',
@@ -305,7 +301,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.14.19', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'number',
                 'blisstribute-discount-difference-watermark',
@@ -331,7 +326,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.15.0', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'text',
                 'blisstribute-alternative-phone-number-order-attribute',
@@ -343,7 +337,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.15.3', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'text',
                 'blisstribute-article-mapping-base-price',
@@ -356,7 +349,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         }
 
         if (version_compare($version, '0.15.6', '<')) {
-            $form = $this->Form();
             $form->setElement(
                 'text',
                 'blisstribute-disable-address-splitting',
@@ -374,7 +366,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $pluginConfig = Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config();
 
             // Migrate the SOAP Host to REST Host, if it's set.
-            $form            = $this->Form();
             $soapHostElement = $form->getElement('blisstribute-soap-host');
             $soapHost        = $pluginConfig->get('blisstribute-soap-host');
             $restHost        = '';
@@ -402,7 +393,6 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if (version_compare($version, '0.16.3', '<')) {
             // Migrate the SOAP Host to REST Host, if it's set.
             // $pluginConfig->get('blisstribute-article-sync-enabled')
-            $form = $this->Form();
 
             // Add option to disable article sync.
             $form->setElement(
@@ -490,6 +480,90 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             );
 
             $this->get('db')->query("DROP TABLE IF EXISTS s_plugin_blisstribute_shipment");
+        }
+
+        if (version_compare($version, '1.2.2', '<')) {
+            $form->setElement(
+                'text',
+                'blisstribute-b2b-blacklist-pattern',
+                [
+                    'label' => 'Blacklist für Firmennamen (B2B Ermittlung, Kommasepatiert)',
+                    'description' => 'Wird dieser Wert als Firmenname angegeben, wird dies nicht als B2B Bestellung gewertet. Es handelt sich NICHT um einen regulärgen Ausdruck.',
+                    'maxLength' => 255,
+                    'value' => 'x,*,/,-',
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+            $form->setElement(
+                'checkbox',
+                'blisstribute-b2b-force',
+                [
+                    'label' => 'B2B Shop',
+                    'description' => 'Wenn aktiviert, werden alle Bestellung aus dem aktuellen Shop als B2B übertragen.',
+                    'value' => 0,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
+
+        if (version_compare($version, '1.3.0', '<')) {
+            $form->setElement(
+                'checkbox',
+                'blisstribute-exclude-price-transfer',
+                [
+                    'label' => 'Artikelpreisübertragung dieses Shops unterbinden',
+                    'description' => 'Wenn aktiviert, werden die Preise dieses Subshops nicht zu Blisstribute übermittelt.',
+                    'value' => 0,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+            $form->setElement(
+                'checkbox',
+                'blisstribute-exclude-advertising-medium-from-shop-price',
+                [
+                    'label' => 'Werbemittel aus dem Shoppreis ausschliessen',
+                    'description' => 'Wenn aktiviert, werden die Preise dieses Subshops ohne Werbemittelcode übertragen.',
+                    'value' => 0,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+            $form->setElement(
+                'checkbox',
+                'blisstribute-transfer-shop-price-net',
+                [
+                    'label' => 'Artikel-Shop-Preise Netto übertragen',
+                    'description' => 'Wenn aktiviert, werden die Preise dieses Subshops als Netto-Preise übertragen.',
+                    'value' => 0,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+            $form->setElement(
+                'checkbox',
+                'blisstribute-transfer-scale-prices',
+                [
+                    'label' => 'Artikel-Shop-Staffel-Preise übertragen',
+                    'description' => 'Wenn aktiviert, werden die Staffelpreise dieses Subshops übertragen.',
+                    'value' => 0,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
+
+        if (version_compare($version, '1.3.4', '<')) {
+            $form->setElement(
+                'checkbox',
+                'blisstribute-b2c-force',
+                [
+                    'label' => 'B2C Shop',
+                    'description' => 'Wenn aktiviert, werden alle Bestellung aus dem aktuellen Shop als B2C übertragen.',
+                    'value' => 0,
+                    'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+                ]
+            );
+        }
+
+        if (version_compare($version, '1.3.15', '<')) {
+            $this->get('db')->query("ALTER TABLE s_plugin_blisstribute_payment ADD COLUMN payment_type_code varchar(255)");
         }
 
         return ['success' => true, 'invalidateCache' => ['backend', 'proxy', 'config']];
@@ -659,13 +733,14 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
         if(is_null($job)) return;
 
         try {
-            $controller = new \Shopware_Components_Blisstribute_Order_Sync(
-                Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config()
-            );
+            $container = Shopware()->Container();
+            $shop = $container->get('models')->getRepository(Shop::class)->getActiveDefault();
+            $config = $container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
+            $controller = new \Shopware_Components_Blisstribute_Order_Sync(new Enlight_Config($config));
 
             $controller->processBatchOrderSync();
         } catch (\Exception $ex) {
-            echo "exception while syncing orders " . $ex->getMessage();
+            $this->_log("exception while syncing orders " . $ex->getMessage());
             return;
         }
     }
@@ -679,11 +754,14 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
     {
         if(is_null($job)) return;
 
-        $pluginConfig = Shopware()->Container()->get('plugins')->Backend()->ExitBBlisstribute()->Config();
+        $container = Shopware()->Container();
+        $shop = $container->get('models')->getRepository(Shop::class)->getActiveDefault();
+        $config = $container->get('shopware.plugin.cached_config_reader')->getByPluginName('ExitBBlisstribute', $shop);
+        $pluginConfig = new Enlight_Config($config);
 
         // If the user disabled article synchronization, stop here.
         if (!$pluginConfig->get('blisstribute-article-sync-enabled')) {
-            echo date('r') . ' - BLISSTRIBUTE article sync is disabled' . PHP_EOL;
+            $this->_log(date('r') . ' - BLISSTRIBUTE article sync is disabled' . PHP_EOL);
             return;
         }
 
@@ -692,7 +770,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             $controller->processBatchArticleSync();
         } catch (\Exception $ex) {
-            echo "exception while syncing articles " . $ex->getMessage();
+            $this->_log("exception while syncing articles " . $ex->getMessage());
             return;
         }
     }
@@ -743,7 +821,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             $modelManager->flush();
         } catch (\Exception $ex) {
-            echo "exception while syncing easy coupon " . $ex->getMessage();
+            $this->_log("exception while syncing easy coupon " . $ex->getMessage());
             return;
         }
     }
@@ -786,7 +864,7 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
 
             $this->logDebug('onRunBlisstributeOrderMappingCron::done');
         } catch (\Exception $ex) {
-            echo "exception while syncing orders " . $ex->getMessage();
+            $this->_log("exception while syncing orders " . $ex->getMessage());
             return;
         }
     }
@@ -808,15 +886,16 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             $this->logDebug('onRunBlisstributeArticleMappingCron::cleaning obsolete referenced articles done');
 
             $this->logDebug('onRunBlisstributeArticleMappingCron::create new article references');
-            $blisstributeArticleMappingSql = "INSERT IGNORE INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
+            $blisstributeArticleMappingSql = "INSERT INTO s_plugin_blisstribute_articles (created_at, modified_at, last_cron_at, "
                 . "s_article_id, trigger_deleted, trigger_sync, tries, comment) SELECT CURRENT_TIMESTAMP, "
-                . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a";
+                . "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, a.id, 0, 1, 0, NULL FROM s_articles AS a "
+                . "WHERE a.id NOT IN (SELECT DISTINCT s_article_id FROM s_plugin_blisstribute_articles)";
             $this->get('db')->query($blisstributeArticleMappingSql);
 
             $this->logDebug('onRunBlisstributeArticleMappingCron::done');
             return true;
         } catch (\Exception $ex) {
-            echo "exception while mapping articles " . $ex->getMessage();
+            $this->_log("exception while mapping articles " . $ex->getMessage());
             return false;
         }
     }
@@ -1408,6 +1487,46 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
             ]
         );
         $form->setElement(
+            'checkbox',
+            'blisstribute-exclude-price-transfer',
+            [
+                'label' => 'Artikelpreisübertragung dieses Shops unterbinden',
+                'description' => 'Wenn aktiviert, werden die Preise dieses Subshops nicht zu Blisstribute übermittelt.',
+                'value' => 0,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-exclude-advertising-medium-from-shop-price',
+            [
+                'label' => 'Werbemittel aus dem Shoppreis ausschliessen',
+                'description' => 'Wenn aktiviert, werden die Preise dieses Subshops ohne Werbemittelcode übertragen.',
+                'value' => 0,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-transfer-shop-price-net',
+            [
+                'label' => 'Artikel-Shop-Preise Netto übertragen',
+                'description' => 'Wenn aktiviert, werden die Preise dieses Subshops als Netto-Preise übertragen.',
+                'value' => 0,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+        $form->setElement(
+            'checkbox',
+            'blisstribute-transfer-scale-prices',
+            [
+                'label' => 'Artikel-Shop-Staffel-Preise übertragen',
+                'description' => 'Wenn aktiviert, werden die Staffelpreise dieses Subshops übertragen.',
+                'value' => 0,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+        $form->setElement(
             'text',
             'blisstribute-article-mapping-classification3',
             array(
@@ -1591,6 +1710,29 @@ class Shopware_Plugins_Backend_ExitBBlisstribute_Bootstrap extends Shopware_Comp
                 'description' => '',
                 'value' => '',
             )
+        );
+
+        $form->setElement(
+            'text',
+            'blisstribute-b2b-blacklist-pattern',
+            [
+                'label' => 'Blacklist für Firmennamen (B2B Ermittlung, Kommasepatiert)',
+                'description' => 'Wird dieser Wert als Firmenname angegeben, wird dies nicht als B2B Bestellung gewertet. Es handelt sich NICHT um einen regulärgen Ausdruck.',
+                'maxLength' => 255,
+                'value' => 'x,*,/,-',
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
+        );
+
+        $form->setElement(
+            'checkbox',
+            'blisstribute-b2b-force',
+            [
+                'label' => 'B2B Shop',
+                'description' => 'Wenn aktiviert, werden alle Bestellung aus dem aktuellen Shop als B2B übertragen.',
+                'value' => 0,
+                'scope' => Shopware\Models\Config\Element::SCOPE_SHOP
+            ]
         );
     }
 
